@@ -411,9 +411,9 @@ class WorkshopParser(QObject):
             return
 
         if self._request_type == "browse":
-            QTimer.singleShot(500, self._parse_browse_page)
+            QTimer.singleShot(50, self._parse_browse_page)
         elif self._request_type == "details_init":
-            QTimer.singleShot(100, lambda: self._fetch_item_details(
+            QTimer.singleShot(20, lambda: self._fetch_item_details(
                 self._current_pubfileid,
                 self._details_request_id
             ))

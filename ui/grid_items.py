@@ -2,24 +2,182 @@ import json
 import weakref
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, QByteArray, QBuffer
-from PyQt6.QtGui import QPixmap, QFontMetrics, QMovie, QPixmapCache
+from PyQt6.QtCore import Qt, QSize, pyqtSignal, QByteArray, QBuffer, QRectF
+from PyQt6.QtGui import (
+    QPixmap, QFontMetrics, QMovie, QPixmapCache,
+    QPainter, QPen, QColor, QFont
+)
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 from core.image_cache import ImageCache
 from resources.icons import get_pixmap
+from utils.helpers import parse_file_size_to_bytes, format_bytes_short, parse_depot_status
+
+class _DownloadOverlay(QWidget):
+    def __init__(self, size: int, parent=None):
+        super().__init__(parent)
+        self._size = size
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setFixedSize(size, size)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setBrush(QColor(0, 0, 0, 150))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRect(0, 0, self._size, self._size)
+        painter.end()
+
+class CircularProgressWidget(QWidget):
+
+    def __init__(self, size: int = 60, line_width: int = 4, parent=None):
+        super().__init__(parent)
+        self._progress = 0.0
+        self._display_text = "0%"
+        self._circle_size = size
+        self._line_width = line_width
+        self.setFixedSize(size, size)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def update_from_status(self, status_text: str, file_size_bytes: int = 0):
+        parsed = parse_depot_status(status_text)
+        dl_bytes = parsed['downloaded_bytes']
+        total_bytes = parsed['total_bytes']
+        percent = parsed['percent']
+
+        if percent >= 0:
+            self._progress = min(1.0, max(0.0, percent / 100.0))
+        elif dl_bytes > 0:
+            effective_total = total_bytes if total_bytes > 0 else file_size_bytes
+            if effective_total > 0:
+                self._progress = min(1.0, max(0.0, dl_bytes / effective_total))
+            else:
+                self._progress = 0.0
+        else:
+            self._progress = 0.0
+
+        pct_int = int(self._progress * 100)
+        if self._progress > 0 or percent >= 0:
+            self._display_text = f"{pct_int}%"
+        else:
+            self._display_text = "0%"
+
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w = self.width()
+        h = self.height()
+        margin = self._line_width / 2 + 1
+        rect = QRectF(margin, margin, w - 2 * margin, h - 2 * margin)
+
+        track_pen = QPen(QColor(255, 255, 255, 60), self._line_width)
+        track_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(track_pen)
+        painter.drawArc(rect, 0, 360 * 16)
+
+        if self._progress > 0:
+            progress_pen = QPen(QColor(70, 130, 240), self._line_width)
+            progress_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+            painter.setPen(progress_pen)
+            span_angle = int(-self._progress * 360 * 16)
+            painter.drawArc(rect, 90 * 16, span_angle)
+
+        font_size = max(7, int(self._circle_size / 5.5))
+        font = QFont("Segoe UI", font_size, QFont.Weight.Bold)
+        painter.setFont(font)
+        painter.setPen(QColor(255, 255, 255, 230))
+        painter.drawText(
+            QRectF(0, 0, w, h),
+            Qt.AlignmentFlag.AlignCenter,
+            self._display_text,
+        )
+        painter.end()
+
+class SmallCircularProgress(QWidget):
+
+    def __init__(self, size: int = 40, line_width: int = 3, parent=None):
+        super().__init__(parent)
+        self._progress = 0.0
+        self._display_text = "0B"
+        self._circle_size = size
+        self._line_width = line_width
+        self.setFixedSize(size, size)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def update_from_status(self, status_text: str, file_size_bytes: int = 0):
+        parsed = parse_depot_status(status_text)
+        dl_bytes = parsed['downloaded_bytes']
+        total_bytes = parsed['total_bytes']
+        percent = parsed['percent']
+
+        if percent >= 0:
+            self._progress = min(1.0, max(0.0, percent / 100.0))
+        elif dl_bytes > 0:
+            effective_total = total_bytes if total_bytes > 0 else file_size_bytes
+            if effective_total > 0:
+                self._progress = min(1.0, max(0.0, dl_bytes / effective_total))
+            else:
+                self._progress = 0.0
+        else:
+            self._progress = 0.0
+
+        if dl_bytes > 0:
+            self._display_text = format_bytes_short(dl_bytes)
+        elif percent >= 0:
+            effective_total = total_bytes if total_bytes > 0 else file_size_bytes
+            if effective_total > 0:
+                estimated = int(effective_total * percent / 100.0)
+                self._display_text = format_bytes_short(estimated)
+            else:
+                self._display_text = f"{int(percent)}%"
+        else:
+            self._display_text = "0B"
+
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w = self.width()
+        h = self.height()
+        margin = self._line_width / 2 + 1
+        rect = QRectF(margin, margin, w - 2 * margin, h - 2 * margin)
+
+        track_pen = QPen(QColor(255, 255, 255, 50), self._line_width)
+        track_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(track_pen)
+        painter.drawArc(rect, 0, 360 * 16)
+
+        if self._progress > 0:
+            progress_pen = QPen(QColor(70, 130, 240), self._line_width)
+            progress_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+            painter.setPen(progress_pen)
+            span_angle = int(-self._progress * 360 * 16)
+            painter.drawArc(rect, 90 * 16, span_angle)
+
+        font_size = max(6, int(self._circle_size / 6.5))
+        font = QFont("Segoe UI", font_size, QFont.Weight.Bold)
+        painter.setFont(font)
+        painter.setPen(QColor(255, 255, 255, 220))
+        painter.drawText(
+            QRectF(0, 0, w, h),
+            Qt.AlignmentFlag.AlignCenter,
+            self._display_text,
+        )
+        painter.end()
 
 class BaseGridItem(QWidget):
-
     clicked = pyqtSignal(str)
 
     def __init__(self, item_id: str, item_size: int = 185, parent=None):
         super().__init__(parent)
-
         self.item_id = item_id
         self.item_size = item_size
         self._original_title = ""
-
         self._pixmap: QPixmap = None
         self._movie: QMovie = None
         self._gif_buffer: QByteArray = None
@@ -27,7 +185,6 @@ class BaseGridItem(QWidget):
         self._is_gif = False
         self._is_hovered = False
         self._is_destroyed = False
-
         self._setup_ui()
 
     def _setup_ui(self):
@@ -47,7 +204,9 @@ class BaseGridItem(QWidget):
         self.name_container = QWidget(self.overlay_container)
         self.name_container.setFixedHeight(name_container_height)
         self.name_container.setFixedWidth(self.item_size)
-        self.name_container.setStyleSheet("background-color: rgba(0, 0, 0, 180); border-radius: 0px;")
+        self.name_container.setStyleSheet(
+            "background-color: rgba(0, 0, 0, 180); border-radius: 0px;"
+        )
         self.name_container.move(0, self.item_size - name_container_height)
 
         name_layout = QVBoxLayout(self.name_container)
@@ -80,7 +239,11 @@ class BaseGridItem(QWidget):
             return
         try:
             metrics = QFontMetrics(self.name_label.font())
-            max_width = self.name_label.maximumWidth() if self.name_label.maximumWidth() > 0 else self.item_size - 10
+            max_width = (
+                self.name_label.maximumWidth()
+                if self.name_label.maximumWidth() > 0
+                else self.item_size - 10
+            )
             elided = metrics.elidedText(text, Qt.TextElideMode.ElideRight, max_width)
             self.name_label.setText(elided)
         except RuntimeError:
@@ -93,7 +256,7 @@ class BaseGridItem(QWidget):
             scaled = self._pixmap.scaled(
                 size, size,
                 Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                Qt.TransformationMode.SmoothTransformation
+                Qt.TransformationMode.SmoothTransformation,
             )
             if scaled.width() > size or scaled.height() > size:
                 x = (scaled.width() - size) // 2
@@ -125,11 +288,9 @@ class BaseGridItem(QWidget):
             self._gif_buffer = QByteArray(data)
             self._buffer = QBuffer(self._gif_buffer)
             self._buffer.open(QBuffer.OpenModeFlag.ReadOnly)
-
             self._movie = QMovie()
             self._movie.setDevice(self._buffer)
             self._movie.setScaledSize(QSize(self.item_size, self.item_size))
-
             if not self._is_destroyed:
                 self.preview_label.setMovie(self._movie)
                 self._movie.start()
@@ -160,7 +321,9 @@ class BaseGridItem(QWidget):
                 self._movie.setScaledSize(QSize(enlarged_size, enlarged_size))
             elif self._pixmap and not self._pixmap.isNull():
                 self._apply_pixmap(enlarged_size)
-            self.name_container.setStyleSheet("background-color: rgba(0, 0, 0, 120); border-radius: 0px;")
+            self.name_container.setStyleSheet(
+                "background-color: rgba(0, 0, 0, 120); border-radius: 0px;"
+            )
         except RuntimeError:
             pass
         super().enterEvent(event)
@@ -174,7 +337,9 @@ class BaseGridItem(QWidget):
                 self._movie.setScaledSize(QSize(self.item_size, self.item_size))
             elif self._pixmap and not self._pixmap.isNull():
                 self._apply_pixmap(self.item_size)
-            self.name_container.setStyleSheet("background-color: rgba(0, 0, 0, 180); border-radius: 0px;")
+            self.name_container.setStyleSheet(
+                "background-color: rgba(0, 0, 0, 180); border-radius: 0px;"
+            )
         except RuntimeError:
             pass
         super().leaveEvent(event)
@@ -199,7 +364,7 @@ class BaseGridItem(QWidget):
         if self._buffer is not None:
             try:
                 self._buffer.close()
-            except:
+            except Exception:
                 pass
             self._buffer = None
         self._gif_buffer = None
@@ -215,20 +380,22 @@ class BaseGridItem(QWidget):
 
 
 class WorkshopGridItem(BaseGridItem):
-
     STATUS_AVAILABLE = "available"
     STATUS_INSTALLED = "installed"
     STATUS_DOWNLOADING = "downloading"
 
-    def __init__(self, pubfileid: str, title: str = "", preview_url: str = "", item_size: int = 185, parent=None):
+    def __init__(self, pubfileid: str, title: str = "", preview_url: str = "",
+                 item_size: int = 185, parent=None):
         super().__init__(item_id=pubfileid, item_size=item_size, parent=parent)
-
         self.pubfileid = pubfileid
         self.preview_url = preview_url
         self.status = self.STATUS_AVAILABLE
         self._is_loading = False
+        self._file_size_bytes = 0
+        self._overlay_visible = False
 
         self._setup_status_indicator()
+        self._setup_download_overlay()
         self.set_title(title if title else pubfileid)
         self._load_preview()
 
@@ -244,28 +411,45 @@ class WorkshopGridItem(BaseGridItem):
         """)
         self.status_indicator.hide()
 
+    def _setup_download_overlay(self):
+        self.download_overlay = _DownloadOverlay(
+            self.item_size, parent=self.overlay_container
+        )
+        self.download_overlay.move(0, 0)
+        self.download_overlay.hide()
+
+        circle_size = max(50, int(self.item_size * 0.38))
+        line_width = max(3, int(circle_size / 14))
+        self.circular_progress = CircularProgressWidget(
+            size=circle_size, line_width=line_width, parent=self.download_overlay
+        )
+        cx = (self.item_size - circle_size) // 2
+        cy = (self.item_size - circle_size) // 2
+        self.circular_progress.move(cx, cy)
+
+    def set_file_size(self, file_size_str: str):
+        self._file_size_bytes = parse_file_size_to_bytes(file_size_str)
+
+    def set_file_size_bytes(self, size_bytes: int):
+        self._file_size_bytes = size_bytes
+
     def _load_preview(self):
         if not self.preview_url or self._is_loading or self._is_destroyed:
             self._show_placeholder()
             return
-
         cache = ImageCache.instance()
-
         pixmap = cache.get_pixmap(self.preview_url)
         if pixmap:
             self._pixmap = pixmap
             self._is_gif = False
             self._apply_pixmap(self.item_size)
             return
-
         gif_data = cache.get_gif(self.preview_url)
         if gif_data:
             self._load_gif_from_data(gif_data)
             return
-
         self._is_loading = True
         self._show_placeholder("⏳")
-
         weak_self = weakref.ref(self)
         expected_url = self.preview_url
 
@@ -288,25 +472,39 @@ class WorkshopGridItem(BaseGridItem):
 
         cache.load_image(self.preview_url, callback=on_loaded)
 
-    def set_status(self, status: str):
+    def set_status(self, status: str, status_text: str = ""):
         if self._is_destroyed:
             return
         self.status = status
         try:
             if status == self.STATUS_INSTALLED:
+                if self._overlay_visible:
+                    self.download_overlay.hide()
+                    self._overlay_visible = False
                 self.status_indicator.setPixmap(get_pixmap("IMG_CHECK", 18))
                 self.status_indicator.show()
             elif status == self.STATUS_DOWNLOADING:
-                self.status_indicator.setPixmap(get_pixmap("IMG_DOWNLOAD", 18))
-                self.status_indicator.show()
+                self.status_indicator.hide()
+                if not self._overlay_visible:
+                    self.download_overlay.show()
+                    self.download_overlay.raise_()
+                    self.name_container.raise_()
+                    self._overlay_visible = True
+                self.circular_progress.update_from_status(
+                    status_text, self._file_size_bytes
+                )
             else:
+                if self._overlay_visible:
+                    self.download_overlay.hide()
+                    self._overlay_visible = False
                 self.status_indicator.hide()
         except RuntimeError:
             pass
 
+    def release_resources(self):
+        super().release_resources()
 
 class LocalGridItem(BaseGridItem):
-
     def __init__(self, folder_path: str, item_size: int = 185, parent=None):
         super().__init__(item_id=folder_path, item_size=item_size, parent=parent)
         self.folder_path = folder_path
@@ -336,11 +534,9 @@ class LocalGridItem(BaseGridItem):
             if candidate.exists():
                 preview_file = candidate
                 break
-
         if not preview_file:
             self._show_placeholder("No preview")
             return
-
         try:
             if preview_file.suffix.lower() == ".gif":
                 self._load_gif_from_file(str(preview_file))
@@ -361,7 +557,6 @@ class LocalGridItem(BaseGridItem):
         QPixmapCache.clear()
 
 class SkeletonGridItem(QWidget):
-
     def __init__(self, item_size: int = 185, parent=None):
         super().__init__(parent)
         self.item_size = item_size
@@ -375,4 +570,3 @@ class SkeletonGridItem(QWidget):
             );
             border-radius: 0px;
         """)
- 

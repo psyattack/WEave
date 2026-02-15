@@ -4,25 +4,28 @@ from typing import Optional, List, Dict
 
 from PyQt6.QtCore import (
     Qt, QTimer, pyqtSignal, QSize, QEvent, QPoint, QByteArray,
-    QBuffer, QIODevice, QPropertyAnimation, QRectF, pyqtProperty
+    QBuffer, QIODevice, QPropertyAnimation, QRectF, pyqtProperty,
+    QEasingCurve,
 )
 from PyQt6.QtGui import QPixmap, QMovie, QPainter, QPainterPath, QColor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QScrollArea, QGridLayout, QFrame, QSplitter, QSizePolicy, QLineEdit
+    QScrollArea, QGridLayout, QFrame, QSplitter, QSizePolicy, QLineEdit,
 )
 
 from core.image_cache import ImageCache
 from core.workshop_parser import WorkshopParser, WorkshopItem, WorkshopPage
 from core.workshop_filters import WorkshopFilters
 from ui.workshop_filters import CompactFilterBar
-from ui.grid_items import WorkshopGridItem, SkeletonGridItem
+from ui.grid_items import (
+    WorkshopGridItem, SkeletonGridItem, SmallCircularProgress,
+    parse_file_size_to_bytes,
+)
 from ui.details_panel import DetailsPanel
 from ui.custom_widgets import NotificationLabel
 from resources.icons import get_icon
 
 class ToggleSwitch(QWidget):
-
     toggled = pyqtSignal(bool)
 
     def __init__(self, checked=True, theme_manager=None, parent=None):
@@ -57,36 +60,29 @@ class ToggleSwitch(QWidget):
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-
         w, h = self.width(), self.height()
         radius = h / 2
-
         if self._checked:
             bg_color = QColor(self.theme.get_color('primary'))
         else:
             bg_color = QColor(self.theme.get_color('bg_tertiary'))
-
         p.setBrush(bg_color)
         p.setPen(Qt.PenStyle.NoPen)
         p.drawRoundedRect(QRectF(0, 0, w, h), radius, radius)
-
         handle_diameter = h - 4
         x = 2 + self._handle_pos * (w - handle_diameter - 4)
         p.setBrush(QColor("white"))
         p.drawEllipse(QRectF(x, 2, handle_diameter, handle_diameter))
-
         p.end()
 
 class PreviewPopup(QWidget):
-
     def __init__(self, theme_manager, parent=None):
         super().__init__(parent)
         self.theme = theme_manager
-
         self.setWindowFlags(
-            Qt.WindowType.ToolTip |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.NoDropShadowWindowHint
+            Qt.WindowType.ToolTip
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.NoDropShadowWindowHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setFixedSize(156, 156)
@@ -122,37 +118,30 @@ class PreviewPopup(QWidget):
             self.preview_label.setText("No preview")
             self.show()
             return
-
         x_pos = global_pos.x() - self.width() - 10
         if x_pos < 0:
             x_pos = global_pos.x() + 10
         self.move(x_pos, global_pos.y() - 35)
         self.show()
-
         if preview_url == self._current_url:
             return
-
         self._current_url = preview_url
         cache = ImageCache.instance()
-
         gif_data = cache.get_gif(preview_url)
         if gif_data:
             self._play_gif_from_data(gif_data)
             return
-
         pixmap = cache.get_pixmap(preview_url)
         if pixmap:
             self._stop_current_movie()
             self._set_pixmap(pixmap.scaled(
                 150, 150,
                 Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
+                Qt.TransformationMode.SmoothTransformation,
             ))
             return
-
         self._stop_current_movie()
         self.preview_label.setText("Loading...")
-
         weak_self = weakref.ref(self)
         expected_url = preview_url
 
@@ -172,7 +161,7 @@ class PreviewPopup(QWidget):
                 self_ref._set_pixmap(data.scaled(
                     150, 150,
                     Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation
+                    Qt.TransformationMode.SmoothTransformation,
                 ))
 
         cache.load_image(preview_url, callback=on_loaded)
@@ -188,19 +177,17 @@ class PreviewPopup(QWidget):
 
     def _play_gif_from_data(self, data: QByteArray):
         self._stop_current_movie()
-
         self._current_buffer = QBuffer()
         self._current_buffer.setData(data)
         self._current_buffer.open(QIODevice.OpenModeFlag.ReadOnly)
-
         self._current_movie = QMovie()
         self._current_movie.setDevice(self._current_buffer)
-        self._current_movie.setScaledSize(self._calculate_scaled_size(self._current_movie))
-
+        self._current_movie.setScaledSize(
+            self._calculate_scaled_size(self._current_movie)
+        )
         self.preview_label.setStyleSheet("background: transparent; border: none;")
         self.preview_label.setText("")
         self.preview_label.setMovie(self._current_movie)
-
         self._current_movie.frameChanged.connect(self._on_gif_frame_changed)
         self._current_movie.start()
 
@@ -209,7 +196,9 @@ class PreviewPopup(QWidget):
             return
         current_pixmap = self._current_movie.currentPixmap()
         if not current_pixmap.isNull():
-            self.preview_label.setPixmap(self._create_rounded_pixmap(current_pixmap, radius=6))
+            self.preview_label.setPixmap(
+                self._create_rounded_pixmap(current_pixmap, radius=6)
+            )
 
     def _calculate_scaled_size(self, movie: QMovie) -> QSize:
         movie.jumpToFrame(0)
@@ -258,14 +247,12 @@ class PreviewPopup(QWidget):
             font-size: 11px;
         """)
 
-
 class WorkshopTab(QWidget):
-
     download_requested = pyqtSignal(str)
 
-    def __init__(self, config_manager, account_manager, download_manager, wallpaper_engine, translator, theme_manager, parent=None):
+    def __init__(self, config_manager, account_manager, download_manager,
+                 wallpaper_engine, translator, theme_manager, parent=None):
         super().__init__(parent)
-
         self.config = config_manager
         self.accounts = account_manager
         self.dm = download_manager
@@ -284,6 +271,7 @@ class WorkshopTab(QWidget):
         self._is_loading_details = False
 
         self._preview_url_cache: Dict[str, str] = {}
+        self._file_size_cache: Dict[str, int] = {}
 
         self._setup_ui()
         self._setup_parser()
@@ -293,7 +281,7 @@ class WorkshopTab(QWidget):
 
         self._status_timer = QTimer()
         self._status_timer.timeout.connect(self._update_item_statuses)
-        self._status_timer.start(3000)
+        self._status_timer.start(1000)
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
@@ -301,7 +289,6 @@ class WorkshopTab(QWidget):
         main_layout.setSpacing(0)
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
-
         left_panel = self._create_left_panel()
 
         self.details_panel = DetailsPanel(
@@ -311,8 +298,12 @@ class WorkshopTab(QWidget):
         self.details_scroll = QScrollArea()
         self.details_scroll.setWidgetResizable(True)
         self.details_scroll.setFixedWidth(320)
-        self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.details_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        self.details_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.details_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+        )
         self.details_scroll.setWidget(self.details_panel)
 
         self.splitter.addWidget(left_panel)
@@ -341,12 +332,12 @@ class WorkshopTab(QWidget):
     def _setup_downloads_popup(self):
         self.downloads_popup = QWidget()
         self.downloads_popup.setWindowFlags(
-            Qt.WindowType.Popup |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.NoDropShadowWindowHint
+            Qt.WindowType.Popup
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.NoDropShadowWindowHint
         )
         self.downloads_popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.downloads_popup.setFixedSize(260, 350)
+        self.downloads_popup.setFixedSize(280, 350)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -375,33 +366,50 @@ class WorkshopTab(QWidget):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(15, 10, 5, 10)
-        layout.setSpacing(10)
+        layout.setSpacing(0)
 
+        from ui.workshop_filters import AnimatedContainer
         self.filter_bar = CompactFilterBar(self.theme, self)
         self.filter_bar.filters_changed.connect(self._on_filters_changed)
-        self.filter_bar.setVisible(False)
-        layout.addWidget(self.filter_bar)
+        self.filter_bar.refresh_requested.connect(self._on_refresh_requested)
+        
+        self.filter_animated = AnimatedContainer(self)
+        self.filter_animated.set_content_widget(self.filter_bar)
+        layout.addWidget(self.filter_animated)
+        
+        self.filter_bar.tags_animated.height_changed.connect(
+            self.filter_animated.update_height
+        )
 
         self.info_bar = self._create_info_bar()
         layout.addWidget(self.info_bar)
 
+        layout.addSpacing(10)
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll_area.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+        )
 
         self.grid_widget = QWidget()
         self.grid_layout = QGridLayout(self.grid_widget)
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.grid_layout.setHorizontalSpacing(2)
         self.grid_layout.setVerticalSpacing(2)
-        self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.grid_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+        )
 
         self.scroll_area.setWidget(self.grid_widget)
         self._scrollbar_visible = self.scroll_area.verticalScrollBar().isVisible()
-        self.scroll_area.verticalScrollBar().rangeChanged.connect(self._on_scrollbar_range_changed)
+        self.scroll_area.verticalScrollBar().rangeChanged.connect(
+            self._on_scrollbar_range_changed
+        )
         layout.addWidget(self.scroll_area, 1)
-
+        layout.addSpacing(10)
         layout.addWidget(self._create_pagination_bar())
         return widget
 
@@ -443,14 +451,15 @@ class WorkshopTab(QWidget):
         """)
         layout.addWidget(self.filter_toggle_label)
 
-        self.filter_toggle = ToggleSwitch(checked=False, theme_manager=self.theme, parent=bar)
+        self.filter_toggle = ToggleSwitch(
+            checked=False, theme_manager=self.theme, parent=bar
+        )
         self.filter_toggle.toggled.connect(self._on_filter_toggle)
         layout.addWidget(self.filter_toggle)
-
         return bar
 
     def _on_filter_toggle(self, checked: bool):
-        self.filter_bar.setVisible(checked)
+        self.filter_animated.toggle(checked)
 
     def _create_pagination_bar(self) -> QFrame:
         bar = QFrame()
@@ -583,6 +592,14 @@ class WorkshopTab(QWidget):
     def _initial_load(self):
         self.parser.load_page(self.filter_bar.get_current_filters())
 
+    def _on_refresh_requested(self, filters: WorkshopFilters):
+        if self._is_loading_page:
+            return
+        filters.page = self.current_page
+        self.filter_bar.set_page(self.current_page)
+        self.selected_pubfileid = None
+        self.parser.load_page(filters)
+
     def _on_filters_changed(self, filters: WorkshopFilters):
         if self._is_loading_page:
             return
@@ -617,6 +634,17 @@ class WorkshopTab(QWidget):
         self._is_loading_details = False
         if item.preview_url:
             self._preview_url_cache[item.pubfileid] = item.preview_url
+        if item.file_size:
+            size_bytes = parse_file_size_to_bytes(item.file_size)
+            if size_bytes > 0:
+                self._file_size_cache[item.pubfileid] = size_bytes
+                for grid_item in self.grid_items:
+                    try:
+                        if grid_item and grid_item.pubfileid == item.pubfileid:
+                            grid_item.set_file_size_bytes(size_bytes)
+                            break
+                    except RuntimeError:
+                        pass
         self.details_panel.set_workshop_item(item)
 
     def _on_error(self, error_msg: str):
@@ -678,11 +706,16 @@ class WorkshopTab(QWidget):
                 title=item_data.title,
                 preview_url=item_data.preview_url,
                 item_size=item_size,
-                parent=self
+                parent=self,
             )
 
+            cached_size = self._file_size_cache.get(item_data.pubfileid, 0)
+            if cached_size > 0:
+                grid_item.set_file_size_bytes(cached_size)
+
             if self.dm.is_downloading(item_data.pubfileid):
-                grid_item.set_status(WorkshopGridItem.STATUS_DOWNLOADING)
+                status_text = self.dm.get_download_status(item_data.pubfileid)
+                grid_item.set_status(WorkshopGridItem.STATUS_DOWNLOADING, status_text)
             elif self._is_fully_installed(item_data.pubfileid):
                 grid_item.set_status(WorkshopGridItem.STATUS_INSTALLED)
             else:
@@ -703,9 +736,7 @@ class WorkshopTab(QWidget):
                     item.release_resources()
             except RuntimeError:
                 pass
-
         self._clear_skeleton_grid()
-
         while self.grid_layout.count():
             child = self.grid_layout.takeAt(0)
             if child is not None:
@@ -716,7 +747,6 @@ class WorkshopTab(QWidget):
                         widget.deleteLater()
                     except RuntimeError:
                         pass
-
         self.grid_items.clear()
 
     def _calculate_columns(self) -> int:
@@ -725,7 +755,7 @@ class WorkshopTab(QWidget):
             if available_width <= 0:
                 return 4
             return min(max(1, available_width // 192), 8)
-        except:
+        except Exception:
             return 4
 
     def _calculate_item_size(self, columns: int) -> int:
@@ -738,7 +768,7 @@ class WorkshopTab(QWidget):
             total_spacing = (columns - 1) * 2
             ideal_size = (available_width - total_spacing) // columns
             return max(160, min(ideal_size, 240))
-        except:
+        except Exception:
             return 185
 
     def _select_item(self, pubfileid: str):
@@ -755,7 +785,8 @@ class WorkshopTab(QWidget):
                 if item is None:
                     continue
                 if self.dm.is_downloading(item.pubfileid):
-                    item.set_status(WorkshopGridItem.STATUS_DOWNLOADING)
+                    status_text = self.dm.get_download_status(item.pubfileid)
+                    item.set_status(WorkshopGridItem.STATUS_DOWNLOADING, status_text)
                 elif self._is_fully_installed(item.pubfileid):
                     item.set_status(WorkshopGridItem.STATUS_INSTALLED)
                 else:
@@ -774,7 +805,9 @@ class WorkshopTab(QWidget):
             start_item = (self.current_page - 1) * 15 + 1
             end_item = min(start_item + current_count - 1, total_items)
             if total_items > 0:
-                self.results_label.setText(f"Showing {start_item}-{end_item} of {total_items:,} wallpapers")
+                self.results_label.setText(
+                    f"Showing {start_item}-{end_item} of {total_items:,} wallpapers"
+                )
             else:
                 self.results_label.setText("No wallpapers found")
         else:
@@ -804,9 +837,22 @@ class WorkshopTab(QWidget):
         cached_item = self.parser.get_cached_item(pubfileid)
         if cached_item and cached_item.preview_url:
             self._preview_url_cache[pubfileid] = cached_item.preview_url
+        if cached_item and cached_item.file_size:
+            size_bytes = parse_file_size_to_bytes(cached_item.file_size)
+            if size_bytes > 0:
+                self._file_size_cache[pubfileid] = size_bytes
+                for grid_item in self.grid_items:
+                    try:
+                        if grid_item and grid_item.pubfileid == pubfileid:
+                            grid_item.set_file_size_bytes(size_bytes)
+                            break
+                    except RuntimeError:
+                        pass
         self.dm.start_download(pubfileid, self.config.get_account_number())
         self._update_item_statuses()
-        NotificationLabel.show_notification(self.details_panel, self.tr.t("messages.download_started"), 55, 15)
+        NotificationLabel.show_notification(
+            self.details_panel, self.tr.t("messages.download_started"), 55, 15
+        )
 
     def show_downloads_popup(self, button_pos):
         self.downloads_popup.move(button_pos.x() - 90, button_pos.y())
@@ -854,7 +900,7 @@ class WorkshopTab(QWidget):
                 padding: 8px 12px;
                 border-radius: 6px;
             """)
-            label.setFixedSize(250, 70)
+            label.setFixedSize(270, 70)
             self.scroll_layout.addWidget(label)
         else:
             for task_type, pubfileid, info in all_tasks:
@@ -864,31 +910,41 @@ class WorkshopTab(QWidget):
 
     def _create_task_item(self, task_type: str, pubfileid: str, info: dict):
         item_widget = QWidget()
-        item_widget.setFixedSize(250, 70)
+        item_widget.setFixedSize(270, 70)
 
         item_layout = QHBoxLayout(item_widget)
         item_layout.setContentsMargins(0, 0, 0, 0)
 
         bg_container = QWidget()
-        bg_container.setStyleSheet("background-color: rgba(0, 0, 0, 200); border-radius: 6px;")
+        bg_container.setStyleSheet(
+            "background-color: rgba(0, 0, 0, 200); border-radius: 6px;"
+        )
 
         bg_layout = QHBoxLayout(bg_container)
-        bg_layout.setContentsMargins(8, 6, 8, 6)
+        bg_layout.setContentsMargins(6, 6, 8, 6)
         bg_layout.setSpacing(8)
+
+        mini_progress = SmallCircularProgress(
+            size=40, line_width=3, parent=bg_container
+        )
+        status_text = info.get("status", "")
+        file_size_bytes = self._file_size_cache.get(pubfileid, 0)
+        mini_progress.update_from_status(status_text, file_size_bytes)
+        bg_layout.addWidget(mini_progress)
 
         if task_type == "download":
             prefix = self.tr.t("labels.download_prefix", id=pubfileid)
         else:
             prefix = self.tr.t("labels.extract_prefix", id=pubfileid)
 
-        status = info.get("status", "...")
-        text = f"<b>{prefix}</b><br><small>{status[:50]}</small>"
+        display_status = status_text[:45] if status_text else "0B"
+        text = f"<b>{prefix}</b><br><small>{display_status}</small>"
 
         text_label = QLabel(text)
-        text_label.setStyleSheet("color: white; font-size: 14px; background: none")
+        text_label.setStyleSheet("color: white; font-size: 13px; background: none")
         text_label.setTextFormat(Qt.TextFormat.RichText)
         text_label.setWordWrap(True)
-        text_label.setFixedSize(200, 50)
+        text_label.setFixedSize(165, 50)
         text_label.setCursor(Qt.CursorShape.PointingHandCursor)
         text_label.setProperty("pubfileid", pubfileid)
         text_label.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
@@ -903,8 +959,12 @@ class WorkshopTab(QWidget):
             delete_btn.setIcon(get_icon("ICON_DELETE"))
             delete_btn.setIconSize(QSize(30, 30))
             delete_btn.setFixedSize(30, 30)
-            delete_btn.setStyleSheet("QPushButton { background: transparent; border: none; }")
-            delete_btn.clicked.connect(lambda checked, pid=pubfileid: self._cancel_download(pid))
+            delete_btn.setStyleSheet(
+                "QPushButton { background: transparent; border: none; }"
+            )
+            delete_btn.clicked.connect(
+                lambda checked, pid=pubfileid: self._cancel_download(pid)
+            )
             bg_layout.addWidget(delete_btn)
 
         item_layout.addWidget(bg_container)
@@ -924,25 +984,24 @@ class WorkshopTab(QWidget):
 
     def _show_item_preview(self, pubfileid: str, widget: QWidget):
         preview_url = self._preview_url_cache.get(pubfileid)
-
         if not preview_url:
             cached_item = self.parser.get_cached_item(pubfileid)
             if cached_item and cached_item.preview_url:
                 preview_url = cached_item.preview_url
                 self._preview_url_cache[pubfileid] = preview_url
-
         if not preview_url and self._current_page_data:
             for page_item in self._current_page_data.items:
                 if page_item.pubfileid == pubfileid and page_item.preview_url:
                     preview_url = page_item.preview_url
                     self._preview_url_cache[pubfileid] = preview_url
                     break
-
-        global_pos = widget.mapToGlobal(QPoint(0, widget.height() // 2))
+        global_pos = widget.mapToGlobal(QPoint(-45, widget.height() // 2))
         self.preview_popup.show_preview(preview_url or "", global_pos)
 
     def _on_open_browser(self, pubfileid):
-        webbrowser.open(f"https://steamcommunity.com/sharedfiles/filedetails/?id={pubfileid}")
+        webbrowser.open(
+            f"https://steamcommunity.com/sharedfiles/filedetails/?id={pubfileid}"
+        )
 
     def _cancel_download(self, pubfileid: str):
         self.dm.cancel_download(pubfileid)
@@ -956,4 +1015,5 @@ class WorkshopTab(QWidget):
             self.parser.cleanup()
         ImageCache.instance().clear()
         self._preview_url_cache.clear()
+        self._file_size_cache.clear()
         self._clear_grid()
