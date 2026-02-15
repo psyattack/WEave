@@ -1,5 +1,5 @@
 from typing import Dict
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPropertyAnimation, QEasingCurve
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QLineEdit, QPushButton, QScrollArea, QFrame, QCheckBox
@@ -7,8 +7,67 @@ from PyQt6.QtWidgets import (
 from core.workshop_filters import FilterConfig, WorkshopFilters
 from resources.icons import get_icon
 
+class AnimatedContainer(QWidget):
+    height_changed = pyqtSignal()
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._animation = QPropertyAnimation(self, b"maximumHeight")
+        self._animation.setDuration(250)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._animation.valueChanged.connect(self._on_anim_value_changed)
+        self._expanded = False
+        self._content_height = 0
+        self.setMaximumHeight(0)
+        self._inner_layout = QVBoxLayout(self)
+        self._inner_layout.setContentsMargins(0, 0, 0, 0)
+        self._inner_layout.setSpacing(4)
+    
+    def set_content_widget(self, widget: QWidget):
+        self._inner_layout.addWidget(widget)
+    
+    def _recalc_content_height(self):
+        self._content_height = self._inner_layout.sizeHint().height()
+    
+    def _on_anim_value_changed(self):
+        self.height_changed.emit()
+    
+    def toggle(self, expand: bool):
+        if expand == self._expanded:
+            return
+        self._expanded = expand
+        self._recalc_content_height()
+        self._animation.stop()
+        self._animation.setStartValue(self.maximumHeight())
+        self._animation.setEndValue(self._content_height if expand else 0)
+        self._animation.start()
+    
+    def is_expanded(self) -> bool:
+        return self._expanded
+    
+    def snap_open(self):
+        self._expanded = True
+        self._recalc_content_height()
+        self.setMaximumHeight(self._content_height)
+    
+    def update_height(self):
+        if self._expanded:
+            self._recalc_content_height()
+            self.setMaximumHeight(self._content_height)
+    
+    def animate_height_change(self, height_delta: int, duration: int = 250):
+        if not self._expanded:
+            return
+        self._animation.stop()
+        current = self.maximumHeight()
+        self._animation.setStartValue(current)
+        self._animation.setEndValue(max(0, current + height_delta))
+        self._animation.setDuration(duration)
+        self._animation.start()
+
 class CompactFilterBar(QWidget):
     filters_changed = pyqtSignal(WorkshopFilters)
+    refresh_requested = pyqtSignal(WorkshopFilters)
     search_requested = pyqtSignal(str)
     
     def __init__(self, theme_manager, parent=None):
@@ -20,7 +79,7 @@ class CompactFilterBar(QWidget):
     
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(0, 0, 0, 10)
         main_layout.setSpacing(4)
         
         row1 = self._create_row1()
@@ -29,9 +88,10 @@ class CompactFilterBar(QWidget):
         row2 = self._create_row2()
         main_layout.addWidget(row2)
 
+        self.tags_animated = AnimatedContainer(self)
         self.tags_container = self._create_tags_section()
-        self.tags_container.hide()
-        main_layout.addWidget(self.tags_container)
+        self.tags_animated.set_content_widget(self.tags_container)
+        main_layout.addWidget(self.tags_animated)
     
     def _create_row1(self) -> QFrame:
         frame = QFrame()
@@ -109,7 +169,7 @@ class CompactFilterBar(QWidget):
                 background-color: rgba(78, 140, 255, 0.25);
             }
         """)
-        refresh_btn.clicked.connect(self._emit_filters)
+        refresh_btn.clicked.connect(self._on_refresh)
         layout.addWidget(refresh_btn)
         
         return frame
@@ -327,12 +387,9 @@ class CompactFilterBar(QWidget):
         """
     
     def _toggle_expanded(self):
-        if self.tags_container.isVisible():
-            self.tags_container.hide()
-            self.expand_btn.setText("▼ More Filters")
-        else:
-            self.tags_container.show()
-            self.expand_btn.setText("▲ Less Filters")
+        expanding = not self.tags_animated.is_expanded()
+        self.tags_animated.toggle(expanding)
+        self.expand_btn.setText("▲ Less Filters" if expanding else "▼ More Filters")
     
     def _on_sort_changed(self):
         is_trend = self.sort_combo.currentData() == "trend"
@@ -358,6 +415,10 @@ class CompactFilterBar(QWidget):
 
         self.incompatible_checkbox.setChecked(False)
         self._emit_filters()
+    
+    def _on_refresh(self):
+        filters = self.get_current_filters()
+        self.refresh_requested.emit(filters)
     
     def _emit_filters(self):
         filters = self.get_current_filters()
