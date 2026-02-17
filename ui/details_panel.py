@@ -95,29 +95,47 @@ class DetailsPanel(QWidget):
         layout.addWidget(self.buttons_widget)
 
     def _create_title_section(self, layout):
+        self.title_container = QWidget()
+        self.title_container.setObjectName("titleContainer")
+        self.title_container.setFixedHeight(80)
+        self.title_container.setStyleSheet("""
+            #titleContainer {
+                background-color: #1e1e2f;
+                border-radius: 12px;
+            }
+        """)
+
+        container_layout = QVBoxLayout(self.title_container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+
         self.title_scroll = QScrollArea()
+        self.title_scroll.setObjectName("titleScroll")
         self.title_scroll.setWidgetResizable(True)
         self.title_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.title_scroll.setMaximumHeight(80)
         self.title_scroll.setStyleSheet("""
-            QScrollArea {
+            #titleScroll {
                 border: none;
                 background: transparent;
+            }
+            QScrollBar:vertical {
+                width: 0px;
             }
         """)
 
         title_content = QWidget()
+        title_content.setStyleSheet("background: transparent; border: none;")
         title_layout = QHBoxLayout(title_content)
-        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setContentsMargins(5, 0, 5, 0)
 
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-weight: bold; font-size: 18px; color: white;")
+        self.title_label.setStyleSheet("font-weight: bold; font-size: 18px; color: white; background: transparent;")
         self.title_label.setWordWrap(True)
         self.title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         title_layout.addWidget(self.title_label)
 
         self.title_scroll.setWidget(title_content)
-        layout.addWidget(self.title_scroll)
+        container_layout.addWidget(self.title_scroll)
+        layout.addWidget(self.title_container)
 
     def _create_id_section(self, layout):
         self.id_label = QLabel()
@@ -169,6 +187,9 @@ class DetailsPanel(QWidget):
                 border: none;
                 border-left: none;
                 background: transparent;
+            }
+            QScrollBar:vertical {
+                width: 0px;
             }
         """)
 
@@ -764,6 +785,12 @@ class DetailsPanel(QWidget):
         if not self.folder_path:
             return
         self.we.apply_wallpaper(Path(self.folder_path) / "project.json")
+        
+        # Minimize window if setting is enabled
+        if self.config and self.config.get_minimize_on_apply():
+            window = self.window()
+            if window:
+                window.showMinimized()
 
     def _on_install_and_open(self):
         self._on_apply()

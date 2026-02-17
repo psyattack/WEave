@@ -57,7 +57,11 @@
     "language": "Язык:",
     "no_tasks": "Нет активных задач",
     "download_prefix": "Загрузка: {id}",
-    "extract_prefix": "Извлечение: {id}"
+    "extract_prefix": "Извлечение: {id}",
+    "other": "Прочее",
+    "minimize_on_apply": "Свернуть при установке",
+    "disabled": "Отключено",
+    "enabled": "Включено"
   },
   "messages": {
     "download_started": "Загрузка началась!",
@@ -95,7 +99,7 @@
     "exit": "Выход"
   },
   "info": {
-    "version": "WE Workshop Manager v1.1.8",
+    "version": "WE Workshop Manager v1.2.0",
     "description": "Это приложение позволяет легко загружать и управлять обоями Wallpaper Engine из Steam Мастерской.",
     "developed": "Разработано с ❤️ бесплатно."
   }

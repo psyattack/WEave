@@ -5,9 +5,10 @@ from typing import Any
 class ConfigManager:
     DEFAULT_CONFIG = {
         "directory": "",
-        "account_number": 1,
+        "account_number": 4,
         "theme": "dark",
-        "language": "en"
+        "language": "en",
+        "minimize_on_apply": False
     }
     
     def __init__(self, config_path: str = "config.json"):
@@ -87,3 +88,9 @@ class ConfigManager:
     
     def set_language(self, lang: str) -> None:
         self.set("language", lang)
+    
+    def get_minimize_on_apply(self) -> bool:
+        return self.get("minimize_on_apply", False)
+    
+    def set_minimize_on_apply(self, value: bool) -> None:
+        self.set("minimize_on_apply", value)

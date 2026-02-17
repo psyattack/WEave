@@ -65,10 +65,10 @@ class ModernSettingsPopup(QWidget):
         self._setup_ui()
     
     def _setup_ui(self):
-        self.setFixedSize(360, 340)
+        self.setFixedSize(360, 460)
 
         container = QFrame(self)
-        container.setGeometry(0, 0, 360, 340)
+        container.setGeometry(0, 0, 360, 460)
         container.setStyleSheet(f"""
             QFrame {{
                 background-color: {self.theme.get_color('bg_elevated')};
@@ -118,6 +118,8 @@ class ModernSettingsPopup(QWidget):
         
         self._add_section(layout, "🌍 Language", self._create_language_combo())
         
+        self._add_section(layout, "⚙️ Other: " + self.tr.t("labels.minimize_on_apply"), self._create_minimize_combo())
+        
         layout.addStretch()
     
     def _add_section(self, layout, title, widget):
@@ -156,6 +158,14 @@ class ModernSettingsPopup(QWidget):
         combo.addItems(["English", "Русский"])
         combo.setCurrentIndex(0 if self.config.get_language() == "en" else 1)
         combo.currentIndexChanged.connect(self._on_language_changed)
+        combo.setStyleSheet(self._combo_style())
+        return combo
+    
+    def _create_minimize_combo(self):
+        combo = QComboBox()
+        combo.addItems([self.tr.t("labels.disabled"), self.tr.t("labels.enabled")])
+        combo.setCurrentIndex(1 if self.config.get_minimize_on_apply() else 0)
+        combo.currentIndexChanged.connect(self._on_minimize_changed)
         combo.setStyleSheet(self._combo_style())
         return combo
     
@@ -219,3 +229,7 @@ class ModernSettingsPopup(QWidget):
             "Language Changed",
             "Please restart the application for language changes to take effect."
         )
+    
+    def _on_minimize_changed(self, index):
+        value = index == 1
+        self.config.set_minimize_on_apply(value)
