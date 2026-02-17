@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List
 
-
 @dataclass
 class FilterConfig:
     """Complete filter configuration for Workshop"""
@@ -101,6 +100,18 @@ class FilterConfig:
         "Space": "Space"
     }
 
+    SCRIPT_TYPES = {
+        "": "Any",
+        "Boolean": "Boolean",
+        "Number": "Number",
+        "Vec2": "Vec2",
+        "Vec3": "Vec3",
+        "Vec4": "Vec4",
+        "String": "String",
+        "No Animation": "No Animation",
+        "Oversized": "Oversized"
+    }
+
 @dataclass
 class WorkshopFilters:
 
@@ -113,8 +124,11 @@ class WorkshopFilters:
     resolution: str = ""
     misc_tags: List[str] = field(default_factory=list)
     genre_tags: List[str] = field(default_factory=list)
+    excluded_misc_tags: List[str] = field(default_factory=list)
+    excluded_genre_tags: List[str] = field(default_factory=list)
     asset_type: str = ""
     asset_genre: str = ""
+    script_type: str = ""
     required_flags: List[str] = field(default_factory=list)
     page: int = 1
     
@@ -158,11 +172,17 @@ class WorkshopFilters:
             all_tags.append(self.asset_type)
         if self.asset_genre:
             all_tags.append(self.asset_genre)
+        if self.script_type:
+            all_tags.append(self.script_type)
         all_tags.extend(self.misc_tags)
         all_tags.extend(self.genre_tags)
         
         for tag in all_tags:
             parts.append(f"requiredtags[]={tag}")
+        
+        excluded_tags = list(self.excluded_misc_tags) + list(self.excluded_genre_tags)
+        for tag in excluded_tags:
+            parts.append(f"excludedtags[]={tag}")
         
         for flag in self.required_flags:
             parts.append(f"requiredflags[]={flag}")

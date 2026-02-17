@@ -65,6 +65,69 @@ class AnimatedContainer(QWidget):
         self._animation.setDuration(duration)
         self._animation.start()
 
+class StateTagCheckBox(QCheckBox):
+    state_changed_tri = pyqtSignal()
+
+    def __init__(self, text: str, theme_manager, parent=None):
+        super().__init__(text, parent)
+        self.theme = theme_manager
+        self._tri_state = 0
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._on_right_click)
+        self._apply_style()
+
+    def _apply_style(self):
+        if self._tri_state == 2:
+            bg = "#c0392b"
+            border = "#c0392b"
+        elif self._tri_state == 1:
+            bg = self.theme.get_color('primary')
+            border = self.theme.get_color('primary')
+        else:
+            bg = self.theme.get_color('bg_tertiary')
+            border = self.theme.get_color('border')
+        self.setStyleSheet(f"""
+            QCheckBox {{
+                color: {self.theme.get_color('text_primary')};
+                font-size: 10px;
+                spacing: 3px;
+            }}
+            QCheckBox::indicator {{
+                width: 12px; height: 12px;
+                border-radius: 2px;
+                border: 1px solid {border};
+                background: {bg};
+            }}
+        """)
+
+    def nextCheckState(self):
+        if self._tri_state == 0:
+            self._tri_state = 1
+            self.setChecked(True)
+        else:
+            self._tri_state = 0
+            self.setChecked(False)
+        self._apply_style()
+        self.state_changed_tri.emit()
+
+    def _on_right_click(self):
+        if self._tri_state == 2:
+            self._tri_state = 0
+            self.setChecked(False)
+        else:
+            self._tri_state = 2
+            self.setChecked(True)
+        self._apply_style()
+        self.state_changed_tri.emit()
+
+    def tri_state(self) -> int:
+        return self._tri_state
+
+    def reset(self):
+        self._tri_state = 0
+        self.setChecked(False)
+        self._apply_style()
+
 class CompactFilterBar(QWidget):
     filters_changed = pyqtSignal(WorkshopFilters)
     refresh_requested = pyqtSignal(WorkshopFilters)
@@ -229,57 +292,87 @@ class CompactFilterBar(QWidget):
         layout.setContentsMargins(10, 4, 10, 4)
         layout.setSpacing(4)
 
+        combo_frame = QFrame()
+        combo_layout = QHBoxLayout(combo_frame)
+        combo_layout.setContentsMargins(0, 0, 0, 0)
+        combo_layout.setSpacing(10)
+
+        combo_layout.addWidget(self._label("Asset Type:"))
+        self.asset_type_combo = self._create_combo(self.config.ASSET_TYPES, 110)
+        self.asset_type_combo.currentTextChanged.connect(self._emit_filters)
+        combo_layout.addWidget(self.asset_type_combo)
+
+        combo_layout.addWidget(self._label("Asset Genre:"))
+        self.asset_genre_combo = self._create_combo(self.config.ASSET_GENRES, 130)
+        self.asset_genre_combo.currentTextChanged.connect(self._emit_filters)
+        combo_layout.addWidget(self.asset_genre_combo)
+
+        combo_layout.addWidget(self._label("Script Type:"))
+        self.script_type_combo = self._create_combo(self.config.SCRIPT_TYPES, 120)
+        self.script_type_combo.currentTextChanged.connect(self._emit_filters)
+        combo_layout.addWidget(self.script_type_combo)
+
+        combo_layout.addStretch()
+        layout.addWidget(combo_frame)
+
         misc_frame = QFrame()
         misc_layout = QHBoxLayout(misc_frame)
         misc_layout.setContentsMargins(0, 0, 0, 0)
         misc_layout.setSpacing(6)
-        misc_layout.addWidget(self._label("Features:", bold=True))
+        misc_layout.addWidget(self._label("Miscellaneous:", bold=True))
+
+        misc_scroll = QScrollArea()
+        misc_scroll.setWidgetResizable(True)
+        misc_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        misc_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        misc_scroll.setFixedHeight(26)
+        misc_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        misc_content = QWidget()
+        misc_content_layout = QHBoxLayout(misc_content)
+        misc_content_layout.setContentsMargins(0, 0, 0, 0)
+        misc_content_layout.setSpacing(4)
         self.misc_checkboxes = {}
-        for tag in self.config.MISC_TAGS[:6]:
-            cb = QCheckBox(tag)
-            cb.setStyleSheet(self._checkbox_style())
-            cb.stateChanged.connect(self._emit_filters)
+        for tag in self.config.MISC_TAGS:
+            cb = StateTagCheckBox(tag, self.theme)
+            cb.state_changed_tri.connect(self._emit_filters)
             self.misc_checkboxes[tag] = cb
-            misc_layout.addWidget(cb)
-        misc_layout.addStretch()
+            misc_content_layout.addWidget(cb)
+        misc_scroll.setWidget(misc_content)
+        misc_layout.addWidget(misc_scroll, 1)
         layout.addWidget(misc_frame)
         
         genre_frame = QFrame()
         genre_layout = QHBoxLayout(genre_frame)
         genre_layout.setContentsMargins(0, 0, 0, 0)
         genre_layout.setSpacing(6)
-        
         genre_layout.addWidget(self._label("Genre:", bold=True))
-        
+
         genre_scroll = QScrollArea()
         genre_scroll.setWidgetResizable(True)
         genre_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         genre_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         genre_scroll.setFixedHeight(26)
         genre_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-        
         genre_content = QWidget()
         genre_content_layout = QHBoxLayout(genre_content)
         genre_content_layout.setContentsMargins(0, 0, 0, 0)
         genre_content_layout.setSpacing(4)
-        
         self.genre_checkboxes = {}
         for tag in self.config.GENRE_TAGS:
-            cb = QCheckBox(tag)
-            cb.setStyleSheet(self._checkbox_style())
-            cb.stateChanged.connect(self._emit_filters)
+            cb = StateTagCheckBox(tag, self.theme)
+            cb.state_changed_tri.connect(self._emit_filters)
             self.genre_checkboxes[tag] = cb
             genre_content_layout.addWidget(cb)
-        
         genre_scroll.setWidget(genre_content)
         genre_layout.addWidget(genre_scroll, 1)
-        
         layout.addWidget(genre_frame)
+
 
         incompatible_frame = QFrame()
         incompatible_layout = QHBoxLayout(incompatible_frame)
         incompatible_layout.setContentsMargins(0, 0, 0, 0)
         incompatible_layout.setSpacing(6)
+        incompatible_layout.addWidget(self._label("Other:", bold=True))
         
         self.incompatible_checkbox = QCheckBox("Incompatible items")
         self.incompatible_checkbox.setStyleSheet(self._checkbox_style())
@@ -409,9 +502,13 @@ class CompactFilterBar(QWidget):
         self.resolution_combo.setCurrentIndex(0)
         
         for cb in self.misc_checkboxes.values():
-            cb.setChecked(False)
+            cb.reset()
         for cb in self.genre_checkboxes.values():
-            cb.setChecked(False)
+            cb.reset()
+
+        self.asset_type_combo.setCurrentIndex(0)
+        self.asset_genre_combo.setCurrentIndex(0)
+        self.script_type_combo.setCurrentIndex(0)
 
         self.incompatible_checkbox.setChecked(False)
         self._emit_filters()
@@ -425,8 +522,10 @@ class CompactFilterBar(QWidget):
         self.filters_changed.emit(filters)
     
     def get_current_filters(self) -> WorkshopFilters:
-        misc_tags = [tag for tag, cb in self.misc_checkboxes.items() if cb.isChecked()]
-        genre_tags = [tag for tag, cb in self.genre_checkboxes.items() if cb.isChecked()]
+        misc_tags = [t for t, cb in self.misc_checkboxes.items() if cb.tri_state() == 1]
+        excluded_misc = [t for t, cb in self.misc_checkboxes.items() if cb.tri_state() == 2]
+        genre_tags = [t for t, cb in self.genre_checkboxes.items() if cb.tri_state() == 1]
+        excluded_genre = [t for t, cb in self.genre_checkboxes.items() if cb.tri_state() == 2]
         
         required_flags = []
         if self.incompatible_checkbox.isChecked():
@@ -442,6 +541,11 @@ class CompactFilterBar(QWidget):
             resolution=self.resolution_combo.currentData() or "",
             misc_tags=misc_tags,
             genre_tags=genre_tags,
+            excluded_misc_tags=excluded_misc,
+            excluded_genre_tags=excluded_genre,
+            asset_type=self.asset_type_combo.currentData() or "",
+            asset_genre=self.asset_genre_combo.currentData() or "",
+            script_type=self.script_type_combo.currentData() or "",
             required_flags=required_flags,
             page=self._current_filters.page
         )
