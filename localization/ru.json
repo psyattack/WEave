@@ -93,8 +93,11 @@
     "search_placeholder": "Поиск...",
     "id_url_placeholder": "ID, URL...",
     "account": "Аккаунт",
-    "dark": "🌙 Тёмная",
-    "light": "☀️ Светлая",
+    "dark": "Dark",
+    "light": "Light",
+    "nord": "Nord",
+    "monokai": "Monokai",
+    "solarized": "Solarized",
     "translating": "⏳ Перевод..."
   },
   "messages": {
@@ -135,7 +138,9 @@
     "restart_now_question": "Перезапустить приложение сейчас для применения языка?",
     "restart_with_tasks": "У вас есть незавершённые загрузки или извлечения.\nПри перезапуске они будут отменены.\nПродолжить?",
     "restart_with_downloads_only": "У вас есть незавершённые загрузки.\nПри перезапуске они будут отменены.\nПродолжить?",
-    "restart_with_extractions_only": "У вас есть незавершённые извлечения.\nПри перезапуске они будут отменены.\nПродолжить?"
+    "restart_with_extractions_only": "У вас есть незавершённые извлечения.\nПри перезапуске они будут отменены.\nПродолжить?",
+    "restart_title": "Требуется перезагрузка",
+    "restart_theme_message": "Тема будет применена после перезагрузки. Перезапустить сейчас?"
   },
   "dialog": {
     "notification": "Уведомление",
@@ -151,13 +156,24 @@
   },
   "settings": {
     "title": "НАСТРОЙКИ",
-    "theme_dev": "🎨 Тема (В разработке)",
+    "theme_dev": "🎨 Тема",
     "account": "👤 Аккаунт",
     "language": "🌍 Язык",
-    "other": "⚙️ Прочее"
+    "other": "⚙️ Прочее",
+    "steam_login": "🔐 Вход в Steam",
+    "current_status": "Текущий статус:",
+    "login_placeholder": "Логин",
+    "password_placeholder": "Пароль",
+    "login_button": "Войти",
+    "reset_button": "Сбросить",
+    "restart_required": "Требуется перезапуск",
+    "restart_message": "Приложение будет перезапущено для применения изменений.",
+    "login_success": "Вход выполнен! Приложение будет перезапущено.",
+    "reset_success": "Аккаунт сброшен на System.",
+    "fill_all_fields": "Пожалуйста, заполните все поля."
   },
   "info": {
-    "version": "WE Workshop Manager v1.2.4",
+    "version": "WE Workshop Manager v1.3.0",
     "description": "Это приложение позволяет легко загружать и управлять обоями Wallpaper Engine из Steam Мастерской.",
     "developed": "Разработано с ❤️ бесплатно."
   },

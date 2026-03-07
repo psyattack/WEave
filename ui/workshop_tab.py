@@ -1,7 +1,6 @@
 import weakref
 import webbrowser
 from typing import Optional, List, Dict
-
 from PyQt6.QtCore import (
     Qt, QTimer, pyqtSignal, QSize, QEvent, QPoint, QByteArray,
     QBuffer, QIODevice, QPropertyAnimation, QRectF, pyqtProperty
@@ -11,7 +10,6 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QScrollArea, QGridLayout, QFrame, QSplitter, QSizePolicy, QLineEdit,
 )
-
 from core.image_cache import ImageCache
 from core.workshop_parser import WorkshopParser, WorkshopItem, WorkshopPage
 from core.workshop_filters import WorkshopFilters
@@ -21,7 +19,7 @@ from ui.grid_items import (
     parse_file_size_to_bytes,
 )
 from ui.details_panel import DetailsPanel
-from ui.custom_widgets import NotificationLabel
+from ui.notifications import NotificationLabel
 from resources.icons import get_icon
 
 class ToggleSwitch(QWidget):
@@ -36,6 +34,16 @@ class ToggleSwitch(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._animation = QPropertyAnimation(self, b"handlePos")
         self._animation.setDuration(150)
+
+    def _get_primary_color(self) -> str:
+        if self.theme:
+            return self.theme.get_color('primary')
+        return '#4A7FD9'
+
+    def _get_bg_color(self) -> str:
+        if self.theme:
+            return self.theme.get_color('bg_tertiary')
+        return '#252938'
 
     def get_handle_pos(self):
         return self._handle_pos
@@ -62,9 +70,9 @@ class ToggleSwitch(QWidget):
         w, h = self.width(), self.height()
         radius = h / 2
         if self._checked:
-            bg_color = QColor(self.theme.get_color('primary'))
+            bg_color = QColor(self._get_primary_color())
         else:
-            bg_color = QColor(self.theme.get_color('bg_tertiary'))
+            bg_color = QColor(self._get_bg_color())
         p.setBrush(bg_color)
         p.setPen(Qt.PenStyle.NoPen)
         p.drawRoundedRect(QRectF(0, 0, w, h), radius, radius)
@@ -240,10 +248,10 @@ class PreviewPopup(QWidget):
     def _show_error(self, message: str):
         self._stop_current_movie()
         self.preview_label.setText(message)
-        self.preview_label.setStyleSheet("""
+        self.preview_label.setStyleSheet(f"""
             background: transparent;
             border: none;
-            color: #888;
+            color: {self.theme.get_color('text_disabled')};
             font-size: 11px;
         """)
 
@@ -371,11 +379,11 @@ class WorkshopTab(QWidget):
         self.filter_bar = CompactFilterBar(self.theme, self.tr, self)
         self.filter_bar.filters_changed.connect(self._on_filters_changed)
         self.filter_bar.refresh_requested.connect(self._on_refresh_requested)
-        
+
         self.filter_animated = AnimatedContainer(self)
         self.filter_animated.set_content_widget(self.filter_bar)
         layout.addWidget(self.filter_animated)
-        
+
         self.filter_bar.tags_animated.height_changed.connect(
             self.filter_animated.update_height
         )
@@ -665,7 +673,7 @@ class WorkshopTab(QWidget):
         columns = self._calculate_columns()
         item_size = self._calculate_item_size(columns)
         for i in range(30):
-            skeleton = SkeletonGridItem(item_size, self)
+            skeleton = SkeletonGridItem(item_size, self.theme, self)
             self.grid_layout.addWidget(skeleton, i // columns, i % columns)
             self.skeleton_items.append(skeleton)
 
@@ -702,6 +710,7 @@ class WorkshopTab(QWidget):
                 title=item_data.title,
                 preview_url=item_data.preview_url,
                 item_size=item_size,
+                theme_manager=self.theme,
                 parent=self,
             )
 
@@ -854,6 +863,9 @@ class WorkshopTab(QWidget):
         self.downloads_popup.move(button_pos.x() - 90, button_pos.y())
         self.downloads_popup.show()
 
+    def hide_downloads_popup(self):
+        self.downloads_popup.hide()
+
     def _on_downloads_popup_show(self, event):
         self.downloads_update_timer.start()
         self._update_downloads_list()
@@ -889,10 +901,10 @@ class WorkshopTab(QWidget):
         if not all_tasks:
             label = QLabel(self.tr.t("labels.no_tasks"))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            label.setStyleSheet("""
-                color: white;
+            label.setStyleSheet(f"""
+                color: {self.theme.get_color('text_primary')};
                 font-size: 14px;
-                background-color: rgba(0, 0, 0, 200);
+                background-color: {self.theme.get_color('overlay')};
                 padding: 8px 12px;
                 border-radius: 6px;
             """)
@@ -912,16 +924,17 @@ class WorkshopTab(QWidget):
         item_layout.setContentsMargins(0, 0, 0, 0)
 
         bg_container = QWidget()
-        bg_container.setStyleSheet(
-            "background-color: rgba(0, 0, 0, 200); border-radius: 6px;"
-        )
+        bg_container.setStyleSheet(f"""
+            background-color: {self.theme.get_color('overlay')};
+            border-radius: 6px;
+        """)
 
         bg_layout = QHBoxLayout(bg_container)
         bg_layout.setContentsMargins(6, 6, 8, 6)
         bg_layout.setSpacing(8)
 
         mini_progress = SmallCircularProgress(
-            size=40, line_width=3, parent=bg_container
+            size=40, line_width=3, theme_manager=self.theme, parent=bg_container
         )
         status_text = info.get("status", "")
         file_size_bytes = self._file_size_cache.get(pubfileid, 0)
@@ -938,7 +951,11 @@ class WorkshopTab(QWidget):
         text = f"<b>{prefix}</b><br><small>{display_status}</small>"
 
         text_label = QLabel(text)
-        text_label.setStyleSheet("color: white; font-size: 13px; background: none")
+        text_label.setStyleSheet(f"""
+            color: {self.theme.get_color('text_primary')};
+            font-size: 13px;
+            background: none;
+        """)
         text_label.setTextFormat(Qt.TextFormat.RichText)
         text_label.setWordWrap(True)
         text_label.setFixedSize(165, 50)
