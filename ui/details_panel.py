@@ -12,21 +12,21 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QScrollArea, QMessageBox, QFileDialog, QApplication
 )
-from ui.custom_widgets import NotificationLabel
+from ui.notifications import NotificationLabel
 from resources.icons import get_icon
 from utils.helpers import human_readable_size, format_timestamp, get_directory_size, get_folder_mtime
 from core.image_cache import ImageCache
 from utils.translation_helper import DescriptionTranslator
 
 class TranslationWorker(QThread):
-    finished = pyqtSignal(str, str)  # original_text, translated_text
-    error = pyqtSignal(str)  # error_message
-    
+    finished = pyqtSignal(str, str)
+    error = pyqtSignal(str)
+
     def __init__(self, text: str, target_lang: str, parent=None):
         super().__init__(parent)
         self.text = text
         self.target_lang = target_lang
-    
+
     def run(self):
         try:
             translated = DescriptionTranslator.translate(self.text, self.target_lang)
@@ -38,7 +38,6 @@ class TranslationWorker(QThread):
             self.error.emit(str(e))
 
 class DetailsPanel(QWidget):
-
     MODE_NONE = 0
     MODE_INSTALLED = 1
     MODE_WORKSHOP = 2
@@ -63,7 +62,7 @@ class DetailsPanel(QWidget):
         self._temp_gif_file: Optional[str] = None
 
         self._project_data: dict = {}
-        
+
         self._original_description: str = ""
         self._translated_description: str = ""
         self._is_translated: bool = False
@@ -85,11 +84,11 @@ class DetailsPanel(QWidget):
         self.preview_label = QLabel()
         self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setFixedSize(310, 275)
-        self.preview_label.setStyleSheet("""
-            QLabel {
-                background-color: #2c2f48;
+        self.preview_label.setStyleSheet(f"""
+            QLabel {{
+                background-color: {self.theme.get_color('bg_tertiary')};
                 border-radius: 8px;
-            }
+            }}
         """)
         main_layout.addWidget(self.preview_label)
 
@@ -98,11 +97,11 @@ class DetailsPanel(QWidget):
         self._create_id_section(main_layout)
         self._create_details_section(main_layout)
 
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #1e1e2f;
-                border-left: 1px solid #3c3f58;
-            }
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.theme.get_color('bg_secondary')};
+                border-left: 1px solid {self.theme.get_color('border')};
+            }}
         """)
 
     def _create_action_buttons(self, layout):
@@ -117,11 +116,11 @@ class DetailsPanel(QWidget):
         self.title_container = QWidget()
         self.title_container.setObjectName("titleContainer")
         self.title_container.setFixedHeight(80)
-        self.title_container.setStyleSheet("""
-            #titleContainer {
-                background-color: #1e1e2f;
+        self.title_container.setStyleSheet(f"""
+            #titleContainer {{
+                background-color: {self.theme.get_color('bg_secondary')};
                 border-radius: 12px;
-            }
+            }}
         """)
 
         container_layout = QVBoxLayout(self.title_container)
@@ -147,7 +146,12 @@ class DetailsPanel(QWidget):
         title_layout.setContentsMargins(5, 0, 5, 0)
 
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-weight: bold; font-size: 18px; color: white; background: transparent;")
+        self.title_label.setStyleSheet(f"""
+            font-weight: bold;
+            font-size: 18px;
+            color: {self.theme.get_color('text_primary')};
+            background: transparent;
+        """)
         self.title_label.setWordWrap(True)
         self.title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         title_layout.addWidget(self.title_label)
@@ -158,17 +162,17 @@ class DetailsPanel(QWidget):
 
     def _create_id_section(self, layout):
         self.id_label = QLabel()
-        self.id_label.setStyleSheet("""
-            QLabel {
-                color: #a3a3a3;
+        self.id_label.setStyleSheet(f"""
+            QLabel {{
+                color: {self.theme.get_color('text_secondary')};
                 font-size: 14px;
-                background-color: #1e1e2f;
+                background-color: {self.theme.get_color('bg_secondary')};
                 padding: 4px 8px;
                 border-radius: 8px;
-            }
-            QLabel:hover {
-                background-color: rgba(78, 140, 255, 0.25);
-            }
+            }}
+            QLabel:hover {{
+                background-color: {self.theme.get_color('primary')};
+            }}
         """)
         self.id_label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.id_label.mousePressEvent = self._on_id_clicked
@@ -177,16 +181,16 @@ class DetailsPanel(QWidget):
     def _create_details_section(self, layout):
         self.details_container = QWidget()
         self.details_container.setObjectName("detailsContainer")
-        self.details_container.setStyleSheet("""
-            #detailsContainer {
-                background-color: #1e1e2f;
+        self.details_container.setStyleSheet(f"""
+            #detailsContainer {{
+                background-color: {self.theme.get_color('bg_secondary')};
                 border-radius: 8px;
-            }
-            #detailsContainer * {
+            }}
+            #detailsContainer * {{
                 border: none;
                 border-left: none;
                 border-radius: 0px;
-            }
+            }}
         """)
 
         container_layout = QVBoxLayout(self.details_container)
@@ -232,7 +236,6 @@ class DetailsPanel(QWidget):
 
     @staticmethod
     def _star_file_to_text(rating_star_file: str) -> str:
-        """'4-star_large' → '★★★★☆'"""
         mapping = {
             "5-star_large": "★★★★★",
             "4-star_large": "★★★★☆",
@@ -312,7 +315,7 @@ class DetailsPanel(QWidget):
         self._reset_preview()
         self._clear_details()
         self._clear_buttons()
-        
+
         if self._translation_worker and self._translation_worker.isRunning():
             self._translation_worker.terminate()
             self._translation_worker = None
@@ -320,7 +323,7 @@ class DetailsPanel(QWidget):
         self._current_item = None
         self._current_preview_url = ""
         self._project_data = {}
-        
+
         self._original_description = ""
         self._translated_description = ""
         self._is_translated = False
@@ -349,13 +352,13 @@ class DetailsPanel(QWidget):
         self._stop_movie()
         self.preview_label.clear()
         self.preview_label.setText("⏳")
-        self.preview_label.setStyleSheet("""
-            QLabel {
-                background-color: #2c2f48;
+        self.preview_label.setStyleSheet(f"""
+            QLabel {{
+                background-color: {self.theme.get_color('bg_tertiary')};
                 border-radius: 8px;
-                color: #6B6E7C;
+                color: {self.theme.get_color('text_disabled')};
                 font-size: 32px;
-            }
+            }}
         """)
 
     def _clear_buttons(self):
@@ -370,7 +373,12 @@ class DetailsPanel(QWidget):
             if child and child.widget():
                 child.widget().deleteLater()
 
-    def _create_icon_button(self, icon_name, tooltip, callback, color='#4e8cff', hover_color='#6ea4ff'):
+    def _create_icon_button(self, icon_name, tooltip, callback, color=None, hover_color=None):
+        if color is None:
+            color = self.theme.get_color('primary')
+        if hover_color is None:
+            hover_color = self.theme.get_color('primary_hover')
+
         btn = QPushButton()
         btn.setToolTip(tooltip)
         btn.setFixedSize(43, 35)
@@ -396,18 +404,18 @@ class DetailsPanel(QWidget):
         btn.setIconSize(QSize(24, 24))
         btn.setFixedSize(150, 35)
         btn.setText(text)
-        btn.setStyleSheet("""
-            QPushButton {
-                background-color: rgba(78, 140, 255, 0.1);
-                color: white;
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self.theme.get_color('primary')};
+                color: {self.theme.get_color('text_primary')};
                 border-radius: 10px;
                 font-weight: bold;
                 font-size: 14px;
                 border: none;
-            }
-            QPushButton:hover {
-                background-color: rgba(78, 140, 255, 0.25);
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {self.theme.get_color('primary')};
+            }}
         """)
         btn.clicked.connect(callback)
         return btn
@@ -423,7 +431,8 @@ class DetailsPanel(QWidget):
         ))
         self.buttons_layout.addWidget(self._create_icon_button(
             "ICON_DELETE", self.tr.t("tooltips.delete_wallpaper"), self._on_delete,
-            color='#ff5c5c', hover_color='#ff7c7c'
+            color=self.theme.get_color('accent_red'),
+            hover_color=self.theme.get_color('accent_red_hover')
         ))
         self.buttons_layout.addWidget(self._create_icon_button(
             "ICON_DOWNLOAD", self.tr.t("tooltips.extract_wallpaper"), self._on_extract
@@ -448,7 +457,12 @@ class DetailsPanel(QWidget):
 
     def _add_detail_label(self, text: str, icon: str = ""):
         label = QLabel(f"{icon} {text}" if icon else text)
-        label.setStyleSheet("color: #a3a3a3; font-size: 14px; background: transparent; border: none;")
+        label.setStyleSheet(f"""
+            color: {self.theme.get_color('text_secondary')};
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
         label.setWordWrap(True)
         self.details_layout.addWidget(label)
         return label
@@ -456,123 +470,141 @@ class DetailsPanel(QWidget):
     def _add_separator(self):
         separator = QWidget()
         separator.setFixedHeight(1)
-        separator.setStyleSheet("background-color: #3c3f58; border: none;")
+        separator.setStyleSheet(f"background-color: {self.theme.get_color('border')}; border: none;")
         self.details_layout.addWidget(separator)
 
     def _add_section_title(self, text: str):
         label = QLabel(text)
-        label.setStyleSheet("font-weight: bold; color: white; font-size: 14px; background: transparent; border: none;")
+        label.setStyleSheet(f"""
+            font-weight: bold;
+            color: {self.theme.get_color('text_primary')};
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
         self.details_layout.addWidget(label)
         return label
 
     def _add_description_label(self, text: str):
         label = QLabel(text)
-        label.setStyleSheet("color: #dcdcdc; font-size: 13px; line-height: 1.4; background: transparent; border: none;")
+        label.setStyleSheet(f"""
+            color: {self.theme.get_color('text_primary')};
+            font-size: 13px;
+            line-height: 1.4;
+            background: transparent;
+            border: none;
+        """)
         label.setWordWrap(True)
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.details_layout.addWidget(label)
         return label
-    
+
     def _add_description_section(self, description: str):
         self._original_description = description if description else ""
         self._translated_description = ""
         self._is_translated = False
-        
+
         header_widget = QWidget()
         header_widget.setStyleSheet("background: transparent; border: none;")
         header_layout = QHBoxLayout(header_widget)
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.setSpacing(8)
-        
+
         title_label = QLabel(self.tr.t("labels.description"))
-        title_label.setStyleSheet("font-weight: bold; color: white; font-size: 14px; background: transparent; border: none;")
+        title_label.setStyleSheet(f"""
+            font-weight: bold;
+            color: {self.theme.get_color('text_primary')};
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
         header_layout.addWidget(title_label)
-        
+
         if description and description.strip():
             self._translate_button = QPushButton()
             self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
             self._translate_button.setFixedSize(22, 22)
             self._translate_button.setIcon(get_icon("ICON_TRANSLATE"))
             self._translate_button.setIconSize(QSize(21, 21))
-            self._translate_button.setStyleSheet("""
-                QPushButton {
+            self._translate_button.setStyleSheet(f"""
+                QPushButton {{
                     background-color: transparent;
                     border-radius: 6px;
                     border: none;
-                }
-                QPushButton:hover {
-                    background-color: rgba(78, 140, 255, 0.3);
-                }
+                }}
+                QPushButton:hover {{
+                    background-color: {self.theme.get_color('primary')}4D;
+                }}
             """)
             self._translate_button.clicked.connect(self._on_translate_clicked)
             header_layout.addWidget(self._translate_button)
-        
+
         header_layout.addStretch()
         self.details_layout.addWidget(header_widget)
-        
+
         display_text = description if description else self.tr.t("labels.no_description")
         self._description_label = self._add_description_label(display_text)
-    
+
     def _on_translate_clicked(self):
         if not self._original_description:
             return
-        
+
         if self._is_translated:
             self._description_label.setText(self._original_description)
             self._is_translated = False
             if self._translate_button:
                 self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
             return
-        
+
         if self._translated_description:
             self._description_label.setText(self._translated_description)
             self._is_translated = True
             if self._translate_button:
                 self._translate_button.setToolTip(self.tr.t("tooltips.show_original"))
             return
-        
+
         target_lang = self.tr.get_language()
-        
+
         if self._translation_worker and self._translation_worker.isRunning():
             self._translation_worker.terminate()
-        
+
         self._translation_worker = TranslationWorker(self._original_description, target_lang)
         self._translation_worker.finished.connect(self._on_translation_finished)
         self._translation_worker.error.connect(self._on_translation_error)
-        
+
         if self._translate_button:
             self._translate_button.setEnabled(False)
         self._description_label.setText(self.tr.t("labels.translating"))
-        
+
         self._translation_worker.start()
-    
+
     def _on_translation_finished(self, original: str, translated: str):
         if original != self._original_description:
             return
-        
+
         self._translated_description = translated
         self._is_translated = True
-        
+
         if self._description_label:
             self._description_label.setText(translated)
-        
+
         if self._translate_button:
             self._translate_button.setEnabled(True)
             self._translate_button.setToolTip(self.tr.t("tooltips.show_original"))
-        
+
         self._translation_worker = None
-    
+
     def _on_translation_error(self, error_msg: str):
         print(f"[DetailsPanel] Translation error: {error_msg}")
-        
+
         if self._description_label:
             self._description_label.setText(self._original_description)
-        
+
         if self._translate_button:
             self._translate_button.setEnabled(True)
             self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
-        
+
         self._show_notification(self.tr.t("messages.translation_error"))
         self._translation_worker = None
 
@@ -598,7 +630,7 @@ class DetailsPanel(QWidget):
     def _translate_single_tag_value(self, key: str, value: str) -> str:
         if not value:
             return value
-        
+
         value_mappings = {
             "Type": "filters.type",
             "Resolution": "filters.resolution",
@@ -609,7 +641,7 @@ class DetailsPanel(QWidget):
             "Asset Genre": "filters.asset_genre",
             "Genre": "filters.genre_tags",
         }
-        
+
         if key in value_mappings:
             base_path = value_mappings[key]
             translated = self.tr.t(f"{base_path}.{value}")
@@ -624,28 +656,27 @@ class DetailsPanel(QWidget):
                 translated = self.tr.t(f"{base_path}.empty")
                 if translated != f"{base_path}.empty":
                     return translated
-        
+
         translated = self.tr.t(f"filters.content_descriptors.{value}")
         if translated != f"filters.content_descriptors.{value}":
             return translated
-        
+
         for tag_type in ["misc_tags", "genre_tags"]:
             translated = self.tr.t(f"filters.{tag_type}.{value}")
             if translated != f"filters.{tag_type}.{value}":
                 return translated
-        
+
         return value
 
     def _translate_tag_value(self, key: str, value: str) -> str:
-        """Translate tag value, handling comma-separated lists."""
         if not value:
             return value
-        
+
         if "," in value:
             items = [item.strip() for item in value.split(",")]
             translated_items = [self._translate_single_tag_value(key, item) for item in items]
             return ", ".join(translated_items)
-        
+
         return self._translate_single_tag_value(key, value)
 
     def _setup_installed_details(self):
@@ -658,7 +689,7 @@ class DetailsPanel(QWidget):
         self._add_detail_label(self.tr.t("labels.installed", date=format_timestamp(mtime)), "📅")
 
         self._add_separator()
-        
+
         description = self._project_data.get("description", "")
         self._add_description_section(description)
 
@@ -675,7 +706,7 @@ class DetailsPanel(QWidget):
             if stars_text:
                 count_part = f"  ({num_ratings})" if num_ratings else ""
                 rating_label = QLabel(
-                    f'<span style="color: #a3a3a3;">✨ {self.tr.t("labels.rating")}&nbsp;&nbsp;</span>'
+                    f'<span style="color: {self.theme.get_color("text_secondary")};">✨ {self.tr.t("labels.rating")}&nbsp;&nbsp;</span>'
                     f'<span style="color: #f5c518;">{stars_text}{count_part}</span>'
                 )
                 rating_label.setStyleSheet(
@@ -704,7 +735,12 @@ class DetailsPanel(QWidget):
                 else:
                     tag_text = f"• {clean_key}"
                 tag_label = QLabel(tag_text)
-                tag_label.setStyleSheet("color: #dcdcdc; font-size: 13px; background: transparent; border: none;")
+                tag_label.setStyleSheet(f"""
+                    color: {self.theme.get_color('text_primary')};
+                    font-size: 13px;
+                    background: transparent;
+                    border: none;
+                """)
                 tag_label.setWordWrap(True)
                 self.details_layout.addWidget(tag_label)
 
@@ -761,11 +797,11 @@ class DetailsPanel(QWidget):
                 self.movie = QMovie(str(preview_file))
                 self.movie.setScaledSize(self.preview_label.size())
                 self.preview_label.setMovie(self.movie)
-                self.preview_label.setStyleSheet("""
-                    QLabel {
-                        background-color: #2c2f48;
+                self.preview_label.setStyleSheet(f"""
+                    QLabel {{
+                        background-color: {self.theme.get_color('bg_tertiary')};
                         border-radius: 8px;
-                    }
+                    }}
                 """)
                 self.movie.start()
             else:
@@ -828,11 +864,11 @@ class DetailsPanel(QWidget):
                 Qt.TransformationMode.SmoothTransformation
             )
             self.preview_label.setPixmap(scaled)
-            self.preview_label.setStyleSheet("""
-                QLabel {
-                    background-color: #2c2f48;
+            self.preview_label.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {self.theme.get_color('bg_tertiary')};
                     border-radius: 8px;
-                }
+                }}
             """)
         except Exception as e:
             print(f"[DetailsPanel] Apply pixmap error: {e}")
@@ -852,11 +888,11 @@ class DetailsPanel(QWidget):
             self.movie = QMovie(self._temp_gif_file)
             self.movie.setScaledSize(self.preview_label.size())
             self.preview_label.setMovie(self.movie)
-            self.preview_label.setStyleSheet("""
-                QLabel {
-                    background-color: #2c2f48;
+            self.preview_label.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {self.theme.get_color('bg_tertiary')};
                     border-radius: 8px;
-                }
+                }}
             """)
             self.movie.start()
         except Exception as e:
@@ -962,7 +998,7 @@ class DetailsPanel(QWidget):
         if not self.folder_path:
             return
         self.we.apply_wallpaper(Path(self.folder_path) / "project.json")
-        
+
         if self.config and self.config.get_minimize_on_apply():
             window = self.window()
             if window:

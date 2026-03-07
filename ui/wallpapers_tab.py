@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
@@ -108,6 +107,7 @@ class WallpapersTab(QWidget):
     def _create_header(self) -> QFrame:
         header = QFrame()
         header.setFixedHeight(80)
+
         header.setStyleSheet(f"""
             QFrame {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
@@ -119,7 +119,7 @@ class WallpapersTab(QWidget):
 
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(20)
-        shadow.setColor(QColor(91, 141, 239, 100))
+        shadow.setColor(QColor(self.theme.get_color('primary')))
         shadow.setOffset(0, 5)
         header.setGraphicsEffect(shadow)
 
@@ -131,18 +131,18 @@ class WallpapersTab(QWidget):
         info_layout.setSpacing(4)
 
         self.count_label = QLabel()
-        self.count_label.setStyleSheet("""
+        self.count_label.setStyleSheet(f"""
             font-weight: 800;
             font-size: 24px;
-            color: white;
+            color: {self.theme.get_color('text_primary')};
             background: transparent;
         """)
 
         self.size_label = QLabel()
-        self.size_label.setStyleSheet("""
+        self.size_label.setStyleSheet(f"""
             font-weight: 600;
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.9);
+            color: {self.theme.get_color('text_secondary')};
             background: transparent;
         """)
 
@@ -153,11 +153,11 @@ class WallpapersTab(QWidget):
 
         sort_container = QWidget()
         sort_container.setFixedWidth(160)
-        sort_container.setStyleSheet("""
-            QWidget {
-                background-color: rgba(255, 255, 255, 0.15);
+        sort_container.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.theme.get_color('overlay_light')};
                 border-radius: 10px;
-            }
+            }}
         """)
 
         sort_layout = QVBoxLayout(sort_container)
@@ -170,30 +170,30 @@ class WallpapersTab(QWidget):
         ])
         self.sort_combo.currentIndexChanged.connect(self._on_sort_changed)
         self.sort_combo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.sort_combo.setStyleSheet("""
-            QComboBox {
+        self.sort_combo.setStyleSheet(f"""
+            QComboBox {{
                 background: transparent;
-                color: white;
+                color: {self.theme.get_color('text_primary')};
                 border: none;
                 font-weight: 600;
                 font-size: 13px;
                 padding: 4px;
-            }
-            QComboBox::drop-down {
+            }}
+            QComboBox::drop-down {{
                 border: none;
-            }
-            QComboBox::down-arrow {
+            }}
+            QComboBox::down-arrow {{
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 6px solid white;
-            }
-            QComboBox QAbstractItemView {
-                background-color: rgba(26, 29, 46, 0.95);
-                color: white;
-                selection-background-color: rgba(91, 141, 239, 0.5);
-                border: 2px solid rgba(91, 141, 239, 0.3);
+                border-top: 6px solid {self.theme.get_color('text_primary')};
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {self.theme.get_color('overlay')};
+                color: {self.theme.get_color('text_primary')};
+                selection-background-color: {self.theme.get_color('primary')};
+                border: 2px solid {self.theme.get_color('border')};
                 border-radius: 8px;
-            }
+            }}
         """)
 
         sort_layout.addWidget(self.sort_combo)
@@ -245,7 +245,7 @@ class WallpapersTab(QWidget):
 
         row = col = 0
         for wallpaper_path in wallpapers:
-            item = LocalGridItem(str(wallpaper_path), item_size, self)
+            item = LocalGridItem(str(wallpaper_path), item_size, self.theme, self)
             item.clicked.connect(self._on_item_clicked)
             self.grid_layout.addWidget(item, row, col)
             self.items.append(item)

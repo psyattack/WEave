@@ -1,10 +1,49 @@
 import os
 import re
+import sys
 import time
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
+from PyQt6.QtWidgets import QApplication
+
+def restart_application(quit_app: bool = True, login: Optional[str] = None, password: Optional[str] = None, **kwargs) -> None:
+    args = ["--restart"]
+
+    if login is not None:
+        args.extend(["-login", login])
+    if password is not None:
+        args.extend(["-password", password])
+
+    for key, value in kwargs.items():
+        arg_key = f"-{key}" if len(key) == 1 else f"--{key}"
+        if value is True:
+            args.append(arg_key)
+        elif isinstance(value, str):
+            args.extend([arg_key, value])
+    
+    if getattr(sys, 'frozen', False):
+        executable = sys.executable
+        restart_args = args
+    else:
+        executable = sys.executable
+        skip_next = False
+        filtered_args = []
+        for arg in sys.argv:
+            if skip_next:
+                skip_next = False
+                continue
+            if arg in ["-login", "-password", "--restart"]:
+                skip_next = True
+                continue
+            filtered_args.append(arg)
+        restart_args = filtered_args + args
+    
+    subprocess.Popen([executable] + restart_args)
+    
+    if quit_app:
+        QApplication.quit()
 
 def human_readable_size(size_bytes: int) -> str:
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:

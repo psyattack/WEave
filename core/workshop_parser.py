@@ -6,7 +6,7 @@ from collections import OrderedDict
 from PyQt6.QtCore import QObject, QUrl, pyqtSignal, QTimer
 from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from core.workshop_filters import WorkshopFilters
 
 @dataclass
@@ -94,6 +94,8 @@ class WorkshopParser(QObject):
     LOGIN_CHECK_INTERVAL_MS = 500
     LOGIN_TIMEOUT_MS = 30000
 
+    DEBUG_WEBVIEW_ENABLED = False  # DEBUG
+
     def __init__(self, account_manager, parent=None):
         super().__init__(parent)
 
@@ -121,9 +123,17 @@ class WorkshopParser(QObject):
         self._setup_webview()
 
     def _setup_webview(self):
+        debug_width = 1200 # DEBUG
+        debug_height = 800 # DEBUG
         self._container = QWidget()
-        self._container.setFixedSize(1, 1)
-        self._container.hide()
+        
+        if self.DEBUG_WEBVIEW_ENABLED: # DEBUG
+            self._container.setFixedSize(debug_width, debug_height)
+            self._container.show()
+            print(f"[WorkshopParser:DEBUG] WebView container shown ({debug_width}x{debug_height})")
+        else:
+            self._container.setFixedSize(1, 1)
+            self._container.hide()
 
         profile_path = Path.cwd() / "Cookies"
         self._profile = QWebEngineProfile("Workshop_Parser", self._container)
@@ -136,7 +146,16 @@ class WorkshopParser(QObject):
         self._page = QWebEnginePage(self._profile, self._container)
         self._webview = QWebEngineView(self._container)
         self._webview.setPage(self._page)
-        self._webview.setFixedSize(1, 1)
+
+        if self.DEBUG_WEBVIEW_ENABLED: # DEBUG
+            layout = QVBoxLayout(self._container)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(self._webview)
+
+            self._webview.setFixedSize(debug_width, debug_height)
+            self._webview.show()
+        else:
+            self._webview.setFixedSize(1, 1)
 
         self._webview.loadFinished.connect(self._on_load_finished)
 
@@ -507,6 +526,7 @@ class WorkshopParser(QObject):
         if "/login" not in current_url:
             self._login_in_progress = False
             self._is_logged_in = True
+            self.clear_cache()
             self.login_successful.emit()
             return
 
@@ -692,6 +712,13 @@ class WorkshopParser(QObject):
     def get_cached_item(self, pubfileid: str) -> Optional[WorkshopItem]:
         return self._cache.get_item(pubfileid)
 
+    def clear_cookies(self):
+        try:
+            if hasattr(self, '_profile') and self._profile is not None:
+                self._profile.cookieStore().deleteAllCookies()
+        except Exception as e:
+            print(f"Error clearing cookies: {e}")
+    
     def clear_cache(self):
         self._cache.clear()
 

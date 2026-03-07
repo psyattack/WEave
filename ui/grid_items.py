@@ -1,14 +1,12 @@
 import json
 import weakref
 from pathlib import Path
-
 from PyQt6.QtCore import Qt, QSize, pyqtSignal, QByteArray, QBuffer, QRectF
 from PyQt6.QtGui import (
     QPixmap, QFontMetrics, QMovie, QPixmapCache,
     QPainter, QPen, QColor, QFont
 )
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
-
 from core.image_cache import ImageCache
 from resources.icons import get_pixmap
 from utils.helpers import parse_file_size_to_bytes, format_bytes_short, parse_depot_status
@@ -30,14 +28,20 @@ class _DownloadOverlay(QWidget):
 
 class CircularProgressWidget(QWidget):
 
-    def __init__(self, size: int = 60, line_width: int = 4, parent=None):
+    def __init__(self, size: int = 60, line_width: int = 4, theme_manager=None, parent=None):
         super().__init__(parent)
         self._progress = 0.0
         self._display_text = "0%"
         self._circle_size = size
         self._line_width = line_width
+        self.theme = theme_manager
         self.setFixedSize(size, size)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def _get_progress_color(self) -> QColor:
+        if self.theme:
+            return QColor(self.theme.get_color('primary'))
+        return QColor(70, 130, 240)
 
     def update_from_status(self, status_text: str, file_size_bytes: int = 0):
         parsed = parse_depot_status(status_text)
@@ -79,7 +83,7 @@ class CircularProgressWidget(QWidget):
         painter.drawArc(rect, 0, 360 * 16)
 
         if self._progress > 0:
-            progress_pen = QPen(QColor(70, 130, 240), self._line_width)
+            progress_pen = QPen(self._get_progress_color(), self._line_width)
             progress_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             painter.setPen(progress_pen)
             span_angle = int(-self._progress * 360 * 16)
@@ -98,14 +102,20 @@ class CircularProgressWidget(QWidget):
 
 class SmallCircularProgress(QWidget):
 
-    def __init__(self, size: int = 40, line_width: int = 3, parent=None):
+    def __init__(self, size: int = 40, line_width: int = 3, theme_manager=None, parent=None):
         super().__init__(parent)
         self._progress = 0.0
         self._display_text = "0B"
         self._circle_size = size
         self._line_width = line_width
+        self.theme = theme_manager
         self.setFixedSize(size, size)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def _get_progress_color(self) -> QColor:
+        if self.theme:
+            return QColor(self.theme.get_color('primary'))
+        return QColor(70, 130, 240)
 
     def update_from_status(self, status_text: str, file_size_bytes: int = 0, is_extraction: bool = False):
         parsed = parse_depot_status(status_text)
@@ -155,7 +165,7 @@ class SmallCircularProgress(QWidget):
         painter.drawArc(rect, 0, 360 * 16)
 
         if self._progress > 0:
-            progress_pen = QPen(QColor(70, 130, 240), self._line_width)
+            progress_pen = QPen(self._get_progress_color(), self._line_width)
             progress_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             painter.setPen(progress_pen)
             span_angle = int(-self._progress * 360 * 16)
@@ -175,10 +185,11 @@ class SmallCircularProgress(QWidget):
 class BaseGridItem(QWidget):
     clicked = pyqtSignal(str)
 
-    def __init__(self, item_id: str, item_size: int = 185, parent=None):
+    def __init__(self, item_id: str, item_size: int = 185, theme_manager=None, parent=None):
         super().__init__(parent)
         self.item_id = item_id
         self.item_size = item_size
+        self.theme = theme_manager
         self._original_title = ""
         self._pixmap: QPixmap = None
         self._movie: QMovie = None
@@ -188,6 +199,16 @@ class BaseGridItem(QWidget):
         self._is_hovered = False
         self._is_destroyed = False
         self._setup_ui()
+
+    def _get_bg_color(self) -> str:
+        if self.theme:
+            return self.theme.get_color('bg_tertiary')
+        return '#25283d'
+
+    def _get_placeholder_color(self) -> str:
+        if self.theme:
+            return self.theme.get_color('text_disabled')
+        return '#6B6E7C'
 
     def _setup_ui(self):
         self.setFixedSize(self.item_size, self.item_size)
@@ -200,7 +221,7 @@ class BaseGridItem(QWidget):
         self.preview_label = QLabel(self.overlay_container)
         self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setFixedSize(self.item_size, self.item_size)
-        self.preview_label.setStyleSheet("background-color: #25283d;")
+        self.preview_label.setStyleSheet(f"background-color: {self._get_bg_color()};")
 
         name_container_height = max(24, int(self.item_size * 0.22))
         self.name_container = QWidget(self.overlay_container)
@@ -274,10 +295,10 @@ class BaseGridItem(QWidget):
             return
         try:
             self.preview_label.setText(text)
-            self.preview_label.setStyleSheet("""
-                color: #6B6E7C;
+            self.preview_label.setStyleSheet(f"""
+                color: {self._get_placeholder_color()};
                 font-size: 32px;
-                background-color: #25283d;
+                background-color: {self._get_bg_color()};
             """)
         except RuntimeError:
             pass
@@ -380,15 +401,14 @@ class BaseGridItem(QWidget):
         self.release_resources()
         super().deleteLater()
 
-
 class WorkshopGridItem(BaseGridItem):
     STATUS_AVAILABLE = "available"
     STATUS_INSTALLED = "installed"
     STATUS_DOWNLOADING = "downloading"
 
     def __init__(self, pubfileid: str, title: str = "", preview_url: str = "",
-                 item_size: int = 185, parent=None):
-        super().__init__(item_id=pubfileid, item_size=item_size, parent=parent)
+                 item_size: int = 185, theme_manager=None, parent=None):
+        super().__init__(item_id=pubfileid, item_size=item_size, theme_manager=theme_manager, parent=parent)
         self.pubfileid = pubfileid
         self.preview_url = preview_url
         self.status = self.STATUS_AVAILABLE
@@ -423,7 +443,7 @@ class WorkshopGridItem(BaseGridItem):
         circle_size = max(50, int(self.item_size * 0.38))
         line_width = max(3, int(circle_size / 14))
         self.circular_progress = CircularProgressWidget(
-            size=circle_size, line_width=line_width, parent=self.download_overlay
+            size=circle_size, line_width=line_width, theme_manager=self.theme, parent=self.download_overlay
         )
         cx = (self.item_size - circle_size) // 2
         cy = (self.item_size - circle_size) // 2
@@ -507,8 +527,8 @@ class WorkshopGridItem(BaseGridItem):
         super().release_resources()
 
 class LocalGridItem(BaseGridItem):
-    def __init__(self, folder_path: str, item_size: int = 185, parent=None):
-        super().__init__(item_id=folder_path, item_size=item_size, parent=parent)
+    def __init__(self, folder_path: str, item_size: int = 185, theme_manager=None, parent=None):
+        super().__init__(item_id=folder_path, item_size=item_size, theme_manager=theme_manager, parent=parent)
         self.folder_path = folder_path
         self._load_data()
 
@@ -559,16 +579,21 @@ class LocalGridItem(BaseGridItem):
         QPixmapCache.clear()
 
 class SkeletonGridItem(QWidget):
-    def __init__(self, item_size: int = 185, parent=None):
+    def __init__(self, item_size: int = 185, theme_manager=None, parent=None):
         super().__init__(parent)
         self.item_size = item_size
+        self.theme = theme_manager
         self.setFixedSize(item_size, item_size)
-        self.setStyleSheet("""
+        
+        bg_color = self.theme.get_color('bg_tertiary') if self.theme else '#25283d'
+        bg_lighter = self.theme.get_color('bg_elevated') if self.theme else '#2d3148'
+        
+        self.setStyleSheet(f"""
             background: qlineargradient(
                 x1:0, y1:0, x2:1, y2:0,
-                stop:0 #25283d,
-                stop:0.5 #2d3148,
-                stop:1 #25283d
+                stop:0 {bg_color},
+                stop:0.5 {bg_lighter},
+                stop:1 {bg_color}
             );
             border-radius: 0px;
         """)

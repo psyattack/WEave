@@ -22,13 +22,11 @@ except:
 import subprocess
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication, QMessageBox, QFileDialog
-
 from core.config_manager import ConfigManager
 from core.accounts import AccountManager
 from core.download_manager import DownloadManager
 from core.wallpaper_engine import WallpaperEngine
-
-from ui.themes.theme_manager import ThemeManager
+from core.theme_manager import ThemeManager
 from localization.translator import Translator
 from ui.main_window import MainWindow
 from resources.icons import get_icon

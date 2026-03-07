@@ -93,8 +93,11 @@
     "search_placeholder": "Search...",
     "id_url_placeholder": "ID, URL...",
     "account": "Account",
-    "dark": "🌙 Dark",
-    "light": "☀️ Light",
+    "dark": "Dark",
+    "light": "Light",
+    "nord": "Nord",
+    "monokai": "Monokai",
+    "solarized": "Solarized",
     "translating": "⏳ Translating..."
   },
   "messages": {
@@ -135,7 +138,9 @@
     "restart_now_question": "Restart the application now to apply the language?",
     "restart_with_tasks": "You have incomplete downloads or extractions.\nThey will be cancelled upon restart.\nContinue?",
     "restart_with_downloads_only": "You have incomplete downloads.\nThey will be cancelled upon restart.\nContinue?",
-    "restart_with_extractions_only": "You have incomplete extractions.\nThey will be cancelled upon restart.\nContinue?"
+    "restart_with_extractions_only": "You have incomplete extractions.\nThey will be cancelled upon restart.\nContinue?",
+    "restart_title": "Restart Required",
+    "restart_theme_message": "Theme will be applied after restart. Restart now?"
   },
   "dialog": {
     "notification": "Notification",
@@ -151,13 +156,24 @@
   },
   "settings": {
     "title": "SETTINGS",
-    "theme_dev": "🎨 Theme (In Dev)",
+    "theme_dev": "🎨 Theme",
     "account": "👤 Account",
     "language": "🌍 Language",
-    "other": "⚙️ Other"
+    "other": "⚙️ Other",
+    "steam_login": "🔐 Steam Login",
+    "current_status": "Current status:",
+    "login_placeholder": "Login",
+    "password_placeholder": "Password",
+    "login_button": "Login",
+    "reset_button": "Reset",
+    "restart_required": "Restart Required",
+    "restart_message": "Application will restart to apply changes.",
+    "login_success": "Login successful! Application will restart.",
+    "reset_success": "Account reset to System.",
+    "fill_all_fields": "Please fill in all fields."
   },
   "info": {
-    "version": "WE Workshop Manager v1.2.4",
+    "version": "WE Workshop Manager v1.3.0",
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
     "developed": "Developed with ❤️ free."
   },

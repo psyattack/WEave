@@ -1,5 +1,23 @@
 import base64
+import sys
 from typing import Dict
+
+_custom_login = None
+_custom_password = None
+if "-login" in sys.argv:
+    try:
+        idx = sys.argv.index("-login")
+        if idx + 1 < len(sys.argv):
+            _custom_login = sys.argv[idx + 1]
+    except:
+        pass
+if "-password" in sys.argv:
+    try:
+        idx = sys.argv.index("-password")
+        if idx + 1 < len(sys.argv):
+            _custom_password = sys.argv[idx + 1]
+    except:
+        pass
 
 class AccountManager:
     ACCOUNTS = {
@@ -14,6 +32,10 @@ class AccountManager:
     
     def __init__(self):
         self._passwords = self._decode_passwords()
+        if _custom_login and _custom_password:
+            self.ACCOUNTS.pop("weworkshopmanager2")
+            self.ACCOUNTS[_custom_login] = _custom_password
+            self._passwords[_custom_login] = _custom_password
     
     def _decode_passwords(self) -> Dict[str, str]:
         return {
