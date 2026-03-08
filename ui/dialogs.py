@@ -3,12 +3,16 @@ from PyQt6.QtWidgets import (
     QPushButton, QTextEdit, QFrame, QGraphicsDropShadowEffect, QWidget,
     QComboBox, QLineEdit, QScrollArea, QTabWidget
 )
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, QPoint, QTimer, QEvent, pyqtSignal
 from PyQt6.QtGui import QColor
 from resources.icons import get_icon, get_pixmap
 from ui.notifications import MessageBox
+from ui.grid_items import SmallCircularProgress
+from utils.helpers import hex_to_rgba
 import re
+import webbrowser
 from utils.helpers import restart_application
+from ui.workshop_tab import PreviewPopup
 
 class CustomDialog(QDialog):
     def __init__(self, title: str = "Dialog", parent=None, theme_manager=None):
@@ -53,9 +57,11 @@ class CustomDialog(QDialog):
             self.c_border_light = self.theme.get_color('border_light')
             self.c_text_primary = self.theme.get_color('text_primary')
             self.c_text_secondary = self.theme.get_color('text_secondary')
+            self.c_text_disabled = self.theme.get_color('text_disabled')
             self.c_primary = self.theme.get_color('primary')
             self.c_primary_hover = self.theme.get_color('primary_hover')
             self.c_accent_red = self.theme.get_color('accent_red')
+            self.c_overlay = self.theme.get_color('overlay')
         else:
             self.c_bg_primary = '#0F111A'
             self.c_bg_secondary = '#1A1D2E'
@@ -64,14 +70,17 @@ class CustomDialog(QDialog):
             self.c_border_light = '#3A3F52'
             self.c_text_primary = '#FFFFFF'
             self.c_text_secondary = '#B4B7C3'
+            self.c_text_disabled = '#6B6E7C'
             self.c_primary = '#4A7FD9'
             self.c_primary_hover = '#5B8FE9'
             self.c_accent_red = '#EF5B5B'
+            self.c_overlay = 'rgba(0, 0, 0, 0.4)'
 
     def _apply_container_style(self):
+        bg_rgba = hex_to_rgba(self.c_bg_secondary)
         self.container.setStyleSheet(f"""
             QFrame {{
-                background-color: {self.c_bg_secondary};
+                background-color: {bg_rgba};
                 border-radius: 12px;
                 border: 2px solid {self.c_border_light};
             }}
@@ -86,29 +95,29 @@ class CustomDialog(QDialog):
 
         title_label = QLabel(title)
         title_label.setStyleSheet(f"""
-        font-size: 16px;
-        font-weight: 700;
-        color: {self.c_text_primary};
-        background: transparent;
+            font-size: 16px;
+            font-weight: 700;
+            color: {self.c_text_primary};
+            background: transparent;
         """)
 
         close_btn = QPushButton()
         close_btn.setFixedSize(32, 32)
         close_btn.setIcon(get_icon("ICON_CLOSE"))
         close_btn.setIconSize(QSize(20, 20))
-        close_btn.setStyleSheet(f"""
-        QPushButton {{
-            background-color: transparent;
-            border: none;
-            border-radius: 16px;
-            padding: 0px;
-        }}
-        QPushButton:hover {{
-            background-color: rgba(239, 91, 91, 0.2);
-        }}
-        QPushButton:pressed {{
-            background-color: rgba(239, 91, 91, 0.3);
-        }}
+        close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                border-radius: 16px;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: rgba(239, 91, 91, 0.2);
+            }
+            QPushButton:pressed {
+                background-color: rgba(239, 91, 91, 0.3);
+            }
         """)
         close_btn.clicked.connect(self.reject)
 
@@ -129,6 +138,235 @@ class CustomDialog(QDialog):
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
+
+class DownloadsDialog(CustomDialog):
+    download_cancelled = pyqtSignal(str)
+
+    def __init__(self, translator, theme_manager, download_manager, parser, parent=None):
+        super().__init__(translator.t("dialog.tasks"), parent, theme_manager)
+
+        self.tr = translator
+        self.dm = download_manager
+        self.parser = parser
+        self._preview_url_cache = {}
+        self._file_size_cache = {}
+
+        self.setFixedSize(400, 400)
+
+        self._setup_content()
+        self._setup_preview_popup()
+        self._setup_update_timer()
+
+    def _setup_content(self):
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setStyleSheet(f"""
+            QScrollArea {{
+                background: transparent;
+                border: none;
+            }}
+            QScrollBar:vertical {{
+                background: {self.c_bg_tertiary};
+                width: 6px;
+                border-radius: 3px;
+            }}
+            QScrollBar::handle:vertical {{
+                background: {self.c_border_light};
+                border-radius: 3px;
+                min-height: 30px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background: {self.c_primary};
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                height: 0px;
+            }}
+        """)
+
+        self.scroll_container = QWidget()
+        self.scroll_container.setStyleSheet("background: transparent;")
+        self.scroll_layout = QVBoxLayout(self.scroll_container)
+        self.scroll_layout.setContentsMargins(5, 5, 5, 5)
+        self.scroll_layout.setSpacing(6)
+        scroll.setWidget(self.scroll_container)
+
+        self.content_layout.addWidget(scroll)
+
+    def _setup_preview_popup(self):
+        self.preview_popup = PreviewPopup(self.theme, self.tr, self)
+
+    def _setup_update_timer(self):
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self._update_list)
+        self.update_timer.setInterval(500)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_timer.start()
+        self._update_list()
+
+    def hideEvent(self, event):
+        self.update_timer.stop()
+        self.preview_popup.hide_preview()
+        self.preview_popup.force_cancel()
+        super().hideEvent(event)
+
+    def set_caches(self, preview_cache: dict, size_cache: dict):
+        self._preview_url_cache = preview_cache
+        self._file_size_cache = size_cache
+
+    def showAt(self, global_pos: QPoint):
+        self.move(global_pos)
+        self.show()
+
+    def _update_list(self):
+        while self.scroll_layout.count():
+            child = self.scroll_layout.takeAt(0)
+            if child is not None and child.widget() is not None:
+                try:
+                    child.widget().deleteLater()
+                except RuntimeError:
+                    pass
+
+        all_tasks = []
+        for pubfileid, info in self.dm.downloading.items():
+            all_tasks.append(("download", pubfileid, info))
+        for pubfileid, info in self.dm.extracting.items():
+            all_tasks.append(("extract", pubfileid, info))
+
+        if not all_tasks:
+            label = QLabel(self.tr.t("labels.no_tasks"))
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setStyleSheet(f"""
+                color: {self.c_text_secondary};
+                font-size: 13px;
+                background-color: {self.c_bg_tertiary};
+                padding: 12px 16px;
+                border-radius: 8px;
+            """)
+            label.setFixedHeight(60)
+            self.scroll_layout.addWidget(label)
+        else:
+            for task_type, pubfileid, info in all_tasks:
+                self._create_task_item(task_type, pubfileid, info)
+
+        self.scroll_layout.addStretch()
+
+    def _create_task_item(self, task_type: str, pubfileid: str, info: dict):
+        item_widget = QWidget()
+        item_widget.setFixedHeight(68)
+        item_widget.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.c_bg_tertiary};
+                border: 2px solid {self.c_border_light};
+                border-radius: 8px;
+            }}
+        """)
+
+        item_layout = QHBoxLayout(item_widget)
+        item_layout.setContentsMargins(8, 8, 10, 8)
+        item_layout.setSpacing(10)
+
+        mini_progress = SmallCircularProgress(
+            size=52, line_width=3, theme_manager=self.theme, parent=item_widget
+        )
+        mini_progress.setStyleSheet("border: none;")
+        status_text = info.get("status", "")
+        file_size_bytes = self._file_size_cache.get(pubfileid, 0)
+        is_extraction = (task_type == "extract")
+        mini_progress.update_from_status(status_text, file_size_bytes, is_extraction)
+        item_layout.addWidget(mini_progress)
+
+        text_container = QWidget()
+        text_container.setStyleSheet("background: transparent; border: none;")
+        text_layout = QVBoxLayout(text_container)
+        text_layout.setContentsMargins(0, 0, 0, 0)
+        text_layout.setSpacing(2)
+
+        short_id = pubfileid[:12] + "..." if len(pubfileid) > 12 else pubfileid
+        if task_type == "download":
+            prefix = self.tr.t("labels.download_prefix", id=short_id)
+        else:
+            prefix = self.tr.t("labels.extract_prefix", id=short_id)
+
+        title_label = QLabel(prefix)
+        title_label.setStyleSheet(f"""
+            color: {self.c_text_primary};
+            font-size: 12px;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+        """)
+        title_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        title_label.setProperty("pubfileid", pubfileid)
+        title_label.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        title_label.installEventFilter(self)
+        title_label.mousePressEvent = lambda e, pid=pubfileid: self._on_open_browser(pid)
+        text_layout.addWidget(title_label)
+
+        display_status = status_text[:40] + "..." if len(status_text) > 40 else status_text
+        if not display_status:
+            display_status = self.tr.t("labels.starting")
+        status_label = QLabel(display_status)
+        status_label.setStyleSheet(f"""
+            color: {self.c_text_disabled};
+            font-size: 10px;
+            background: transparent;
+            border: none;
+        """)
+        text_layout.addWidget(status_label)
+
+        item_layout.addWidget(text_container, 1)
+
+        if task_type == "download":
+            delete_btn = QPushButton()
+            delete_btn.setIcon(get_icon("ICON_DELETE"))
+            delete_btn.setIconSize(QSize(28, 28))
+            delete_btn.setFixedSize(36, 36)
+            delete_btn.setStyleSheet("""
+                QPushButton {
+                    background: transparent;
+                    border: none;
+                }
+            """)
+            delete_btn.clicked.connect(
+                lambda checked, pid=pubfileid: self._cancel_download(pid)
+            )
+            item_layout.addWidget(delete_btn)
+
+        self.scroll_layout.addWidget(item_widget)
+
+    def eventFilter(self, obj, event):
+        if isinstance(obj, QLabel):
+            pubfileid = obj.property("pubfileid")
+            if pubfileid:
+                if event.type() == QEvent.Type.Enter:
+                    self._show_item_preview(pubfileid, obj)
+                    return False
+                elif event.type() == QEvent.Type.Leave:
+                    self.preview_popup.hide_preview()
+                    return False
+        return super().eventFilter(obj, event)
+
+    def _show_item_preview(self, pubfileid: str, widget: QWidget):
+        preview_url = self._preview_url_cache.get(pubfileid)
+        if not preview_url and self.parser:
+            cached_item = self.parser.get_cached_item(pubfileid)
+            if cached_item and cached_item.preview_url:
+                preview_url = cached_item.preview_url
+                self._preview_url_cache[pubfileid] = preview_url
+        global_pos = widget.mapToGlobal(QPoint(-65, widget.height() // 2 + 12))
+        self.preview_popup.show_preview(preview_url or "", global_pos)
+
+    def _on_open_browser(self, pubfileid: str):
+        webbrowser.open(
+            f"https://steamcommunity.com/sharedfiles/filedetails/?id={pubfileid}"
+        )
+
+    def _cancel_download(self, pubfileid: str):
+        self.download_cancelled.emit(pubfileid)
+        QTimer.singleShot(100, self._update_list)
 
 class BatchDownloadDialog(CustomDialog):
     def __init__(self, translator, parent=None, theme_manager=None):
