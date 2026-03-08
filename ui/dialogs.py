@@ -77,7 +77,7 @@ class CustomDialog(QDialog):
             self.c_overlay = 'rgba(0, 0, 0, 0.4)'
 
     def _apply_container_style(self):
-        bg_rgba = hex_to_rgba(self.c_bg_secondary)
+        bg_rgba = hex_to_rgba(self.c_bg_secondary, 240)
         self.container.setStyleSheet(f"""
             QFrame {{
                 background-color: {bg_rgba};
