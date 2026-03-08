@@ -35,7 +35,7 @@
 
 WE Workshop Manager is a Python/PyQt6 desktop application that allows you to easily download, install, and manage wallpapers from Steam Workshop for Wallpaper Engine **without needing to run the Steam client**.
 
-### <strong>Since version 1.4.0, Workshop pages load even faster than in the browser with the new Preload Next Page (BETA) feature!</strong>
+### <strong>Since version 1.3.7, Workshop pages load even faster than in the browser with the new Preload Next Page (BETA) feature!</strong>
 
 ### 🔑 Key Features:
 
