@@ -116,6 +116,7 @@
     "restart_theme_message": "Theme will be applied after restart. Restart now?"
   },
   "dialog": {
+    "tasks": "Tasks",
     "confirm_deletion": "Confirm Deletion",
     "error": "Error",
     "warning": "Warning",
@@ -155,7 +156,7 @@
     "login_description": "Enter your Steam credentials for authentication in the Workshop"
   },
   "info": {
-    "version": "WE Workshop Manager v1.3.7",
+    "version": "WE Workshop Manager v1.4.0",
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
     "developed": "Developed with ❤️ free."
   },

@@ -116,6 +116,7 @@
     "restart_theme_message": "主题将在重启后应用。是否立即重启?"
   },
   "dialog": {
+    "tasks": "任务",
     "confirm_deletion": "确认删除",
     "error": "错误",
     "warning": "警告",
@@ -155,7 +156,7 @@
     "login_description": "输入您的Steam凭据以在创意工坊中进行身份验证"
   },
   "info": {
-    "version": "WE Workshop Manager v1.3.7",
+    "version": "WE Workshop Manager v1.4.0",
     "description": "这款应用程序让您可以轻松地从Steam创意工坊下载和管理Wallpaper Engine壁纸。",
     "developed": "免费开发 ❤️"
   },
