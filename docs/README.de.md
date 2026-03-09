@@ -57,9 +57,9 @@ WE Workshop Manager ist eine Python/PyQt6 Desktop-Anwendung, die es Ihnen ermög
 > - Die App **modifiziert nicht** den originalen Wallpaper Engine- oder Steam-Client  
 > - Der Autor **unterstützt nicht** die Verwendung dieser Software für finanzielle Gewinne, verwenden Sie sie nur als Alternative mit zusätzlichen Funktionen oder wenn Sie aufgrund regionaler Einschränkungen keine lizenzierte Version erwerben können :)  
 
-> [!WARNING]  
-> Wenn die App jemals die Anzeige von "bestimmten" Inhalten im Workshop verweigert, bedeutet dies, dass das Systemkonto aus irgendeinem Grund nicht angemeldet wurde. Sie müssen sich in den App-Einstellungen in ein beliebiges Steam-Konto (ohne Steam Guard und mit den gewünschten Inhaltseinstellungen) anmelden.  
-> Ähnlich beim Herunterladen, wenn Wallpaper nicht geladen werden - versuchen Sie, ein anderes Konto aus der Liste auszuwählen.
+> [!TIP]   
+> - Wenn die App jemals die Anzeige von "bestimmten" Inhalten im Workshop verweigert, bedeutet dies, dass das Systemkonto aus irgendeinem Grund nicht angemeldet wurde. Sie müssen sich in den App-Einstellungen in ein beliebiges Steam-Konto (ohne Steam Guard und mit den gewünschten Inhaltseinstellungen) anmelden.  
+> - Ähnlich beim Herunterladen, wenn Wallpaper nicht geladen werden - versuchen Sie, ein anderes Konto aus der Liste auszuwählen.
 
 ---
 
