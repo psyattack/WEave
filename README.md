@@ -1,4 +1,4 @@
-# WE Workshop Manager
+# WEave (бывший WE Workshop Manager)
 
 <p align="center">
   <a href="README.md">🇷🇺 Русский</a> |
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="screenshots/screen_main.png" alt="WE Workshop Manager" width="700">
+  <img src="screenshots/screen_main.png" alt="WEave (бывший WE Workshop Manager)" width="700">
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@
 
 ---
 
-WE Workshop Manager — это десктопное приложение на Python/PyQt6, которое позволяет легко загружать, устанавливать и управлять обоями из Steam Workshop для Wallpaper Engine **без необходимости запускать клиент Steam**.
+WEave (бывший WE Workshop Manager) — это десктопное приложение на Python/PyQt6, которое позволяет легко загружать, устанавливать и управлять обоями из Steam Workshop для Wallpaper Engine **без необходимости запускать клиент Steam**.
 
 ### <strong>С версии 1.3.7 страницы в Workshop загружаюстся даже быстрее чем в браузере с новой функцией Preload Next Page (BETA)!</strong>
 ### <strong>В разработке 2.0 - миграция на Tauri (React) + Rust или PyWebView. Свежее UI, быстрее, компактнее.</strong>
@@ -77,7 +77,7 @@ WE Workshop Manager — это десктопное приложение на Py
 ### 📦 Вариант 1: Упакованная через PyInstaller версия
 
 Скачайте последнюю версию из раздела **[Releases](https://github.com/psyattack/we-workshop-manager/releases)**  
-> Все зависимости уже есть в архиве, просто распакуйте архив в удобное место и запустите `WE Workshop Manager.exe`
+> Все зависимости уже есть в архиве, просто распакуйте архив в удобное место и запустите `WEave.exe`
 
 ---
 
@@ -118,7 +118,6 @@ we-workshop-manager/
 ├── core/                  # Основная логика
 ├── ui/                    # Интерфейс
 ├── localization/          # Файлы локализации
-├── resources/             # Ресурсы
 ├── utils/                 # Вспомогательные утилиты
 ├── plugins/               # Утилиты DepotDownloaderMod и RePKG (загружать отдельно)
 ├── app.py                 # Точка входа
@@ -146,9 +145,8 @@ we-workshop-manager/
 
 ## 👁️‍🗨️ Известные проблемы
 
-- [ ] Поиск частично отличается от версии на сайте
 - [ ] Некорректное возвращение состояния окна после предварительного сворачивания
-- [ ] Белые диалоговые окна при очистке фильтров
+- [x] Белые диалоговые окна при очистке фильтров
 - [ ] PyInstaller --onefile ломает перезапуск, если будете собирать из исходников собирайте в --onedir (~500мб, поэтому не заливаю в релиз)
 
 ---
@@ -161,7 +159,7 @@ we-workshop-manager/
 - [ ] Трей + silent mode
 - [ ] Ряд оригинальных функций WE (Редактор пресетов, создание плейлистов, профили и тд.)
 - [ ] Автоматическое обновление
-- [ ] Оптимизация интерфейса под разные размеры и форматы экранов + возможность resize окна
+- [x] Оптимизация интерфейса под разные размеры и форматы экранов + возможность resize окна
 
 > Если у вас возникли проблемы или есть предложения по улучшению — создайте [Issue](https://github.com/psyattack/we-workshop-manager/issues) в репозитории.
 

@@ -77,7 +77,7 @@
     "search_placeholder": "搜索...",
     "id_url_placeholder": "ID, URL...",
     "account": "账户",
-    "translating": "⏳ 翻译中..."
+    "translating": "翻译中..."
   },
   "messages": {
     "download_started": "开始下载!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "您有未完成的下载。\n重启后将被取消。\n继续?",
     "restart_with_extractions_only": "您有未完成的提取。\n重启后将被取消。\n继续?",
     "restart_title": "需要重启",
-    "restart_theme_message": "主题将在重启后应用。是否立即重启?"
+    "restart_theme_message": "主题将在重启后应用。是否立即重启?",
+    "restart_debug_message": "调试模式将在重启后应用。是否立即重启?"
   },
   "dialog": {
     "tasks": "任务",
@@ -153,10 +154,12 @@
     "notifications": "通知",
     "coming_soon": "更多设置即将推出...",
     "tab_advanced": "高级",
-    "login_description": "输入您的Steam凭据以在创意工坊中进行身份验证"
+    "login_description": "输入您的Steam凭据以在创意工坊中进行身份验证",
+    "debug": "调试",
+    "debug_mode": "🔧 调试模式",
+    "debug_description": "启用调试模式以进行WebView测试"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "这款应用程序让您可以轻松地从Steam创意工坊下载和管理Wallpaper Engine壁纸。",
     "developed": "免费开发 ❤️"
   },

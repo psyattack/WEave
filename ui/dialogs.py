@@ -1,11 +1,12 @@
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QTextEdit, QFrame, QGraphicsDropShadowEffect, QWidget,
-    QComboBox, QLineEdit, QScrollArea, QTabWidget
+    QComboBox, QLineEdit, QScrollArea, QTabWidget, QCheckBox
 )
 from PyQt6.QtCore import Qt, QSize, QPoint, QTimer, QEvent, pyqtSignal
 from PyQt6.QtGui import QColor
-from resources.icons import get_icon, get_pixmap
+from core.resources import get_icon, get_pixmap
+from core.constants import APP_FULL_NAME
 from ui.notifications import MessageBox
 from ui.grid_items import SmallCircularProgress
 from utils.helpers import hex_to_rgba
@@ -482,7 +483,7 @@ class InfoDialog(CustomDialog):
         self.content_layout.addWidget(icon)
 
         info_text = QLabel(
-            f"{self.tr.t('info.version')}\n\n"
+            f"{APP_FULL_NAME}\n\n"
             f"{self.tr.t('info.description')}\n\n"
             f"{self.tr.t('info.developed')}"
         )
@@ -817,6 +818,37 @@ class SettingsPopup(CustomDialog):
         value = index == 1
         self.config.set_preload_next_page(value)
 
+    def _create_debug_combo(self):
+        combo = QComboBox()
+        combo.addItems([self.tr.t("labels.disabled"), self.tr.t("labels.enabled")])
+        combo.setCurrentIndex(1 if self.config.get_debug_mode() else 0)
+        combo.currentIndexChanged.connect(self._on_debug_mode_changed)
+        combo.setStyleSheet(self._combo_style())
+        return combo
+
+    def _on_debug_mode_changed(self, index):
+        value = index == 1
+        
+        current_value = self.config.get_debug_mode()
+        if value == current_value:
+            return
+        
+        self.config.set_debug_mode(value)
+        
+        msg_box = MessageBox(
+            self.theme,
+            self.tr.t("messages.restart_title"),
+            self.tr.t("messages.restart_debug_message"),
+            MessageBox.Icon.Question,
+            self
+        )
+        yes_btn = msg_box.addButton(self.tr.t("buttons.yes"), MessageBox.ButtonRole.YesRole)
+        no_btn = msg_box.addButton(self.tr.t("buttons.no"), MessageBox.ButtonRole.NoRole)
+        msg_box.exec()
+
+        if msg_box.clickedButton() == yes_btn:
+            restart_application()
+
     def _create_account_tab(self):
         tab = self._create_scrollable_tab()
         layout = tab._inner_layout
@@ -850,25 +882,22 @@ class SettingsPopup(CustomDialog):
         tab = self._create_scrollable_tab()
         layout = tab._inner_layout
 
-        notif_section = CollapsibleSection(
-            self.tr.t("settings.notifications") if self.tr.t("settings.notifications") != "settings.notifications" else "Notifications",
-            expanded=False,
+        debug_section = CollapsibleSection(
+            self.tr.t("settings.debug") if self.tr.t("settings.debug") != "settings.debug" else "Debug",
+            expanded=True,
             theme_manager=self.theme
         )
 
-        placeholder3 = QLabel(self.tr.t("settings.coming_soon") if self.tr.t("settings.coming_soon") != "settings.coming_soon" else "More settings coming soon...")
-        placeholder3.setStyleSheet(f"""
-            color: {self.theme.get_color('text_disabled') if self.theme else '#6B6E7C'};
-            font-size: 12px;
-            font-style: italic;
-            background: transparent;
-            border: none;
-            padding: 8px;
-        """)
-        placeholder3.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        notif_section.add_widget(placeholder3)
+        debug_combo = self._create_debug_combo()
+        debug_description = self.tr.t("settings.debug_description") if self.tr.t("settings.debug_description") != "settings.debug_description" else "Enable debug mode for webview testing"
+        debug_section.add_widget(SettingsField(
+            self.tr.t("settings.debug_mode"),
+            debug_combo,
+            description=debug_description,
+            theme_manager=self.theme
+        ))
 
-        layout.addWidget(notif_section)
+        layout.addWidget(debug_section)
 
         layout.addStretch()
         self.tab_widget.addTab(tab, self.tr.t("settings.tab_advanced") if self.tr.t("settings.tab_advanced") != "settings.tab_advanced" else "Advanced")

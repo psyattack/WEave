@@ -1,9 +1,9 @@
 from pathlib import Path
 from PyQt6.QtCore import (
     Qt, QSize, pyqtSignal, QTimer, QPropertyAnimation,
-    QEasingCurve, pyqtProperty
+    QEasingCurve, pyqtProperty, QPoint
 )
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QCursor
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QStackedWidget, QApplication,
@@ -13,8 +13,10 @@ from ui.notifications import MessageBox
 from ui.workshop_tab import WorkshopTab
 from ui.wallpapers_tab import WallpapersTab
 from ui.dialogs import BatchDownloadDialog, InfoDialog, SettingsPopup
-from resources.icons import get_icon
+from core.resources import get_icon
+from core.constants import APP_NAME
 from utils.helpers import clear_cache_if_needed
+
 
 class AnimatedIconButton(QPushButton):
 
@@ -124,6 +126,7 @@ class AnimatedIconButton(QPushButton):
         self._scale_anim.setEasingCurve(QEasingCurve.Type.OutBack)
         self._scale_anim.start()
         super().mouseReleaseEvent(event)
+
 
 class SideNavBar(QWidget):
     currentChanged = pyqtSignal(int)
@@ -339,6 +342,7 @@ class SideNavBar(QWidget):
         for btn in self._action_buttons:
             self._apply_action_button_style(btn)
 
+
 class ContentSwitcher(QStackedWidget):
 
     def __init__(self, parent=None):
@@ -395,8 +399,11 @@ class ContentSwitcher(QStackedWidget):
         self._current_fade_out_effect = fade_out_effect
         fade_out.start()
 
+
 class MainWindow(QMainWindow):
     download_completed = pyqtSignal(str)
+
+    RESIZE_MARGIN = 8
 
     def __init__(self, config_manager, account_manager, download_manager,
                  wallpaper_engine, translator, theme_manager):
@@ -411,11 +418,17 @@ class MainWindow(QMainWindow):
 
         self._is_maximized = False
         self.old_pos = None
+        self._resize_edge = None
+        self._resize_start_pos = None
+        self._resize_start_geometry = None
 
         self._apply_theme()
         self._setup_ui()
 
         self.dm.download_completed.connect(self._on_download_completed_signal)
+        
+        self.setMouseTracking(True)
+        self.centralWidget().setMouseTracking(True)
 
     def _on_download_completed_signal(self, pubfileid: str, success: bool):
         if success:
@@ -430,8 +443,9 @@ class MainWindow(QMainWindow):
         self.theme.set_theme(theme_name, QApplication.instance())
 
     def _setup_ui(self):
-        self.setWindowTitle("WE Workshop Manager")
+        self.setWindowTitle(APP_NAME)
         self.resize(1200, 730)
+        self.setMinimumSize(900, 600)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -495,9 +509,14 @@ class MainWindow(QMainWindow):
 
         layout = QHBoxLayout(title_bar)
         layout.setContentsMargins(20, 0, 10, 0)
-        layout.setSpacing(12)
+        layout.setSpacing(5)
 
-        app_name = QLabel("WE Workshop Manager")
+        app_icon = QLabel()
+        app_icon.setPixmap(get_icon("ICON_APP").pixmap(26, 26))
+        app_icon.setStyleSheet("background: transparent; border: none;")
+        layout.addWidget(app_icon)
+
+        app_name = QLabel(APP_NAME)
         app_name.setStyleSheet(f"""
             font-size: 15px;
             font-weight: 700;
@@ -572,6 +591,22 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.wallpapers_tab)
 
         self.side_nav.currentChanged.connect(self.stack.setCurrentIndex)
+        
+        self.workshop_tab.details_panel.panel_collapse_requested.connect(
+            lambda: self._toggle_details_panel(self.workshop_tab)
+        )
+        self.wallpapers_tab.details_panel.panel_collapse_requested.connect(
+            lambda: self._toggle_details_panel(self.wallpapers_tab)
+        )
+
+    def _toggle_details_panel(self, tab):
+        if hasattr(tab, 'details_scroll'):
+            details = tab.details_scroll
+            if details.isVisible():
+                tab._details_was_visible = True
+                details.hide()
+            else:
+                details.show()
 
     def _create_corner_covers(self):
         self._corner_covers = []
@@ -722,16 +757,114 @@ class MainWindow(QMainWindow):
 
         self.close()
 
+    def _get_resize_edge(self, pos: QPoint) -> str:
+        if self._is_maximized:
+            return ""
+        
+        rect = self.rect()
+        x, y = pos.x(), pos.y()
+        margin = self.RESIZE_MARGIN
+        
+        edges = ""
+        
+        if y <= margin:
+            edges += "top"
+        elif y >= rect.height() - margin:
+            edges += "bottom"
+        
+        if x <= margin:
+            edges += "left"
+        elif x >= rect.width() - margin:
+            edges += "right"
+        
+        return edges
+
+    def _update_cursor_for_edge(self, edge: str):
+        cursor_map = {
+            "top": Qt.CursorShape.SizeVerCursor,
+            "bottom": Qt.CursorShape.SizeVerCursor,
+            "left": Qt.CursorShape.SizeHorCursor,
+            "right": Qt.CursorShape.SizeHorCursor,
+            "topleft": Qt.CursorShape.SizeFDiagCursor,
+            "topright": Qt.CursorShape.SizeBDiagCursor,
+            "bottomleft": Qt.CursorShape.SizeBDiagCursor,
+            "bottomright": Qt.CursorShape.SizeFDiagCursor,
+        }
+        
+        if edge in cursor_map:
+            self.setCursor(cursor_map[edge])
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            if not self._is_maximized and event.position().y() <= self.title_bar.height():
+            pos = event.position().toPoint()
+            edge = self._get_resize_edge(pos)
+            
+            if edge:
+                self._resize_edge = edge
+                self._resize_start_pos = event.globalPosition().toPoint()
+                self._resize_start_geometry = self.geometry()
+            elif not self._is_maximized and pos.y() <= self.title_bar.height():
                 self.old_pos = event.globalPosition().toPoint()
 
     def mouseMoveEvent(self, event):
-        if self.old_pos and event.buttons() == Qt.MouseButton.LeftButton:
+        if self._resize_edge and event.buttons() == Qt.MouseButton.LeftButton:
+            self._perform_resize(event.globalPosition().toPoint())
+        elif self.old_pos and event.buttons() == Qt.MouseButton.LeftButton:
             delta = event.globalPosition().toPoint() - self.old_pos
             self.move(self.pos() + delta)
             self.old_pos = event.globalPosition().toPoint()
+        else:
+            edge = self._get_resize_edge(event.position().toPoint())
+            self._update_cursor_for_edge(edge)
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
+        self._resize_edge = None
+        self._resize_start_pos = None
+        self._resize_start_geometry = None
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def _perform_resize(self, global_pos: QPoint):
+        if not self._resize_edge or not self._resize_start_geometry:
+            return
+        
+        delta = global_pos - self._resize_start_pos
+        geo = self._resize_start_geometry
+        
+        new_x = geo.x()
+        new_y = geo.y()
+        new_w = geo.width()
+        new_h = geo.height()
+        
+        min_w = self.minimumWidth()
+        min_h = self.minimumHeight()
+        
+        if "left" in self._resize_edge:
+            new_w = geo.width() - delta.x()
+            if new_w >= min_w:
+                new_x = geo.x() + delta.x()
+            else:
+                new_w = min_w
+                new_x = geo.x() + geo.width() - min_w
+        
+        if "right" in self._resize_edge:
+            new_w = geo.width() + delta.x()
+            if new_w < min_w:
+                new_w = min_w
+        
+        if "top" in self._resize_edge:
+            new_h = geo.height() - delta.y()
+            if new_h >= min_h:
+                new_y = geo.y() + delta.y()
+            else:
+                new_h = min_h
+                new_y = geo.y() + geo.height() - min_h
+        
+        if "bottom" in self._resize_edge:
+            new_h = geo.height() + delta.y()
+            if new_h < min_h:
+                new_h = min_h
+        
+        self.setGeometry(new_x, new_y, new_w, new_h)

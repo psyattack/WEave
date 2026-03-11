@@ -1,4 +1,4 @@
-# WE Workshop Manager
+# WEave (formerly WE Workshop Manager)
 
 <p align="center">
   <a href="README.md">🇷🇺 Русский</a> |
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="../screenshots/screen_main.png" alt="WE Workshop Manager" width="700">
+  <img src="../screenshots/screen_main.png" alt="WEave (formerly WE Workshop Manager)" width="700">
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@
 
 ---
 
-WE Workshop Manager is a Python/PyQt6 desktop application that allows you to easily download, install, and manage wallpapers from Steam Workshop for Wallpaper Engine **without needing to run the Steam client**.
+WEave (formerly WE Workshop Manager) is a Python/PyQt6 desktop application that allows you to easily download, install, and manage wallpapers from Steam Workshop for Wallpaper Engine **without needing to run the Steam client**.
 
 ### <strong>Since version 1.3.7, Workshop pages load even faster than in the browser with the new Preload Next Page (BETA) feature!</strong>
 ### <strong>In development 2.0 - migration to Tauri (React) + Rust or PyWebView. Fresh UI, faster, more compact.</strong>
@@ -77,16 +77,11 @@ WE Workshop Manager is a Python/PyQt6 desktop application that allows you to eas
 ### 📦 Option 1: Packaged PyInstaller version
 
 Download the latest version from the **[Releases](https://github.com/psyattack/we-workshop-manager/releases)** section  
-> All dependencies are already in the archive, just extract the archive to a convenient location and run `WE Workshop Manager.exe`
+> All dependencies are already in the archive, just extract the archive to a convenient location and run `WEave.exe`
 
 ---
 
 ### 💻 Option 2: Running from source code
-
-#### 0. Initial setup
-
-Install Python version 3.10 or higher from the [official website](https://www.python.org/downloads) if you haven't already  
-The app was tested on Python 3.14.2
 
 #### 1. Clone the repository
 
@@ -123,7 +118,6 @@ we-workshop-manager/
 ├── core/                  # Core logic
 ├── ui/                    # Interface
 ├── localization/          # Localization files
-├── resources/             # Resources
 ├── utils/                 # Utility scripts
 ├── plugins/               # DepotDownloaderMod and RePKG utilities (download separately)
 ├── app.py                 # Entry point
@@ -151,9 +145,8 @@ This project is licensed under the **[MIT](LICENSE)** license.
 
 ## 👁️‍🗨️ Known Issues
 
-- [ ] Search partially differs from the website version
-- [ ] Incorrect window state return after minimizing
-- [ ] White dialogs when clearing filters
+- [ ] Incorrect window state return after pre-minimizing
+- [x] White dialogs when clearing filters
 - [ ] PyInstaller --onefile breaks restart, if building from source build in --onedir (~500mb, so not uploaded to release)
 
 ---
@@ -166,7 +159,7 @@ This project is licensed under the **[MIT](LICENSE)** license.
 - [ ] Tray + silent mode
 - [ ] Original WE functions (Preset editor, creating playlists, profiles, etc.)
 - [ ] Automatic updates
-- [ ] Interface optimization for different screen sizes and formats + window resize capability
+- [x] Interface optimization for different screen sizes and formats + window resize capability
 
 > If you have any problems or suggestions for improvement — create an [Issue](https://github.com/psyattack/we-workshop-manager/issues) in the repository.
 

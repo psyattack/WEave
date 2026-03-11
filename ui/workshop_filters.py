@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QLineEdit, QPushButton, QScrollArea, QFrame, QCheckBox
 )
 from core.workshop_filters import FilterConfig, WorkshopFilters
-from resources.icons import get_icon
+from core.resources import get_icon
 
 class AnimatedContainer(QWidget):
     height_changed = pyqtSignal()

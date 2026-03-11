@@ -1,4 +1,4 @@
-# WE Workshop Manager
+# WEave (anciennement WE Workshop Manager)
 
 <p align="center">
   <a href="README.md">🇷🇺 Русский</a> |
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="../screenshots/screen_main.png" alt="WE Workshop Manager" width="700">
+  <img src="../screenshots/screen_main.png" alt="WEave (anciennement WE Workshop Manager)" width="700">
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@
 
 ---
 
-WE Workshop Manager est une application de bureau Python/PyQt6 qui vous permet de télécharger, installer et gérer facilement des wallpapers depuis le Steam Workshop pour Wallpaper Engine **sans avoir besoin d'exécuter le client Steam**.
+WEave (anciennement WE Workshop Manager) est une application de bureau Python/PyQt6 qui vous permet de télécharger, installer et gérer facilement des wallpapers depuis le Steam Workshop pour Wallpaper Engine **sans avoir besoin d'exécuter le client Steam**.
 
 ### <strong>Depuis la version 1.3.7, les pages du Workshop se chargent encore plus rapidement que dans le navigateur avec la nouvelle fonction Preload Next Page (BETA) !</strong>
 ### <strong>En développement 2.0 - migration vers Tauri (React) + Rust ou PyWebView. UI frais, plus rapide, plus compact.</strong>
@@ -77,16 +77,11 @@ WE Workshop Manager est une application de bureau Python/PyQt6 qui vous permet d
 ### 📦 Option 1: Version empaquetée PyInstaller
 
 Téléchargez la dernière version depuis la section **[Releases](https://github.com/psyattack/we-workshop-manager/releases)**  
-> Toutes les dépendances sont déjà dans l'archive, extrayez simplement l'archive à un endroit pratique et exécutez `WE Workshop Manager.exe`
+> Toutes les dépendances sont déjà dans l'archive, extrayez simplement l'archive à un endroit pratique et exécutez `WEave.exe`
 
 ---
 
 ### 💻 Option 2: Exécution à partir du code source
-
-#### 0. Configuration initiale
-
-Installez Python version 3.10 ou supérieure depuis le [site officiel](https://www.python.org/downloads) si ce n'est pas encore fait  
-L'application a été testée sur Python 3.14.2
 
 #### 1. Cloner le dépôt
 
@@ -123,7 +118,6 @@ we-workshop-manager/
 ├── core/                  # Logique principale
 ├── ui/                    # Interface
 ├── localization/          # Fichiers de localisation
-├── resources/             # Ressources
 ├── utils/                 # Utilitaires
 ├── plugins/               # Utilitaires DepotDownloaderMod et RePKG (télécharger séparément)
 ├── app.py                 # Point d'entrée
@@ -151,9 +145,8 @@ Ce projet est sous licence **[MIT](LICENSE)**.
 
 ## 👁️‍🗨️ Problèmes connus
 
-- [ ] La recherche diffère partiellement de la version du site
-- [ ] Retour incorrect de l'état de la fenêtre après la réduction
-- [ ] Dialogues blancs lors du nettoyage des filtres
+- [ ] Retour incorrect de l'état de la fenêtre après la pré-réduction
+- [x] Dialogues blancs lors du nettoyage des filtres
 - [ ] PyInstaller --onefile casse le redémarrage, si compilé depuis les sources, compiler en --onedir (~500mb, donc pas dans la release)
 
 ---
@@ -166,7 +159,7 @@ Ce projet est sous licence **[MIT](LICENSE)**.
 - [ ] Barre d'état + mode silencieux
 - [ ] Fonctions originales de WE (Éditeur de préréglages, création de playlists, profils, etc.)
 - [ ] Mises à jour automatiques
-- [ ] Optimisation de l'interface pour différentes tailles et formats d'écran + capacité de redimensionnement de fenêtre
+- [x] Optimisation de l'interface pour différentes tailles et formats d'écran + capacité de redimensionnement de fenêtre
 
 > Si vous avez des problèmes ou des suggestions d'amélioration — créez une [Issue](https://github.com/psyattack/we-workshop-manager/issues) dans le dépôt.
 
