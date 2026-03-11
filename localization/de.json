@@ -77,7 +77,7 @@
     "search_placeholder": "Suchen...",
     "id_url_placeholder": "ID, URL...",
     "account": "Konto",
-    "translating": "⏳ Übersetze..."
+    "translating": "Übersetze..."
   },
   "messages": {
     "download_started": "Download gestartet!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "Sie haben unvollständige Downloads.\nSie werden beim Neustart abgebrochen.\nFortfahren?",
     "restart_with_extractions_only": "Sie haben unvollständige Extrahierungen.\nSie werden beim Neustart abgebrochen.\nFortfahren?",
     "restart_title": "Neustart erforderlich",
-    "restart_theme_message": "Das Design wird nach dem Neustart angewendet. Jetzt neu starten?"
+    "restart_theme_message": "Das Design wird nach dem Neustart angewendet. Jetzt neu starten?",
+    "restart_debug_message": "Der Debug-Modus wird nach dem Neustart angewendet. Jetzt neu starten?"
   },
   "dialog": {
     "tasks": "Aufgaben",
@@ -153,10 +154,12 @@
     "notifications": "Benachrichtigungen",
     "coming_soon": "Weitere Einstellungen kommen bald...",
     "tab_advanced": "Erweitert",
-    "login_description": "Geben Sie Ihre Steam-Anmeldedaten für die Werkstatt-Authentifizierung ein"
+    "login_description": "Geben Sie Ihre Steam-Anmeldedaten für die Werkstatt-Authentifizierung ein",
+    "debug": "Debug",
+    "debug_mode": "🔧 Debug-Modus",
+    "debug_description": "Debug-Modus für Webview-Tests aktivieren"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "Mit dieser Anwendung können Sie Wallpaper Engine-Hintergründe einfach aus der Steam-Werkstatt herunterladen und verwalten.",
     "developed": "Mit ❤️ kostenlos entwickelt."
   },

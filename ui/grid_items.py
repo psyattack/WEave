@@ -1,15 +1,77 @@
 import json
 import weakref
 from pathlib import Path
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, QByteArray, QBuffer, QRectF
+from PyQt6.QtCore import (
+    Qt, QSize, pyqtSignal, QByteArray, QBuffer, QRectF,
+    QPropertyAnimation, QEasingCurve, pyqtProperty
+)
 from PyQt6.QtGui import (
     QPixmap, QFontMetrics, QMovie, QPixmapCache,
-    QPainter, QPen, QColor, QFont
+    QPainter, QPen, QColor, QFont, QTransform
 )
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy
 from core.image_cache import ImageCache
-from resources.icons import get_pixmap
+from core.resources import get_pixmap
 from utils.helpers import parse_file_size_to_bytes, format_bytes_short, parse_depot_status
+
+
+class AnimatedHourglassLabel(QLabel):
+    def __init__(self, size: int = 32, parent=None):
+        super().__init__(parent)
+        self._size = size
+        self._rotation = 0.0
+        self._direction = 1
+        self._base_pixmap = get_pixmap("ICON_HOURGLASS", size)
+        
+        self.setFixedSize(size, size)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setStyleSheet("background: transparent;")
+        self._update_pixmap()
+        
+        self._animation = QPropertyAnimation(self, b"rotation")
+        self._animation.setDuration(1000)
+        self._animation.setStartValue(0.0)
+        self._animation.setEndValue(30.0)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._animation.finished.connect(self._on_animation_finished)
+    
+    def get_rotation(self) -> float:
+        return self._rotation
+    
+    def set_rotation(self, value: float):
+        self._rotation = value
+        self._update_pixmap()
+    
+    rotation = pyqtProperty(float, get_rotation, set_rotation)
+    
+    def _update_pixmap(self):
+        if self._base_pixmap.isNull():
+            return
+        transform = QTransform()
+        transform.rotate(self._rotation)
+        rotated = self._base_pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
+        x = (rotated.width() - self._size) // 2
+        y = (rotated.height() - self._size) // 2
+        if x >= 0 and y >= 0:
+            cropped = rotated.copy(x, y, self._size, self._size)
+        else:
+            cropped = rotated
+        self.setPixmap(cropped)
+    
+    def _on_animation_finished(self):
+        self._direction *= -1
+        self._animation.setStartValue(self._rotation)
+        self._animation.setEndValue(30.0 * self._direction)
+        self._animation.start()
+    
+    def start_animation(self):
+        self._animation.start()
+    
+    def stop_animation(self):
+        self._animation.stop()
+        self._rotation = 0.0
+        self._update_pixmap()
+
 
 class _DownloadOverlay(QWidget):
     def __init__(self, size: int, parent=None):
@@ -26,8 +88,8 @@ class _DownloadOverlay(QWidget):
         painter.drawRect(0, 0, self._size, self._size)
         painter.end()
 
-class CircularProgressWidget(QWidget):
 
+class CircularProgressWidget(QWidget):
     def __init__(self, size: int = 60, line_width: int = 4, theme_manager=None, parent=None):
         super().__init__(parent)
         self._progress = 0.0
@@ -100,8 +162,8 @@ class CircularProgressWidget(QWidget):
         )
         painter.end()
 
-class SmallCircularProgress(QWidget):
 
+class SmallCircularProgress(QWidget):
     def __init__(self, size: int = 40, line_width: int = 3, theme_manager=None, parent=None):
         super().__init__(parent)
         self._progress = 0.0
@@ -182,6 +244,7 @@ class SmallCircularProgress(QWidget):
         )
         painter.end()
 
+
 class BaseGridItem(QWidget):
     clicked = pyqtSignal(str)
 
@@ -198,6 +261,9 @@ class BaseGridItem(QWidget):
         self._is_gif = False
         self._is_hovered = False
         self._is_destroyed = False
+        self._loading_icon: AnimatedHourglassLabel = None
+        
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._setup_ui()
 
     def _get_bg_color(self) -> str:
@@ -290,16 +356,46 @@ class BaseGridItem(QWidget):
         except RuntimeError:
             pass
 
-    def _show_placeholder(self, text: str = "🖼️"):
+    def _stop_loading_animation(self):
+        if self._loading_icon is not None:
+            try:
+                self._loading_icon.stop_animation()
+                self._loading_icon.setParent(None)
+                self._loading_icon.deleteLater()
+            except:
+                pass
+            self._loading_icon = None
+
+    def _show_loading_placeholder(self):
         if self._is_destroyed:
             return
         try:
-            self.preview_label.setText(text)
-            self.preview_label.setStyleSheet(f"""
-                color: {self._get_placeholder_color()};
-                font-size: 32px;
-                background-color: {self._get_bg_color()};
-            """)
+            self._stop_loading_animation()
+            self.preview_label.setText("")
+            self.preview_label.setStyleSheet(f"background-color: {self._get_bg_color()};")
+            
+            icon_size = max(24, int(self.item_size * 0.17))
+            self._loading_icon = AnimatedHourglassLabel(icon_size, self.preview_label)
+            x = (self.item_size - icon_size) // 2
+            y = (self.item_size - icon_size) // 2
+            self._loading_icon.move(x, y)
+            self._loading_icon.show()
+            self._loading_icon.start_animation()
+        except RuntimeError:
+            pass
+
+    def _show_placeholder(self, text: str = ""):
+        if self._is_destroyed:
+            return
+        try:
+            self._stop_loading_animation()
+            self.preview_label.setText("")
+            self.preview_label.setStyleSheet(f"background-color: {self._get_bg_color()};")
+            
+            icon_size = max(24, int(self.item_size * 0.17))
+            pixmap = get_pixmap("ICON_IMAGE", icon_size)
+            self.preview_label.setPixmap(pixmap)
+            self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         except RuntimeError:
             pass
 
@@ -307,6 +403,7 @@ class BaseGridItem(QWidget):
         if self._is_destroyed:
             return
         try:
+            self._stop_loading_animation()
             self._is_gif = True
             self._gif_buffer = QByteArray(data)
             self._buffer = QBuffer(self._gif_buffer)
@@ -325,6 +422,7 @@ class BaseGridItem(QWidget):
         if self._is_destroyed:
             return
         try:
+            self._stop_loading_animation()
             self._is_gif = True
             self._movie = QMovie(file_path)
             self._movie.setScaledSize(QSize(self.item_size, self.item_size))
@@ -376,6 +474,7 @@ class BaseGridItem(QWidget):
 
     def release_resources(self):
         self._is_destroyed = True
+        self._stop_loading_animation()
         if self._movie is not None:
             try:
                 self._movie.stop()
@@ -400,6 +499,7 @@ class BaseGridItem(QWidget):
     def deleteLater(self):
         self.release_resources()
         super().deleteLater()
+
 
 class WorkshopGridItem(BaseGridItem):
     STATUS_AVAILABLE = "available"
@@ -462,6 +562,7 @@ class WorkshopGridItem(BaseGridItem):
         cache = ImageCache.instance()
         pixmap = cache.get_pixmap(self.preview_url)
         if pixmap:
+            self._stop_loading_animation()
             self._pixmap = pixmap
             self._is_gif = False
             self._apply_pixmap(self.item_size)
@@ -471,7 +572,7 @@ class WorkshopGridItem(BaseGridItem):
             self._load_gif_from_data(gif_data)
             return
         self._is_loading = True
-        self._show_placeholder("⏳")
+        self._show_loading_placeholder()
         weak_self = weakref.ref(self)
         expected_url = self.preview_url
 
@@ -488,6 +589,7 @@ class WorkshopGridItem(BaseGridItem):
             if is_gif:
                 self_ref._load_gif_from_data(data)
             else:
+                self_ref._stop_loading_animation()
                 self_ref._is_gif = False
                 self_ref._pixmap = data
                 self_ref._apply_pixmap(self_ref.item_size)
@@ -526,10 +628,12 @@ class WorkshopGridItem(BaseGridItem):
     def release_resources(self):
         super().release_resources()
 
+
 class LocalGridItem(BaseGridItem):
     def __init__(self, folder_path: str, item_size: int = 185, theme_manager=None, parent=None):
         super().__init__(item_id=folder_path, item_size=item_size, theme_manager=theme_manager, parent=parent)
         self.folder_path = folder_path
+        self.pubfileid = Path(folder_path).name
         self._load_data()
 
     def _load_data(self):
@@ -557,26 +661,28 @@ class LocalGridItem(BaseGridItem):
                 preview_file = candidate
                 break
         if not preview_file:
-            self._show_placeholder("No preview")
+            self._show_placeholder()
             return
         try:
             if preview_file.suffix.lower() == ".gif":
                 self._load_gif_from_file(str(preview_file))
             else:
+                self._stop_loading_animation()
                 pixmap = QPixmap(str(preview_file))
                 if not pixmap.isNull():
                     self._pixmap = pixmap
                     self._is_gif = False
                     self._apply_pixmap(self.item_size)
                 else:
-                    self._show_placeholder("Invalid")
+                    self._show_placeholder()
         except Exception as e:
             print(f"Error loading preview: {e}")
-            self._show_placeholder("Error")
+            self._show_placeholder()
 
     def release_resources(self):
         super().release_resources()
         QPixmapCache.clear()
+
 
 class SkeletonGridItem(QWidget):
     def __init__(self, item_size: int = 185, theme_manager=None, parent=None):
@@ -584,6 +690,7 @@ class SkeletonGridItem(QWidget):
         self.item_size = item_size
         self.theme = theme_manager
         self.setFixedSize(item_size, item_size)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         
         bg_color = self.theme.get_color('bg_tertiary') if self.theme else '#25283d'
         bg_lighter = self.theme.get_color('bg_elevated') if self.theme else '#2d3148'

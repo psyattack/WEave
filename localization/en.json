@@ -77,7 +77,7 @@
     "search_placeholder": "Search...",
     "id_url_placeholder": "ID, URL...",
     "account": "Account",
-    "translating": "⏳ Translating..."
+    "translating": "Translating..."
   },
   "messages": {
     "download_started": "Download started!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "You have incomplete downloads.\nThey will be cancelled upon restart.\nContinue?",
     "restart_with_extractions_only": "You have incomplete extractions.\nThey will be cancelled upon restart.\nContinue?",
     "restart_title": "Restart Required",
-    "restart_theme_message": "Theme will be applied after restart. Restart now?"
+    "restart_theme_message": "Theme will be applied after restart. Restart now?",
+    "restart_debug_message": "Debug mode will be applied after restart. Restart now?"
   },
   "dialog": {
     "tasks": "Tasks",
@@ -153,10 +154,12 @@
     "notifications": "Notifications",
     "coming_soon": "Additional settings will appear soon...",
     "tab_advanced": "Advanced",
-    "login_description": "Enter your Steam credentials for authentication in the Workshop"
+    "login_description": "Enter your Steam credentials for authentication in the Workshop",
+    "debug": "Debug",
+    "debug_mode": "🔧 Debug Mode",
+    "debug_description": "Enable debug mode for webview testing"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
     "developed": "Developed with ❤️ free."
   },

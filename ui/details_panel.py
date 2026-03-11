@@ -6,18 +6,265 @@ import webbrowser
 import weakref
 from pathlib import Path
 from typing import Optional
-from PyQt6.QtCore import Qt, QSize, QTimer, QByteArray, QThread, pyqtSignal
-from PyQt6.QtGui import QPixmap, QMovie, QMouseEvent
+from PyQt6.QtCore import (
+    Qt, QSize, QTimer, QByteArray, QThread, pyqtSignal,
+    QPropertyAnimation, QEasingCurve, pyqtProperty, QRectF
+)
+from PyQt6.QtGui import QPixmap, QMovie, QMouseEvent, QTransform, QPainter, QPainterPath
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QScrollArea, QFileDialog, QApplication
+    QPushButton, QScrollArea, QFileDialog, QApplication,
+    QFrame, QSizePolicy
 )
 from ui.notifications import NotificationLabel, MessageBox
-from resources.icons import get_icon
+from core.resources import get_icon, get_pixmap
 from utils.helpers import human_readable_size, format_timestamp, get_directory_size, get_folder_mtime
 from core.image_cache import ImageCache
 from utils.translation_helper import DescriptionTranslator
 from datetime import datetime
+
+
+class TagChip(QFrame):
+    
+    def __init__(self, text: str, theme_manager, is_key: bool = False, parent=None):
+        super().__init__(parent)
+        self.theme = theme_manager
+        self._is_key = is_key
+        self._setup_ui(text)
+    
+    def _setup_ui(self, text: str):
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(8, 2, 8, 2)
+        layout.setSpacing(0)
+        
+        label = QLabel(text)
+        label.setStyleSheet(f"""
+            color: {self.theme.get_color('text_primary')};
+            font-size: 11px;
+            font-weight: {'600' if self._is_key else 'normal'};
+            background: transparent;
+            border: none;
+        """)
+        layout.addWidget(label)
+        
+        if self._is_key:
+            bg_color = self.theme.get_color('primary')
+            border_color = self.theme.get_color('primary_hover')
+        else:
+            bg_color = self.theme.get_color('bg_tertiary')
+            border_color = self.theme.get_color('border')
+        
+        self.setStyleSheet(f"""
+            TagChip {{
+                background-color: {bg_color};
+                border: 1px solid {border_color};
+                border-radius: 10px;
+            }}
+        """)
+        
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        self.setFixedHeight(20)
+
+
+class TagGroupWidget(QWidget):
+    
+    def __init__(self, key: str, values: list, theme_manager, max_width: int = 280, parent=None):
+        super().__init__(parent)
+        self.theme = theme_manager
+        self._max_width = max_width
+        self._setup_ui(key, values)
+    
+    def _setup_ui(self, key: str, values: list):
+        self.setStyleSheet("background: transparent; border: none;")
+        
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(3)
+
+        chips = []
+        chips.append(TagChip(key, self.theme, is_key=True))
+        
+        for value in values:
+            if value.strip():
+                chips.append(TagChip(value.strip(), self.theme, is_key=False))
+        
+        h_spacing = 4
+        current_row_layout = None
+        current_row_width = 0
+        
+        for chip in chips:
+            chip_width = chip.sizeHint().width() + h_spacing
+            
+            if current_row_layout is None or current_row_width + chip_width > self._max_width:
+                row_widget = QWidget()
+                row_widget.setStyleSheet("background: transparent; border: none;")
+                current_row_layout = QHBoxLayout(row_widget)
+                current_row_layout.setContentsMargins(0, 0, 0, 0)
+                current_row_layout.setSpacing(h_spacing)
+                current_row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                main_layout.addWidget(row_widget)
+                current_row_width = 0
+            
+            current_row_layout.addWidget(chip)
+            current_row_width += chip_width
+
+        if current_row_layout:
+            current_row_layout.addStretch()
+
+
+class FlowLayout(QVBoxLayout):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._rows = []
+        self._current_row = None
+        self._max_width = 280
+        self._current_row_width = 0
+        self._h_spacing = 6
+        self._v_spacing = 6
+        self.setSpacing(self._v_spacing)
+    
+    def set_max_width(self, width: int):
+        self._max_width = width
+    
+    def add_widget_flow(self, widget: QWidget):
+        widget_width = widget.sizeHint().width() + self._h_spacing
+        
+        if self._current_row is None or self._current_row_width + widget_width > self._max_width:
+            self._start_new_row()
+        
+        self._current_row.addWidget(widget)
+        self._current_row_width += widget_width
+    
+    def _start_new_row(self):
+        row_widget = QWidget()
+        row_widget.setStyleSheet("background: transparent; border: none;")
+        row_layout = QHBoxLayout(row_widget)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(self._h_spacing)
+        row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
+        self.addWidget(row_widget)
+        self._rows.append(row_widget)
+        self._current_row = row_layout
+        self._current_row_width = 0
+    
+    def finish(self):
+        if self._current_row:
+            self._current_row.addStretch()
+
+
+class TagsContainer(QWidget):
+    
+    def __init__(self, theme_manager, parent=None):
+        super().__init__(parent)
+        self.theme = theme_manager
+        self._setup_ui()
+    
+    def _setup_ui(self):
+        self.setStyleSheet("background: transparent; border: none;")
+        self._main_layout = QVBoxLayout(self)
+        self._main_layout.setContentsMargins(0, 0, 0, 0)
+        self._main_layout.setSpacing(8)
+    
+    def clear(self):
+        while self._main_layout.count():
+            child = self._main_layout.takeAt(0)
+            if child and child.widget():
+                child.widget().deleteLater()
+    
+    def add_tag_group(self, key: str, values: list):
+        group_widget = QWidget()
+        group_widget.setStyleSheet("background: transparent; border: none;")
+        group_layout = QVBoxLayout(group_widget)
+        group_layout.setContentsMargins(0, 0, 0, 0)
+        group_layout.setSpacing(6)
+        
+        key_chip = TagChip(key, self.theme, is_key=True)
+        
+        key_row = QWidget()
+        key_row.setStyleSheet("background: transparent; border: none;")
+        key_row_layout = QHBoxLayout(key_row)
+        key_row_layout.setContentsMargins(0, 0, 0, 0)
+        key_row_layout.setSpacing(0)
+        key_row_layout.addWidget(key_chip)
+        key_row_layout.addStretch()
+        group_layout.addWidget(key_row)
+        
+        if values:
+            flow = FlowLayout()
+            flow.set_max_width(270)
+            
+            values_widget = QWidget()
+            values_widget.setStyleSheet("background: transparent; border: none;")
+            values_widget.setLayout(flow)
+            
+            for value in values:
+                if value.strip():
+                    chip = TagChip(value.strip(), self.theme, is_key=False)
+                    flow.add_widget_flow(chip)
+            
+            flow.finish()
+            group_layout.addWidget(values_widget)
+        
+        self._main_layout.addWidget(group_widget)
+
+
+class AnimatedIconLabel(QLabel):
+    def __init__(self, icon_name: str, size: int = 32, parent=None):
+        super().__init__(parent)
+        self._icon_name = icon_name
+        self._size = size
+        self._rotation = 0.0
+        self._direction = 1
+        self._base_pixmap = get_pixmap(icon_name, size)
+        
+        self.setFixedSize(size, size)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setStyleSheet("border: none;")
+        self._update_pixmap()
+        
+        self._animation = QPropertyAnimation(self, b"rotation")
+        self._animation.setDuration(1000)
+        self._animation.setStartValue(0.0)
+        self._animation.setEndValue(30.0)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._animation.finished.connect(self._on_animation_finished)
+    
+    def get_rotation(self) -> float:
+        return self._rotation
+    
+    def set_rotation(self, value: float):
+        self._rotation = value
+        self._update_pixmap()
+    
+    rotation = pyqtProperty(float, get_rotation, set_rotation)
+    
+    def _update_pixmap(self):
+        if self._base_pixmap.isNull():
+            return
+        transform = QTransform()
+        transform.rotate(self._rotation)
+        rotated = self._base_pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
+        x = (rotated.width() - self._size) // 2
+        y = (rotated.height() - self._size) // 2
+        cropped = rotated.copy(x, y, self._size, self._size)
+        self.setPixmap(cropped)
+    
+    def _on_animation_finished(self):
+        self._direction *= -1
+        self._animation.setStartValue(self._rotation)
+        self._animation.setEndValue(30.0 * self._direction)
+        self._animation.start()
+    
+    def start_animation(self):
+        self._animation.start()
+    
+    def stop_animation(self):
+        self._animation.stop()
+        self._rotation = 0.0
+        self._update_pixmap()
+
 
 class TranslationWorker(QThread):
     finished = pyqtSignal(str, str)
@@ -38,10 +285,13 @@ class TranslationWorker(QThread):
         except Exception as e:
             self.error.emit(str(e))
 
+
 class DetailsPanel(QWidget):
     MODE_NONE = 0
     MODE_INSTALLED = 1
     MODE_WORKSHOP = 2
+    
+    panel_collapse_requested = pyqtSignal()
 
     def __init__(self, wallpaper_engine, download_manager, translator, theme_manager, config_manager=None, parent=None):
         super().__init__(parent)
@@ -75,6 +325,10 @@ class DetailsPanel(QWidget):
         self._metadata_fetch_pubfileid: str = ""
         self._is_parser_connected: bool = False
         self._retry_timer: Optional[QTimer] = None
+        
+        self._loading_icon: Optional[AnimatedIconLabel] = None
+        
+        self._tags_container: Optional[TagsContainer] = None
 
         self._setup_ui()
         self.setVisible(False)
@@ -87,6 +341,12 @@ class DetailsPanel(QWidget):
         main_layout.setContentsMargins(0, 10, 0, 10)
         main_layout.setSpacing(14)
 
+        preview_container = QWidget()
+        preview_container.setFixedSize(310, 275)
+        preview_layout = QVBoxLayout(preview_container)
+        preview_layout.setContentsMargins(0, 0, 0, 0)
+        preview_layout.setSpacing(0)
+        
         self.preview_label = QLabel()
         self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setFixedSize(310, 275)
@@ -96,7 +356,28 @@ class DetailsPanel(QWidget):
                 border-radius: 8px;
             }}
         """)
-        main_layout.addWidget(self.preview_label)
+        preview_layout.addWidget(self.preview_label)
+        
+        self.collapse_btn = QPushButton(preview_container)
+        self.collapse_btn.setFixedSize(28, 28)
+        self.collapse_btn.setIcon(get_icon("ICON_COLLAPSE"))
+        self.collapse_btn.setIconSize(QSize(16, 16))
+        self.collapse_btn.move(8, 8)
+        self.collapse_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: rgba(0, 0, 0, 150);
+                border-radius: 6px;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: rgba(0, 0, 0, 200);
+            }}
+        """)
+        self.collapse_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.collapse_btn.clicked.connect(self._on_collapse_clicked)
+        self.collapse_btn.raise_()
+        
+        main_layout.addWidget(preview_container)
 
         self._create_action_buttons(main_layout)
         self._create_title_section(main_layout)
@@ -109,6 +390,9 @@ class DetailsPanel(QWidget):
                 border-left: 1px solid {self.theme.get_color('border')};
             }}
         """)
+
+    def _on_collapse_clicked(self):
+        self.panel_collapse_requested.emit()
 
     def _create_action_buttons(self, layout):
         self.buttons_widget = QWidget()
@@ -490,7 +774,6 @@ class DetailsPanel(QWidget):
         self.config.set_wallpaper_metadata(item.pubfileid, metadata)
 
     def _parse_date_to_timestamp(self, date_str: str) -> int:
-        
         if not date_str:
             return 0
         
@@ -573,11 +856,16 @@ class DetailsPanel(QWidget):
         self._is_translated = False
         self._description_label = None
         self._translate_button = None
+        self._tags_container = None
 
     def _stop_movie(self):
         if self.movie is not None:
             try:
                 self.movie.stop()
+                try:
+                    self.movie.frameChanged.disconnect(self._on_gif_frame_changed)
+                except:
+                    pass
                 self.preview_label.setMovie(None)
                 self.movie.deleteLater()
             except:
@@ -591,19 +879,53 @@ class DetailsPanel(QWidget):
                 pass
             self._temp_gif_file = None
 
+    def _stop_loading_animation(self):
+        if self._loading_icon is not None:
+            try:
+                self._loading_icon.stop_animation()
+                self._loading_icon.setParent(None)
+                self._loading_icon.deleteLater()
+            except:
+                pass
+            self._loading_icon = None
+
     def _reset_preview(self):
         self._current_preview_url = ""
         self._stop_movie()
+        self._stop_loading_animation()
         self.preview_label.clear()
-        self.preview_label.setText("⏳")
+        self._show_loading_placeholder()
+
+    def _show_loading_placeholder(self):
+        self._stop_loading_animation()
+        self.preview_label.setText("")
         self.preview_label.setStyleSheet(f"""
             QLabel {{
                 background-color: {self.theme.get_color('bg_tertiary')};
                 border-radius: 8px;
-                color: {self.theme.get_color('text_disabled')};
-                font-size: 32px;
             }}
         """)
+        
+        self._loading_icon = AnimatedIconLabel("ICON_HOURGLASS", 48, self.preview_label)
+        x = (self.preview_label.width() - 48) // 2
+        y = (self.preview_label.height() - 48) // 2
+        self._loading_icon.move(x - 5, y)
+        self._loading_icon.show()
+        self._loading_icon.start_animation()
+
+    def _show_image_placeholder(self):
+        self._stop_loading_animation()
+        self.preview_label.setText("")
+        self.preview_label.setStyleSheet(f"""
+            QLabel {{
+                background-color: {self.theme.get_color('bg_tertiary')};
+                border-radius: 8px;
+            }}
+        """)
+        
+        pixmap = get_pixmap("ICON_IMAGE", 48)
+        self.preview_label.setPixmap(pixmap)
+        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def _clear_buttons(self):
         while self.buttons_layout.count():
@@ -699,8 +1021,41 @@ class DetailsPanel(QWidget):
         ))
         self.buttons_layout.addStretch()
 
-    def _add_detail_label(self, text: str, icon: str = ""):
-        label = QLabel(f"{icon} {text}" if icon else text)
+    def _create_icon_label(self, icon_name: str, size: int = 16) -> QLabel:
+        label = QLabel()
+        label.setPixmap(get_pixmap(icon_name, size))
+        label.setFixedSize(size, size)
+        label.setStyleSheet("background: transparent; border: none;")
+        return label
+
+    def _add_detail_row(self, icon_name: str, text: str):
+        row_widget = QWidget()
+        row_widget.setStyleSheet("background: transparent; border: none;")
+        row_layout = QHBoxLayout(row_widget)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(6)
+        
+        icon_label = self._create_icon_label(icon_name, 16)
+        row_layout.addWidget(icon_label)
+        
+        text_label = QLabel(text)
+        text_label.setStyleSheet(f"""
+            color: {self.theme.get_color('text_secondary')};
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
+        text_label.setWordWrap(True)
+        row_layout.addWidget(text_label, 1)
+        
+        self.details_layout.addWidget(row_widget)
+        return text_label
+
+    def _add_detail_label(self, text: str, icon_name: str = ""):
+        if icon_name:
+            return self._add_detail_row(icon_name, text)
+        
+        label = QLabel(text)
         label.setStyleSheet(f"""
             color: {self.theme.get_color('text_secondary')};
             font-size: 14px;
@@ -717,7 +1072,19 @@ class DetailsPanel(QWidget):
         separator.setStyleSheet(f"background-color: {self.theme.get_color('border')}; border: none;")
         self.details_layout.addWidget(separator)
 
-    def _add_section_title(self, text: str):
+    def _add_section_title(self, text: str, icon_name: str = None):
+        header_widget = QWidget()
+        header_widget.setStyleSheet("background: transparent; border: none;")
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setSpacing(8)
+        
+        if icon_name:
+            icon_label = QLabel()
+            icon_label.setPixmap(get_pixmap(icon_name, 18))
+            icon_label.setStyleSheet("background: transparent; border: none;")
+            header_layout.addWidget(icon_label)
+        
         label = QLabel(text)
         label.setStyleSheet(f"""
             font-weight: bold;
@@ -726,7 +1093,9 @@ class DetailsPanel(QWidget):
             background: transparent;
             border: none;
         """)
-        self.details_layout.addWidget(label)
+        header_layout.addWidget(label)
+        header_layout.addStretch()
+        self.details_layout.addWidget(header_widget)
         return label
 
     def _add_description_label(self, text: str):
@@ -755,16 +1124,6 @@ class DetailsPanel(QWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.setSpacing(8)
 
-        title_label = QLabel(self.tr.t("labels.description"))
-        title_label.setStyleSheet(f"""
-            font-weight: bold;
-            color: {self.theme.get_color('text_primary')};
-            font-size: 14px;
-            background: transparent;
-            border: none;
-        """)
-        header_layout.addWidget(title_label)
-
         if description and description.strip():
             self._translate_button = QPushButton()
             self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
@@ -783,6 +1142,16 @@ class DetailsPanel(QWidget):
             """)
             self._translate_button.clicked.connect(self._on_translate_clicked)
             header_layout.addWidget(self._translate_button)
+
+        title_label = QLabel(self.tr.t("labels.description"))
+        title_label.setStyleSheet(f"""
+            font-weight: bold;
+            color: {self.theme.get_color('text_primary')};
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
+        header_layout.addWidget(title_label)
 
         header_layout.addStretch()
         self.details_layout.addWidget(header_widget)
@@ -923,6 +1292,68 @@ class DetailsPanel(QWidget):
 
         return self._translate_single_tag_value(key, value)
 
+    def _add_rating_row(self, rating_star_file: str, num_ratings: str):
+        stars_text = self._star_file_to_text(rating_star_file)
+        if not stars_text:
+            return
+        
+        row_widget = QWidget()
+        row_widget.setStyleSheet("background: transparent; border: none;")
+        row_layout = QHBoxLayout(row_widget)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(6)
+        
+        icon_label = self._create_icon_label("ICON_STAR", 16)
+        row_layout.addWidget(icon_label)
+        
+        rating_text = QLabel(self.tr.t("labels.rating"))
+        rating_text.setStyleSheet(f"""
+            color: {self.theme.get_color('text_secondary')};
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
+        row_layout.addWidget(rating_text)
+        
+        row_layout.addSpacing(4)
+        
+        count_part = f"  ({num_ratings})" if num_ratings else ""
+        stars_label = QLabel(f"{stars_text}{count_part}")
+        stars_label.setStyleSheet(f"""
+            color: #f5c518;
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        """)
+        row_layout.addWidget(stars_label)
+        
+        row_layout.addStretch()
+        self.details_layout.addWidget(row_widget)
+
+    def _add_tags_section(self, tags: dict):
+        if not tags:
+            return
+        
+        self._add_separator()
+        self._add_section_title(self.tr.t("labels.tags"), "ICON_TAGS")
+        
+        for key, value in tags.items():
+            translated_key = self._translate_tag_key(key)
+            clean_key = translated_key.rstrip(':')
+            
+            if isinstance(value, bool):
+                values = []
+            elif isinstance(value, str) and value.strip():
+                if "," in value:
+                    values = [self._translate_single_tag_value(key, v.strip()) for v in value.split(",")]
+                else:
+                    values = [self._translate_single_tag_value(key, value)]
+            else:
+                values = []
+            
+            tag_group = TagGroupWidget(clean_key, values, self.theme, max_width=280)
+            self.details_layout.addWidget(tag_group)
+
     def _setup_installed_details(self):
         self._clear_details()
 
@@ -935,53 +1366,25 @@ class DetailsPanel(QWidget):
             num_ratings = metadata.get('num_ratings', '')
             
             if rating_star_file:
-                stars_text = self._star_file_to_text(rating_star_file)
-                if stars_text:
-                    count_part = f"  ({num_ratings})" if num_ratings else ""
-                    rating_label = QLabel(
-                        f'<span style="color: {self.theme.get_color("text_secondary")};">✨ {self.tr.t("labels.rating")}&nbsp;&nbsp;</span>'
-                        f'<span style="color: #f5c518;">{stars_text}{count_part}</span>'
-                    )
-                    rating_label.setStyleSheet(
-                        "font-size: 14px; background: transparent; border: none;"
-                    )
-                    self.details_layout.addWidget(rating_label)
+                self._add_rating_row(rating_star_file, num_ratings)
 
             size_bytes = get_directory_size(self.folder_path)
-            self._add_detail_label(self.tr.t("labels.size", size=human_readable_size(size_bytes)), "📦")
+            self._add_detail_row("ICON_PACKAGE", self.tr.t("labels.size", size=human_readable_size(size_bytes)))
 
             if metadata.get('posted_date_str'):
-                self._add_detail_label(self.tr.t("labels.posted", date=metadata['posted_date_str']), "📅")
+                self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.posted", date=metadata['posted_date_str']))
             if metadata.get('updated_date_str'):
-                self._add_detail_label(self.tr.t("labels.updated", date=metadata['updated_date_str']), "🔄")
+                self._add_detail_row("ICON_REFRASH", self.tr.t("labels.updated", date=metadata['updated_date_str']))
 
             mtime = get_folder_mtime(self.folder_path)
-            self._add_detail_label(self.tr.t("labels.installed", date=format_timestamp(mtime)), "📅")
+            self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.installed", date=format_timestamp(mtime)))
 
             if metadata.get('author'):
-                self._add_detail_label(self.tr.t("labels.author", author=metadata['author']), "👤")
+                self._add_detail_row("ICON_USER", self.tr.t("labels.author", author=metadata['author']))
 
             tags = metadata.get('tags', {})
             if tags:
-                self._add_separator()
-                self._add_section_title(self.tr.t("labels.tags"))
-                for key, value in tags.items():
-                    translated_key = self._translate_tag_key(key)
-                    translated_value = self._translate_tag_value(key, value) if not isinstance(value, bool) else ""
-                    clean_key = translated_key.rstrip(':')
-                    if translated_value:
-                        tag_text = f"• {clean_key}: {translated_value}"
-                    else:
-                        tag_text = f"• {clean_key}"
-                    tag_label = QLabel(tag_text)
-                    tag_label.setStyleSheet(f"""
-                        color: {self.theme.get_color('text_primary')};
-                        font-size: 13px;
-                        background: transparent;
-                        border: none;
-                    """)
-                    tag_label.setWordWrap(True)
-                    self.details_layout.addWidget(tag_label)
+                self._add_tags_section(tags)
 
             description = metadata.get('description', '') or self._project_data.get("description", "")
             if description and description.strip():
@@ -989,10 +1392,10 @@ class DetailsPanel(QWidget):
                 self._add_description_section(description)
         else:
             size_bytes = get_directory_size(self.folder_path)
-            self._add_detail_label(self.tr.t("labels.size", size=human_readable_size(size_bytes)), "📦")
+            self._add_detail_row("ICON_PACKAGE", self.tr.t("labels.size", size=human_readable_size(size_bytes)))
             
             mtime = get_folder_mtime(self.folder_path)
-            self._add_detail_label(self.tr.t("labels.installed", date=format_timestamp(mtime)), "📅")
+            self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.installed", date=format_timestamp(mtime)))
             
             description = self._project_data.get("description", "")
             if description and description.strip():
@@ -1008,47 +1411,19 @@ class DetailsPanel(QWidget):
         num_ratings = getattr(item, 'num_ratings', '')
 
         if rating_star_file:
-            stars_text = self._star_file_to_text(rating_star_file)
-            if stars_text:
-                count_part = f"  ({num_ratings})" if num_ratings else ""
-                rating_label = QLabel(
-                    f'<span style="color: {self.theme.get_color("text_secondary")};">✨ {self.tr.t("labels.rating")}&nbsp;&nbsp;</span>'
-                    f'<span style="color: #f5c518;">{stars_text}{count_part}</span>'
-                )
-                rating_label.setStyleSheet(
-                    "font-size: 14px; background: transparent; border: none;"
-                )
-                self.details_layout.addWidget(rating_label)
+            self._add_rating_row(rating_star_file, num_ratings)
 
         if item.file_size:
-            self._add_detail_label(self.tr.t("labels.size", size=item.file_size), "📦")
+            self._add_detail_row("ICON_PACKAGE", self.tr.t("labels.size", size=item.file_size))
         if item.posted_date:
-            self._add_detail_label(self.tr.t("labels.posted", date=item.posted_date), "📅")
+            self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.posted", date=item.posted_date))
         if item.updated_date:
-            self._add_detail_label(self.tr.t("labels.updated", date=item.updated_date), "🔄")
+            self._add_detail_row("ICON_REFRASH", self.tr.t("labels.updated", date=item.updated_date))
         if item.author:
-            self._add_detail_label(self.tr.t("labels.author", author=item.author), "👤")
+            self._add_detail_row("ICON_USER", self.tr.t("labels.author", author=item.author))
 
         if item.tags:
-            self._add_separator()
-            self._add_section_title(self.tr.t("labels.tags"))
-            for key, value in item.tags.items():
-                translated_key = self._translate_tag_key(key)
-                translated_value = self._translate_tag_value(key, value) if not isinstance(value, bool) else ""
-                clean_key = translated_key.rstrip(':')
-                if translated_value:
-                    tag_text = f"• {clean_key}: {translated_value}"
-                else:
-                    tag_text = f"• {clean_key}"
-                tag_label = QLabel(tag_text)
-                tag_label.setStyleSheet(f"""
-                    color: {self.theme.get_color('text_primary')};
-                    font-size: 13px;
-                    background: transparent;
-                    border: none;
-                """)
-                tag_label.setWordWrap(True)
-                self.details_layout.addWidget(tag_label)
+            self._add_tags_section(item.tags)
 
         if item.description:
             self._add_separator()
@@ -1093,6 +1468,7 @@ class DetailsPanel(QWidget):
                 break
 
         if not preview_file:
+            self._stop_loading_animation()
             self.preview_label.clear()
             self.preview_label.setText(self.tr.t("labels.no_preview"))
             return
@@ -1100,9 +1476,11 @@ class DetailsPanel(QWidget):
         try:
             if preview_file.suffix.lower() == ".gif":
                 self._stop_movie()
+                self._stop_loading_animation()
                 self.movie = QMovie(str(preview_file))
                 self.movie.setScaledSize(self.preview_label.size())
                 self.preview_label.setMovie(self.movie)
+                self.movie.frameChanged.connect(self._on_gif_frame_changed)
                 self.preview_label.setStyleSheet(f"""
                     QLabel {{
                         background-color: {self.theme.get_color('bg_tertiary')};
@@ -1116,12 +1494,13 @@ class DetailsPanel(QWidget):
                     self._apply_preview_pixmap(pixmap)
         except Exception as e:
             print(f"[DetailsPanel] Load local preview error: {e}")
+            self._stop_loading_animation()
             self.preview_label.clear()
             self.preview_label.setText(self.tr.t("messages.error"))
 
     def _load_remote_preview(self, url: str):
         if not url:
-            self.preview_label.setText("🖼️")
+            self._show_image_placeholder()
             return
 
         self._current_preview_url = url
@@ -1150,7 +1529,7 @@ class DetailsPanel(QWidget):
             if self_ref._current_preview_url != expected_url:
                 return
             if data is None:
-                self_ref.preview_label.setText("🖼️")
+                self_ref._show_image_placeholder()
                 return
             if is_gif:
                 self_ref._apply_preview_gif(data)
@@ -1161,15 +1540,17 @@ class DetailsPanel(QWidget):
 
     def _apply_preview_pixmap(self, pixmap: QPixmap):
         if pixmap is None or pixmap.isNull():
-            self.preview_label.setText("🖼️")
+            self._show_image_placeholder()
             return
         try:
+            self._stop_loading_animation()
             scaled = pixmap.scaled(
                 self.preview_label.size(),
                 Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                 Qt.TransformationMode.SmoothTransformation
             )
-            self.preview_label.setPixmap(scaled)
+            rounded = self._create_rounded_pixmap(scaled, radius=8)
+            self.preview_label.setPixmap(rounded)
             self.preview_label.setStyleSheet(f"""
                 QLabel {{
                     background-color: {self.theme.get_color('bg_tertiary')};
@@ -1178,14 +1559,29 @@ class DetailsPanel(QWidget):
             """)
         except Exception as e:
             print(f"[DetailsPanel] Apply pixmap error: {e}")
-            self.preview_label.setText("🖼️")
+            self._show_image_placeholder()
+
+    def _create_rounded_pixmap(self, pixmap: QPixmap, radius: int = 8) -> QPixmap:
+        if pixmap.isNull():
+            return pixmap
+        rounded = QPixmap(pixmap.size())
+        rounded.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(rounded)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(0, 0, pixmap.width(), pixmap.height()), radius, radius)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, pixmap)
+        painter.end()
+        return rounded
 
     def _apply_preview_gif(self, data: QByteArray):
         if data is None or data.isEmpty():
-            self.preview_label.setText("🖼️")
+            self._show_image_placeholder()
             return
         try:
             self._stop_movie()
+            self._stop_loading_animation()
 
             fd, self._temp_gif_file = tempfile.mkstemp(suffix='.gif')
             os.write(fd, bytes(data))
@@ -1194,6 +1590,7 @@ class DetailsPanel(QWidget):
             self.movie = QMovie(self._temp_gif_file)
             self.movie.setScaledSize(self.preview_label.size())
             self.preview_label.setMovie(self.movie)
+            self.movie.frameChanged.connect(self._on_gif_frame_changed)
             self.preview_label.setStyleSheet(f"""
                 QLabel {{
                     background-color: {self.theme.get_color('bg_tertiary')};
@@ -1203,7 +1600,15 @@ class DetailsPanel(QWidget):
             self.movie.start()
         except Exception as e:
             print(f"[DetailsPanel] Apply GIF error: {e}")
-            self.preview_label.setText("🖼️")
+            self._show_image_placeholder()
+
+    def _on_gif_frame_changed(self, frame_number: int):
+        if self.movie is None:
+            return
+        current_pixmap = self.movie.currentPixmap()
+        if not current_pixmap.isNull():
+            rounded = self._create_rounded_pixmap(current_pixmap, radius=8)
+            self.preview_label.setPixmap(rounded)
 
     def _on_open_folder(self):
         if self.folder_path and Path(self.folder_path).exists():

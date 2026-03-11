@@ -77,7 +77,7 @@
     "search_placeholder": "Buscar...",
     "id_url_placeholder": "ID, URL...",
     "account": "Cuenta",
-    "translating": "⏳ Traduciendo..."
+    "translating": "Traduciendo..."
   },
   "messages": {
     "download_started": "¡Descarga iniciada!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "Tiene descargas incompletas.\nSe cancelarán al reiniciar.\n¿Continuar?",
     "restart_with_extractions_only": "Tiene extracciones incompletas.\nSe cancelarán al reiniciar.\n¿Continuar?",
     "restart_title": "Reinicio requerido",
-    "restart_theme_message": "El tema se aplicará después del reiniciar. ¿Reiniciar ahora?"
+    "restart_theme_message": "El tema se aplicará después del reiniciar. ¿Reiniciar ahora?",
+    "restart_debug_message": "El modo de depuración se aplicará después del reinicio. ¿Reiniciar ahora?"
   },
   "dialog": {
     "tasks": "Tareas",
@@ -153,10 +154,12 @@
     "notifications": "Notificaciones",
     "coming_soon": "¡Configuración adicional próximamente...",
     "tab_advanced": "Avanzado",
-    "login_description": "Ingrese sus credenciales de Steam para autenticarse en el Taller"
+    "login_description": "Ingrese sus credenciales de Steam para autenticarse en el Taller",
+    "debug": "Depuración",
+    "debug_mode": "🔧 Modo de depuración",
+    "debug_description": "Activar el modo de depuración para pruebas de webview"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "Esta aplicación le permite descargar y gestionar fácilmente fondos de pantalla de Wallpaper Engine desde Steam Workshop.",
     "developed": "Desarrollado con ❤️ gratis."
   },

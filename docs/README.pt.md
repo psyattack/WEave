@@ -1,4 +1,4 @@
-# WE Workshop Manager
+# WEave (anteriormente WE Workshop Manager)
 
 <p align="center">
   <a href="README.md">🇷🇺 Русский</a> |
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="../screenshots/screen_main.png" alt="WE Workshop Manager" width="700">
+  <img src="../screenshots/screen_main.png" alt="WEave (anteriormente WE Workshop Manager)" width="700">
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@
 
 ---
 
-WE Workshop Manager é um aplicativo de desktop Python/PyQt6 que permite baixar, instalar e gerenciar facilmente wallpapers do Steam Workshop para Wallpaper Engine **sem precisar executar o cliente Steam**.
+WEave (anteriormente WE Workshop Manager) é um aplicativo de desktop Python/PyQt6 que permite baixar, instalar e gerenciar facilmente wallpapers do Steam Workshop para Wallpaper Engine **sem precisar executar o cliente Steam**.
 
 ### <strong>Desde a versão 1.3.7, as páginas do Workshop carregam mais rápido que no navegador com o novo recurso Preload Next Page (BETA)!</strong>
 ### <strong>Em desenvolvimento 2.0 - migração para Tauri (React) + Rust ou PyWebView. UI mais fresca, mais rápido, mais compacto.</strong>
@@ -77,16 +77,11 @@ WE Workshop Manager é um aplicativo de desktop Python/PyQt6 que permite baixar,
 ### 📦 Opção 1: Versão empacotada com PyInstaller
 
 Baixe a versão mais recente da seção **[Releases](https://github.com/psyattack/we-workshop-manager/releases)**  
-> Todas as dependências já estão no arquivo, basta extrair o arquivo para um local conveniente e executar `WE Workshop Manager.exe`
+> Todas as dependências já estão no arquivo, basta extrair o arquivo para um local conveniente e executar `WEave.exe`
 
 ---
 
 ### 💻 Opção 2: Execução a partir do código-fonte
-
-#### 0. Configuração inicial
-
-Instale o Python versão 3.10 ou superior do [site oficial](https://www.python.org/downloads) se ainda não fez  
-O aplicativo foi testado no Python 3.14.2
 
 #### 1. Clonar o repositório
 
@@ -122,14 +117,12 @@ python app.py
 we-workshop-manager/
 ├── core/                  # Lógica principal
 ├── ui/                    # Interface
-├── localization/          # Arquivos de localização
-├── resources/             # Recursos
+├── localization/          # Arquivos de localisation
 ├── utils/                 # Utilitários
-├── Plugins/               # Utilitários DepotDownloaderMod e RePKG (baixar separadamente)
-├── Packages/              # Instalador .NET (instalar separadamente)
+├── plugins/               # Utilitários DepotDownloaderMod e RePKG (baixar separadamente)
 ├── app.py                 # Ponto de entrada
 └── requirements.txt       # Dependências Python
----
+```
 
 ---
 
@@ -152,9 +145,8 @@ Este projeto está sob a licença **[MIT](LICENSE)**.
 
 ## 👁️‍🗨️ Problemas conhecidos
 
-- [ ] Busca difere parcialmente da versão do site
-- [ ] Retorno incorreto do estado da janela após minimizar
-- [ ] Diálogos brancos ao limpar filtros
+- [ ] Retorno incorreto do estado da janela após pré-minimizar
+- [x] Diálogos brancos ao limpar filtros
 - [ ] PyInstaller --onefile quebra reinicialização, se compilar do código-fonte compile em --onedir (~500mb, então não upado no release)
 
 ---
@@ -167,7 +159,7 @@ Este projeto está sob a licença **[MIT](LICENSE)**.
 - [ ] Bandeja + modo silencioso
 - [ ] Funções originais do WE (Editor de presets, criar playlists, perfis, etc.)
 - [ ] Atualizações automáticas
-- [ ] Otimização da interface para diferentes tamanhos e formatos de tela + capacidade de redimensionamento de janela
+- [x] Otimização da interface para diferentes tamanhos e formatos de tela + capacidade de redimensionamento de janela
 
 > Se você tiver problemas ou sugestões de melhoria — crie uma [Issue](https://github.com/psyattack/we-workshop-manager/issues) no repositório.
 

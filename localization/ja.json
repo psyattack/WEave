@@ -77,7 +77,7 @@
     "search_placeholder": "検索...",
     "id_url_placeholder": "ID, URL...",
     "account": "アカウント",
-    "translating": "⏳ 翻訳中..."
+    "translating": "翻訳中..."
   },
   "messages": {
     "download_started": "ダウンロードを開始しました!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "未完了のダウンロードがあります。\n再起動時にキャンセルされます。\n続行しますか?",
     "restart_with_extractions_only": "未完了の展開があります。\n再起動時にキャンセルされます。\n続行しますか?",
     "restart_title": "再起動が必要",
-    "restart_theme_message": "テーマは再起動後に適用されます。今すぐ再起動しますか?"
+    "restart_theme_message": "テーマは再起動後に適用されます。今すぐ再起動しますか?",
+    "restart_debug_message": "デバッグモードは再起動後に適用されます。今すぐ再起動しますか?"
   },
   "dialog": {
     "tasks": "タスク",
@@ -153,10 +154,12 @@
     "notifications": "通知",
     "coming_soon": "追加の設定は近日公開...",
     "tab_advanced": "高度な設定",
-    "login_description": "ワークショップ認証用のSteam認証情報を入力"
+    "login_description": "ワークショップ認証用のSteam認証情報を入力",
+    "debug": "デバッグ",
+    "debug_mode": "🔧 デバッグモード",
+    "debug_description": "WebViewテスト用のデバッグモードを有効にする"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "このアプリを使用すると、SteamワークショップからWallpaper Engineの壁紙を簡単にダウンロードして管理できます。",
     "developed": "❤️無料で開発されました。"
   },

@@ -20,7 +20,7 @@ class Translator:
         self._load_translations()
     
     def _load_translations(self):
-        localization_dir = Path(__file__).parent
+        localization_dir = Path(__file__).parent.parent / "localization"
         
         for lang_code in self.SUPPORTED_LANGUAGES.keys():
             lang_file = localization_dir / f"{lang_code}.json"

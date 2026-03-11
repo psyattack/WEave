@@ -1,19 +1,22 @@
 from pathlib import Path
 from typing import List, Dict, Any
 from dataclasses import dataclass, field
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QEasingCurve, QRectF, pyqtProperty
+from PyQt6.QtGui import QPainter, QColor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QComboBox, QScrollArea, QGridLayout, QSplitter,
+    QComboBox, QScrollArea,
     QSizePolicy, QFrame,
     QLineEdit, QPushButton, QCheckBox
 )
 from core.workshop_filters import FilterConfig
 from ui.grid_items import LocalGridItem
+from ui.flow_layout import AdaptiveGridWidget
 from ui.details_panel import DetailsPanel
-from resources.icons import get_pixmap
+from core.resources import get_pixmap
 from utils.helpers import get_directory_size, human_readable_size, get_folder_mtime
 import json
+
 
 @dataclass
 class LocalFilters:
@@ -28,6 +31,7 @@ class LocalFilters:
     genre_tags: List[str] = field(default_factory=list)
     excluded_misc_tags: List[str] = field(default_factory=list)
     excluded_genre_tags: List[str] = field(default_factory=list)
+
 
 class LocalFilterConfig:
     SORT_KEYS = ["install_date", "name", "rating", "size", "posted_date", "updated_date"]
@@ -54,6 +58,7 @@ class LocalFilterConfig:
                 }
                 translations[key] = fallback[key]
         return translations
+
 
 class AnimatedContainerLocal(QWidget):
     height_changed = pyqtSignal()
@@ -97,6 +102,7 @@ class AnimatedContainerLocal(QWidget):
         if self._expanded:
             self._recalc_content_height()
             self.setMaximumHeight(self._content_height)
+
 
 class StateTagCheckBoxLocal(QCheckBox):
     state_changed_tri = pyqtSignal()
@@ -161,6 +167,7 @@ class StateTagCheckBoxLocal(QCheckBox):
         self.setChecked(False)
         self._apply_style()
 
+
 class ToggleSwitchLocal(QWidget):
     toggled = pyqtSignal(bool)
 
@@ -191,7 +198,6 @@ class ToggleSwitchLocal(QWidget):
         self._handle_pos = pos
         self.update()
 
-    from PyQt6.QtCore import pyqtProperty
     handlePos = pyqtProperty(float, get_handle_pos, set_handle_pos)
 
     def isChecked(self):
@@ -205,8 +211,6 @@ class ToggleSwitchLocal(QWidget):
         self.toggled.emit(self._checked)
 
     def paintEvent(self, event):
-        from PyQt6.QtGui import QPainter, QColor
-        from PyQt6.QtCore import QRectF
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
@@ -223,6 +227,7 @@ class ToggleSwitchLocal(QWidget):
         p.setBrush(QColor("white"))
         p.drawEllipse(QRectF(x, 2, handle_diameter, handle_diameter))
         p.end()
+
 
 class LocalFilterBar(QWidget):
     filters_changed = pyqtSignal(object)
@@ -529,6 +534,73 @@ class LocalFilterBar(QWidget):
             excluded_genre_tags=excluded_genre,
         )
 
+
+class AnimatedDetailsContainerLocal(QWidget):
+    animation_finished = pyqtSignal()
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._target_width = 320
+        self._current_width = 320
+        self._is_panel_visible = True
+        
+        self._animation = QPropertyAnimation(self, b"panelWidth")
+        self._animation.setDuration(250)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._animation.finished.connect(self._on_animation_finished)
+        
+        self.setFixedWidth(self._target_width)
+        self.setMinimumWidth(0)
+    
+    def get_panel_width(self) -> int:
+        return self._current_width
+    
+    def set_panel_width(self, width: int):
+        self._current_width = width
+        self.setFixedWidth(max(0, width))
+    
+    panelWidth = pyqtProperty(int, get_panel_width, set_panel_width)
+    
+    def set_target_width(self, width: int):
+        self._target_width = width
+        if self._is_panel_visible:
+            self._current_width = width
+            self.setFixedWidth(width)
+    
+    def is_panel_visible(self) -> bool:
+        return self._is_panel_visible
+    
+    def show_panel(self):
+        if self._is_panel_visible:
+            return
+        
+        self._is_panel_visible = True
+        self.setVisible(True)
+        
+        for child in self.findChildren(QWidget):
+            child.setVisible(True)
+        
+        self._animation.stop()
+        self._animation.setStartValue(0)
+        self._animation.setEndValue(self._target_width)
+        self._animation.start()
+    
+    def hide_panel(self):
+        if not self._is_panel_visible:
+            return
+        
+        self._is_panel_visible = False
+        self._animation.stop()
+        self._animation.setStartValue(self._current_width)
+        self._animation.setEndValue(0)
+        self._animation.start()
+    
+    def _on_animation_finished(self):
+        if not self._is_panel_visible:
+            self.setVisible(False)
+        self.animation_finished.emit()
+
+
 class WallpapersTab(QWidget):
 
     def __init__(self, config_manager, download_manager, wallpaper_engine, translator, theme_manager, parent=None):
@@ -541,9 +613,11 @@ class WallpapersTab(QWidget):
         self.theme = theme_manager
 
         self.selected_folder = None
-        self.items = []
+        self.grid_items: List[LocalGridItem] = []
         self._is_refreshing = False
         self._all_wallpapers_data: List[Dict[str, Any]] = []
+        
+        self._details_panel_margin = 15
 
         self._setup_ui()
 
@@ -552,34 +626,48 @@ class WallpapersTab(QWidget):
         self.load_wallpapers()
 
     def _setup_ui(self):
-        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(5)
 
-        left_widget = self._create_left_panel()
+        self.left_panel = self._create_left_panel()
+        main_layout.addWidget(self.left_panel, 1)
 
+        self.details_container = AnimatedDetailsContainerLocal(self)
+        self.details_container.set_target_width(320)
+        self.details_container.animation_finished.connect(self._on_details_animation_finished)
+        
+        details_layout = QVBoxLayout(self.details_container)
+        details_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.details_scroll = QScrollArea()
         self.details_scroll.setWidgetResizable(True)
-        self.details_scroll.setFixedWidth(320)
         self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.details_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
 
         self.details_panel = DetailsPanel(
             self.we, self.dm, self.tr, self.theme, self.config, self
         )
+        self.details_panel.panel_collapse_requested.connect(self._on_collapse_requested)
+        
         self.details_scroll.setWidget(self.details_panel)
+        details_layout.addWidget(self.details_scroll)
+        
+        main_layout.addWidget(self.details_container)
 
-        self.splitter.addWidget(left_widget)
-        self.splitter.addWidget(self.details_scroll)
-        self.splitter.setStretchFactor(0, 1)
-        self.splitter.setStretchFactor(1, 0)
+    def _on_collapse_requested(self):
+        self.details_container.hide_panel()
+        self._update_grid_margin(False)
 
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(self.splitter)
+    def _on_details_animation_finished(self):
+        self.grid_widget.schedule_layout_update(50)
 
-        self.resize_timer = QTimer()
-        self.resize_timer.setSingleShot(True)
-        self.resize_timer.timeout.connect(self._recalculate_grid)
-        self.splitter.splitterMoved.connect(lambda: self.resize_timer.start(100))
+    def _update_grid_margin(self, panel_visible: bool):
+        layout = self.left_panel.layout()
+        if panel_visible:
+            layout.setContentsMargins(15, 10, 5, 10)
+        else:
+            layout.setContentsMargins(15, 10, self._details_panel_margin, 10)
 
     def _create_left_panel(self) -> QWidget:
         widget = QWidget()
@@ -606,36 +694,49 @@ class WallpapersTab(QWidget):
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setStyleSheet("""
-            QScrollArea {
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll_area.setStyleSheet(f"""
+            QScrollArea {{
                 border: none;
                 background-color: transparent;
-            }
+            }}
+            QScrollBar:vertical {{
+                background-color: {self.theme.get_color('bg_secondary')};
+                width: 10px;
+                margin: 2px 2px 2px 2px;
+                border-radius: 4px;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: {self.theme.get_color('border')};
+                min-height: 30px;
+                border-radius: 4px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background-color: {self.theme.get_color('primary')};
+            }}
+            QScrollBar::handle:vertical:pressed {{
+                background-color: {self.theme.get_color('primary_hover')};
+            }}
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {{
+                height: 0px;
+            }}
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {{
+                background: none;
+            }}
         """)
 
-        self.grid_widget = QWidget()
-        self.grid_layout = QGridLayout(self.grid_widget)
-        self.grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.grid_layout.setHorizontalSpacing(2)
-        self.grid_layout.setVerticalSpacing(2)
-        self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-
+        self.grid_widget = AdaptiveGridWidget()
+        self.grid_widget.set_item_size_range(160, 240, 185)
         self.grid_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.scroll_area.setWidget(self.grid_widget)
 
-        self._scrollbar_visible = self.scroll_area.verticalScrollBar().isVisible()
-        self.scroll_area.verticalScrollBar().rangeChanged.connect(self._on_scrollbar_range_changed)
+        self.scroll_area.setWidget(self.grid_widget)
 
         layout.addWidget(self.scroll_area)
         return widget
-
-    def _on_scrollbar_range_changed(self, min_val: int, max_val: int):
-        scrollbar_now_visible = max_val > 0
-        if scrollbar_now_visible != self._scrollbar_visible:
-            self._scrollbar_visible = scrollbar_now_visible
-            if hasattr(self, 'resize_timer'):
-                self.resize_timer.start(50)
 
     def _create_info_bar(self) -> QFrame:
         bar = QFrame()
@@ -759,7 +860,7 @@ class WallpapersTab(QWidget):
             return result
         
         result["category"] = tags_dict.get("Category", "")
-        result["type"] = tags_dict.get("Type", "")
+        result["type"] =        result["type"] = tags_dict.get("Type", "")
         result["age_rating"] = tags_dict.get("Age Rating", "")
         result["resolution"] = tags_dict.get("Resolution", "")
         
@@ -834,7 +935,7 @@ class WallpapersTab(QWidget):
         sorted_wallpapers = self._sort_wallpapers(filtered, filters)
         self._display_wallpapers(sorted_wallpapers)
 
-    def load_wallpapers(self, columns=None):
+    def load_wallpapers(self):
         self._clear_grid()
 
         wallpaper_paths = [
@@ -848,15 +949,22 @@ class WallpapersTab(QWidget):
         filtered = [w for w in self._all_wallpapers_data if self._matches_filters(w, filters)]
         sorted_wallpapers = self._sort_wallpapers(filtered, filters)
 
-        self._display_wallpapers(sorted_wallpapers, columns)
+        self._display_wallpapers(sorted_wallpapers)
 
         total_size = get_directory_size(self.we.projects_path)
         self._update_info(len(sorted_wallpapers), len(self._all_wallpapers_data), total_size)
 
+        QTimer.singleShot(50, self._force_grid_update)
+
         if sorted_wallpapers and not self.selected_folder:
             self._on_item_clicked(str(sorted_wallpapers[0]["path"]))
 
-    def _display_wallpapers(self, wallpapers: List[Dict[str, Any]], columns=None):
+    def _force_grid_update(self):
+        self.grid_widget.update_layout()
+        self.grid_widget.updateGeometry()
+        self.scroll_area.updateGeometry()
+
+    def _display_wallpapers(self, wallpapers: List[Dict[str, Any]]):
         self._clear_grid()
 
         if not wallpapers:
@@ -868,78 +976,32 @@ class WallpapersTab(QWidget):
                 font-size: 16px;
                 padding: 50px;
             """)
-            self.grid_layout.addWidget(label, 0, 0, 1, 4)
+            self.grid_widget.add_item(label)
             return
 
-        if columns is None:
-            columns = self._calculate_columns()
+        item_size = self.grid_widget.get_current_item_size()
 
-        item_size = self._calculate_item_size(columns)
-
-        row = col = 0
         for wallpaper_data in wallpapers:
             item = LocalGridItem(str(wallpaper_data["path"]), item_size, self.theme, self)
             item.clicked.connect(self._on_item_clicked)
-            self.grid_layout.addWidget(item, row, col)
-            self.items.append(item)
-            col += 1
-            if col >= columns:
-                col = 0
-                row += 1
-
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.grid_layout.addWidget(spacer, row + 1, 0, 1, max(1, columns))
-        self.items.append(spacer)
+            self.grid_widget.add_item(item)
+            self.grid_items.append(item)
 
         total_size = get_directory_size(self.we.projects_path)
         self._update_info(len(wallpapers), len(self._all_wallpapers_data), total_size)
-
-    def _calculate_columns(self) -> int:
-        available_width = self.scroll_area.viewport().width()
-        if available_width <= 0:
-            return 4
-        TARGET_SIZE = 190
-        return min(max(1, available_width // (TARGET_SIZE + 2)), 8)
-
-    def _calculate_item_size(self, columns: int) -> int:
-        if columns <= 0:
-            return 185
-        available_width = self.scroll_area.viewport().width()
-        if available_width <= 0:
-            return 185
-
-        total_spacing = (columns - 1) * 2
-        ideal_size = (available_width - total_spacing) // columns
-        item_size = max(160, min(ideal_size, 240))
-
-        if available_width > 1000:
-            item_size = min(item_size, 230)
-        elif available_width > 800:
-            item_size = min(item_size, 210)
-        elif available_width > 600:
-            item_size = min(item_size, 190)
-        else:
-            item_size = max(160, item_size)
-
-        return item_size
+        
+        QTimer.singleShot(50, self._force_grid_update)
 
     def _clear_grid(self):
-        for item in self.items:
+        for item in self.grid_items:
             if hasattr(item, 'release_resources'):
                 try:
                     item.release_resources()
                 except RuntimeError:
                     pass
 
-        while self.grid_layout.count():
-            layout_item = self.grid_layout.takeAt(0)
-            if layout_item and layout_item.widget():
-                widget = layout_item.widget()
-                widget.setParent(None)
-                widget.deleteLater()
-
-        self.items.clear()
+        self.grid_widget.clear_items()
+        self.grid_items.clear()
 
     def _update_info(self, filtered_count: int, total_count: int, total_size: int):
         self.results_label.setText(
@@ -950,6 +1012,10 @@ class WallpapersTab(QWidget):
         )
 
     def _on_item_clicked(self, folder_path: str):
+        if not self.details_container.is_panel_visible():
+            self.details_container.show_panel()
+            self._update_grid_margin(True)
+        
         if not Path(folder_path).exists():
             return
         self.selected_folder = folder_path
@@ -963,25 +1029,11 @@ class WallpapersTab(QWidget):
         else:
             self.selected_folder = None
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if hasattr(self, 'resize_timer'):
-            self.resize_timer.start(100)
-
-    def _recalculate_grid(self):
-        filters = self.filter_bar.get_current_filters()
-        filtered = [w for w in self._all_wallpapers_data if self._matches_filters(w, filters)]
-        sorted_wallpapers = self._sort_wallpapers(filtered, filters)
-        self._display_wallpapers(sorted_wallpapers, self._calculate_columns())
-        
-        if self.selected_folder and Path(self.selected_folder).exists():
-            self._on_item_clicked(self.selected_folder)
-
     def release_resources_for_folder(self, folder_path: str):
         if hasattr(self, 'details_panel') and self.details_panel.folder_path == folder_path:
             self.details_panel.release_resources()
 
-        for item in self.items:
+        for item in self.grid_items:
             if hasattr(item, 'folder_path') and item.folder_path == folder_path:
                 if hasattr(item, 'release_resources'):
                     try:

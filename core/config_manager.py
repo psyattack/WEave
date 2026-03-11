@@ -17,6 +17,9 @@ class ConfigManager:
                 "behavior": {
                     "minimize_on_apply": False,
                     "preload_next_page": True
+                },
+                "debug": {
+                    "debug_mode": False
                 }
             }
         },
@@ -124,6 +127,12 @@ class ConfigManager:
 
     def set_preload_next_page(self, value: bool) -> None:
         self.set("settings.general.behavior.preload_next_page", value)
+
+    def get_debug_mode(self) -> bool:
+        return self.get("settings.general.debug.debug_mode", False)
+
+    def set_debug_mode(self, value: bool) -> None:
+        self.set("settings.general.debug.debug_mode", value)
 
     def get_wallpaper_metadata(self, pubfileid: str) -> Optional[Dict]:
         metadata = self.get("wallpaper_metadata", {})

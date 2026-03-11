@@ -96,11 +96,14 @@ class WorkshopParser(QObject):
 
     DEBUG_WEBVIEW_ENABLED = False
 
-    def __init__(self, account_manager, parent=None, profile_name: str = "Workshop_Parser"):
+    def __init__(self, account_manager, config_manager=None, parent=None, profile_name: str = "Workshop_Parser"):
         super().__init__(parent)
 
         self.accounts = account_manager
         self._profile_name = profile_name
+        
+        if config_manager is not None:
+            self.DEBUG_WEBVIEW_ENABLED = config_manager.get_debug_mode()
         self._current_page_data: Optional[WorkshopPage] = None
         self._current_filters: Optional[WorkshopFilters] = None
         self._current_url: str = ""

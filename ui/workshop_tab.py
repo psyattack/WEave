@@ -2,25 +2,23 @@ import weakref
 from typing import Optional, List, Dict
 from PyQt6.QtCore import (
     Qt, QTimer, pyqtSignal, QSize, QPoint, QByteArray,
-    QBuffer, QIODevice, QPropertyAnimation, QRectF, pyqtProperty
+    QBuffer, QIODevice, QPropertyAnimation, QRectF, pyqtProperty, QEasingCurve
 )
-from PyQt6.QtGui import QPixmap, QMovie, QPainter, QPainterPath, QColor
+from PyQt6.QtGui import QPixmap, QMovie, QPainter, QPainterPath, QColor, QTransform
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QScrollArea, QGridLayout, QFrame, QSplitter, QSizePolicy, QLineEdit,
+    QScrollArea, QFrame, QSizePolicy, QLineEdit,
 )
 from core.image_cache import ImageCache
 from core.workshop_parser import WorkshopParser, WorkshopItem, WorkshopPage
 from core.workshop_filters import WorkshopFilters
 from ui.workshop_filters import CompactFilterBar, AnimatedContainer
-from ui.grid_items import (
-    WorkshopGridItem, SkeletonGridItem,
-    parse_file_size_to_bytes,
-)
+from ui.grid_items import WorkshopGridItem, SkeletonGridItem
+from ui.flow_layout import AdaptiveGridWidget
 from ui.details_panel import DetailsPanel
-from utils.helpers import hex_to_rgba
+from utils.helpers import hex_to_rgba, parse_file_size_to_bytes
 from ui.notifications import NotificationLabel
-from resources.icons import get_icon
+from core.resources import get_icon, get_pixmap
 
 class ToggleSwitch(QWidget):
     toggled = pyqtSignal(bool)
@@ -81,6 +79,7 @@ class ToggleSwitch(QWidget):
         p.setBrush(QColor("white"))
         p.drawEllipse(QRectF(x, 2, handle_diameter, handle_diameter))
         p.end()
+
 
 class PreviewPopup(QWidget):
     def __init__(self, theme_manager, translator, parent=None):
@@ -256,6 +255,187 @@ class PreviewPopup(QWidget):
             font-size: 11px;
         """)
 
+
+class AnimatedIconLabel(QWidget):
+    
+    def __init__(self, icon_name: str, size: int = 48, parent=None):
+        super().__init__(parent)
+        self._icon_name = icon_name
+        self._size = size
+        self._rotation = 0.0
+        self._direction = 1
+        
+        self.setFixedSize(size, size)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setStyleSheet("background: transparent; border: none;")
+        
+        self._label = QLabel(self)
+        self._label.setFixedSize(size, size)
+        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._label.setStyleSheet("background: transparent; border: none;")
+        
+        self._base_pixmap = get_pixmap(icon_name, size)
+        self._update_pixmap()
+        
+        self._animation = QPropertyAnimation(self, b"rotation")
+        self._animation.setDuration(1000)
+        self._animation.setStartValue(0.0)
+        self._animation.setEndValue(30.0)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._animation.finished.connect(self._on_animation_finished)
+    
+    def get_rotation(self) -> float:
+        return self._rotation
+    
+    def set_rotation(self, value: float):
+        self._rotation = value
+        self._update_pixmap()
+    
+    rotation = pyqtProperty(float, get_rotation, set_rotation)
+    
+    def _update_pixmap(self):
+        if self._base_pixmap.isNull():
+            return
+        transform = QTransform()
+        transform.rotate(self._rotation)
+        rotated = self._base_pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
+        x = (rotated.width() - self._size) // 2
+        y = (rotated.height() - self._size) // 2
+        cropped = rotated.copy(x, y, self._size, self._size)
+        self._label.setPixmap(cropped)
+    
+    def _on_animation_finished(self):
+        self._direction *= -1
+        self._animation.setStartValue(self._rotation)
+        self._animation.setEndValue(30.0 * self._direction)
+        self._animation.start()
+    
+    def start_animation(self):
+        self._animation.start()
+    
+    def stop_animation(self):
+        self._animation.stop()
+        self._rotation = 0.0
+        self._update_pixmap()
+
+
+class LoadingOverlay(QWidget):
+    
+    def __init__(self, theme_manager, parent=None):
+        super().__init__(parent)
+        self.theme = theme_manager
+        
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setStyleSheet("background: transparent;")
+        
+        self._container = QWidget(self)
+        self._container.setFixedSize(80, 80)
+        self._container.setStyleSheet(f"""
+            background-color: rgba(0, 0, 0, 150);
+            border-radius: 16px;
+        """)
+        
+        container_layout = QVBoxLayout(self._container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self._icon = AnimatedIconLabel("ICON_HOURGLASS", 48, self._container)
+        container_layout.addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        self.hide()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._icon.start_animation()
+        self._center_container()
+    
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        self._icon.stop_animation()
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._center_container()
+    
+    def _center_container(self):
+        if self.parent():
+            parent_rect = self.parent().rect()
+            self.setGeometry(parent_rect)
+            
+            x = (self.width() - self._container.width()) // 2
+            y = (self.height() - self._container.height()) // 2
+            self._container.move(x, y)
+    
+    def update_position(self):
+        self._center_container()
+
+class AnimatedDetailsContainer(QWidget):
+    animation_finished = pyqtSignal()
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._target_width = 320
+        self._current_width = 320
+        self._is_panel_visible = True
+        
+        self._animation = QPropertyAnimation(self, b"panelWidth")
+        self._animation.setDuration(250)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._animation.finished.connect(self._on_animation_finished)
+        
+        self.setFixedWidth(self._target_width)
+        self.setMinimumWidth(0)
+    
+    def get_panel_width(self) -> int:
+        return self._current_width
+    
+    def set_panel_width(self, width: int):
+        self._current_width = width
+        self.setFixedWidth(max(0, width))
+    
+    panelWidth = pyqtProperty(int, get_panel_width, set_panel_width)
+    
+    def set_target_width(self, width: int):
+        self._target_width = width
+        if self._is_panel_visible:
+            self._current_width = width
+            self.setFixedWidth(width)
+    
+    def is_panel_visible(self) -> bool:
+        return self._is_panel_visible
+    
+    def show_panel(self):
+        if self._is_panel_visible:
+            return
+        
+        self._is_panel_visible = True
+        self.setVisible(True)
+        
+        for child in self.findChildren(QWidget):
+            child.setVisible(True)
+        
+        self._animation.stop()
+        self._animation.setStartValue(0)
+        self._animation.setEndValue(self._target_width)
+        self._animation.start()
+    
+    def hide_panel(self):
+        if not self._is_panel_visible:
+            return
+        
+        self._is_panel_visible = False
+        self._animation.stop()
+        self._animation.setStartValue(self._current_width)
+        self._animation.setEndValue(0)
+        self._animation.start()
+    
+    def _on_animation_finished(self):
+        if not self._is_panel_visible:
+            self.setVisible(False)
+        self.animation_finished.emit()
+
+
 class WorkshopTab(QWidget):
     download_requested = pyqtSignal(str)
 
@@ -281,6 +461,9 @@ class WorkshopTab(QWidget):
 
         self._preview_url_cache: Dict[str, str] = {}
         self._file_size_cache: Dict[str, int] = {}
+        
+        self._details_panel_margin = 15
+        self._loading_overlay: Optional[LoadingOverlay] = None
 
         self._setup_ui()
         self._setup_parser()
@@ -293,43 +476,57 @@ class WorkshopTab(QWidget):
         self._status_timer.start(1000)
 
     def _setup_ui(self):
-        main_layout = QVBoxLayout(self)
+        main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        main_layout.setSpacing(5)
 
-        self.splitter = QSplitter(Qt.Orientation.Horizontal)
-        left_panel = self._create_left_panel()
+        self.left_panel = self._create_left_panel()
+        main_layout.addWidget(self.left_panel, 1)
 
-        self.details_panel = DetailsPanel(
-            self.we, self.dm, self.tr, self.theme, self.config, self
-        )
-
+        self.details_container = AnimatedDetailsContainer(self)
+        self.details_container.set_target_width(320)
+        self.details_container.animation_finished.connect(self._on_details_animation_finished)
+        
+        details_layout = QVBoxLayout(self.details_container)
+        details_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.details_scroll = QScrollArea()
         self.details_scroll.setWidgetResizable(True)
-        self.details_scroll.setFixedWidth(320)
         self.details_scroll.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
         self.details_scroll.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }"
         )
+        
+        self.details_panel = DetailsPanel(
+            self.we, self.dm, self.tr, self.theme, self.config, self
+        )
+        self.details_panel.panel_collapse_requested.connect(self._on_collapse_requested)
+        
         self.details_scroll.setWidget(self.details_panel)
-
-        self.splitter.addWidget(left_panel)
-        self.splitter.addWidget(self.details_scroll)
-        self.splitter.setStretchFactor(0, 1)
-        self.splitter.setStretchFactor(1, 0)
-
-        main_layout.addWidget(self.splitter)
-
-        self.resize_timer = QTimer()
-        self.resize_timer.setSingleShot(True)
-        self.resize_timer.timeout.connect(self._recalculate_grid)
+        details_layout.addWidget(self.details_scroll)
+        
+        main_layout.addWidget(self.details_container)
 
         self.preview_popup = PreviewPopup(self.theme, self.tr, self)
 
+    def _on_collapse_requested(self):
+        self.details_container.hide_panel()
+        self._update_grid_margin(False)
+
+    def _on_details_animation_finished(self):
+        self.grid_widget.schedule_layout_update(50)
+
+    def _update_grid_margin(self, panel_visible: bool):
+        layout = self.left_panel.layout()
+        if panel_visible:
+            layout.setContentsMargins(15, 10, 5, 10)
+        else:
+            layout.setContentsMargins(15, 10, self._details_panel_margin, 10)
+
     def _setup_parser(self):
-        self.parser = WorkshopParser(self.accounts, self)
+        self.parser = WorkshopParser(self.accounts, self.config, self)
         self.parser.page_loaded.connect(self._on_page_loaded)
         self.parser.item_details_loaded.connect(self._on_item_details_loaded)
         self.parser.page_loading_started.connect(self._on_page_loading_started)
@@ -371,40 +568,55 @@ class WorkshopTab(QWidget):
         layout.addWidget(self.info_bar)
 
         layout.addSpacing(10)
+        
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
-        self.scroll_area.setStyleSheet(
-            "QScrollArea { border: none; background: transparent; }"
-        )
+        self.scroll_area.setStyleSheet(f"""
+            QScrollArea {{
+                border: none;
+                background-color: transparent;
+            }}
+            QScrollBar:vertical {{
+                background-color: {self.theme.get_color('bg_secondary')};
+                width: 10px;
+                margin: 2px 2px 2px 2px;
+                border-radius: 4px;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: {self.theme.get_color('border')};
+                min-height: 30px;
+                border-radius: 4px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background-color: {self.theme.get_color('primary')};
+            }}
+            QScrollBar::handle:vertical:pressed {{
+                background-color: {self.theme.get_color('primary_hover')};
+            }}
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {{
+                height: 0px;
+            }}
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {{
+                background: none;
+            }}
+        """)
 
-        self.grid_widget = QWidget()
-        self.grid_layout = QGridLayout(self.grid_widget)
-        self.grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.grid_layout.setHorizontalSpacing(2)
-        self.grid_layout.setVerticalSpacing(2)
-        self.grid_layout.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
+        self.grid_widget = AdaptiveGridWidget()
+        self.grid_widget.set_item_size_range(160, 240, 185)
+        self.grid_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.scroll_area.setWidget(self.grid_widget)
-        self._scrollbar_visible = self.scroll_area.verticalScrollBar().isVisible()
-        self.scroll_area.verticalScrollBar().rangeChanged.connect(
-            self._on_scrollbar_range_changed
-        )
+        
+        self._loading_overlay = LoadingOverlay(self.theme, self.scroll_area)
         layout.addWidget(self.scroll_area, 1)
         layout.addSpacing(10)
         layout.addWidget(self._create_pagination_bar())
         return widget
-
-    def _on_scrollbar_range_changed(self, min_val: int, max_val: int):
-        scrollbar_now_visible = max_val > 0
-        if scrollbar_now_visible != self._scrollbar_visible:
-            self._scrollbar_visible = scrollbar_now_visible
-            if hasattr(self, 'resize_timer'):
-                self.resize_timer.start(50)
 
     def _create_info_bar(self) -> QFrame:
         bar = QFrame()
@@ -603,17 +815,27 @@ class WorkshopTab(QWidget):
         self.current_page = page_data.current_page
         self.total_pages = max(1, page_data.total_pages)
 
+        if self._loading_overlay:
+            self._loading_overlay.hide()
+
         cache = ImageCache.instance()
         cache.preload([item.preview_url for item in page_data.items if item.preview_url])
 
         self._clear_grid()
         self._populate_grid(page_data.items)
         self._update_pagination()
+        
+        QTimer.singleShot(50, self._force_grid_update)
 
-        if page_data.items and not self.selected_pubfileid:
+        if page_data.items and not self.selected_pubfileid and self.details_container.is_panel_visible():
             self._select_item(page_data.items[0].pubfileid)
 
         self._try_preload_next_page()
+
+    def _force_grid_update(self):
+        self.grid_widget.update_layout()
+        self.grid_widget.updateGeometry()
+        self.scroll_area.updateGeometry()
 
     def _try_preload_next_page(self):
         if not self.config.get_preload_next_page():
@@ -648,6 +870,10 @@ class WorkshopTab(QWidget):
         print(f"[WorkshopTab] Error: {error_msg}")
         self._is_loading_page = False
         self._is_loading_details = False
+        
+        if self._loading_overlay:
+            self._loading_overlay.hide()
+        
         NotificationLabel.show_notification(self, f"Error: {error_msg}")
         self._clear_skeleton_grid()
         self._update_pagination_buttons()
@@ -667,12 +893,20 @@ class WorkshopTab(QWidget):
 
     def _show_skeleton_grid(self):
         self._clear_grid()
-        columns = self._calculate_columns()
-        item_size = self._calculate_item_size(columns)
+
+        if self._loading_overlay:
+            self._loading_overlay.show()
+            self._loading_overlay.raise_()
+            self._loading_overlay.update_position()
+
+        item_size = self.grid_widget.get_current_item_size()
+
         for i in range(30):
             skeleton = SkeletonGridItem(item_size, self.theme, self)
-            self.grid_layout.addWidget(skeleton, i // columns, i % columns)
+            self.grid_widget.add_item(skeleton)
             self.skeleton_items.append(skeleton)
+
+        QTimer.singleShot(50, self._force_grid_update)
 
     def _clear_skeleton_grid(self):
         for item in self.skeleton_items:
@@ -695,13 +929,12 @@ class WorkshopTab(QWidget):
                 font-size: 16px;
                 padding: 50px;
             """)
-            self.grid_layout.addWidget(label, 0, 0, 1, 4)
+            self.grid_widget.add_item(label)
             return
 
-        columns = self._calculate_columns()
-        item_size = self._calculate_item_size(columns)
+        item_size = self.grid_widget.get_current_item_size()
 
-        for i, item_data in enumerate(items):
+        for item_data in items:
             grid_item = WorkshopGridItem(
                 pubfileid=item_data.pubfileid,
                 title=item_data.title,
@@ -724,12 +957,8 @@ class WorkshopTab(QWidget):
                 grid_item.set_status(WorkshopGridItem.STATUS_AVAILABLE)
 
             grid_item.clicked.connect(self._select_item)
-            self.grid_layout.addWidget(grid_item, i // columns, i % columns)
+            self.grid_widget.add_item(grid_item)
             self.grid_items.append(grid_item)
-
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.grid_layout.addWidget(spacer, len(items) // columns + 1, 0, 1, columns)
 
     def _clear_grid(self):
         for item in self.grid_items:
@@ -739,41 +968,14 @@ class WorkshopTab(QWidget):
             except RuntimeError:
                 pass
         self._clear_skeleton_grid()
-        while self.grid_layout.count():
-            child = self.grid_layout.takeAt(0)
-            if child is not None:
-                widget = child.widget()
-                if widget is not None:
-                    try:
-                        widget.setParent(None)
-                        widget.deleteLater()
-                    except RuntimeError:
-                        pass
+        self.grid_widget.clear_items()
         self.grid_items.clear()
 
-    def _calculate_columns(self) -> int:
-        try:
-            available_width = self.scroll_area.viewport().width()
-            if available_width <= 0:
-                return 4
-            return min(max(1, available_width // 192), 8)
-        except Exception:
-            return 4
-
-    def _calculate_item_size(self, columns: int) -> int:
-        try:
-            if columns <= 0:
-                return 185
-            available_width = self.scroll_area.viewport().width()
-            if available_width <= 0:
-                return 185
-            total_spacing = (columns - 1) * 2
-            ideal_size = (available_width - total_spacing) // columns
-            return max(160, min(ideal_size, 240))
-        except Exception:
-            return 185
-
     def _select_item(self, pubfileid: str):
+        if not self.details_container.is_panel_visible():
+            self.details_container.show_panel()
+            self._update_grid_margin(True)
+        
         self.selected_pubfileid = pubfileid
         if self._is_fully_installed(pubfileid):
             folder_path = self.we.projects_path / pubfileid
@@ -822,16 +1024,6 @@ class WorkshopTab(QWidget):
         self.prev_btn.setEnabled(can_go_back)
         self.next_btn.setEnabled(can_go_forward)
         self.last_btn.setEnabled(can_go_forward)
-
-    def _recalculate_grid(self):
-        if self._current_page_data and self._current_page_data.items:
-            self._clear_grid()
-            self._populate_grid(self._current_page_data.items)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if hasattr(self, 'resize_timer'):
-            self.resize_timer.start(200)
 
     def start_download(self, pubfileid: str):
         if self.dm.is_downloading(pubfileid):
@@ -936,6 +1128,10 @@ class WorkshopTab(QWidget):
             self._status_timer.stop()
         if hasattr(self, 'parser'):
             self.parser.cleanup()
+        
+        if self._loading_overlay:
+            self._loading_overlay.hide()
+        
         ImageCache.instance().clear()
         self._preview_url_cache.clear()
         self._file_size_cache.clear()

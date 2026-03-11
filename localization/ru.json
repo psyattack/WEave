@@ -77,7 +77,7 @@
     "search_placeholder": "Поиск...",
     "id_url_placeholder": "ID, URL...",
     "account": "Аккаунт",
-    "translating": "⏳ Перевод..."
+    "translating": "Перевод..."
   },
   "messages": {
     "download_started": "Загрузка началась!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "У вас есть незавершённые загрузки.\nПри перезапуске они будут отменены.\nПродолжить?",
     "restart_with_extractions_only": "У вас есть незавершённые извлечения.\nПри перезапуске они будут отменены.\nПродолжить?",
     "restart_title": "Требуется перезагрузка",
-    "restart_theme_message": "Тема будет применена после перезагрузки. Перезапустить сейчас?"
+    "restart_theme_message": "Тема будет применена после перезагрузки. Перезапустить сейчас?",
+    "restart_debug_message": "Режим отладки будет применён после перезагрузки. Перезапустить сейчас?"
   },
   "dialog": {
     "tasks": "Задачи",
@@ -153,10 +154,12 @@
     "notifications": "Уведомления",
     "coming_soon": "Дополнительные настройки скоро появятся...",
     "tab_advanced": "Дополнительно",
-    "login_description": "Введите ваши учётные данные Steam для аутентификации в Workshop"
+    "login_description": "Введите ваши учётные данные Steam для аутентификации в Workshop",
+    "debug": "Отладка",
+    "debug_mode": "🔧 Режим отладки",
+    "debug_description": "Включить режим отладки для тестирования webview"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "Это приложение позволяет легко загружать и управлять обоями Wallpaper Engine из Steam Мастерской.",
     "developed": "Разработано с ❤️ бесплатно."
   },

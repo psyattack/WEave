@@ -77,7 +77,7 @@
     "search_placeholder": "Pesquisar...",
     "id_url_placeholder": "ID, URL...",
     "account": "Conta",
-    "translating": "⏳ Traduzindo..."
+    "translating": "Traduzindo..."
   },
   "messages": {
     "download_started": "Download iniciado!",
@@ -113,7 +113,8 @@
     "restart_with_downloads_only": "Você tem downloads incompletos.\nEles serão cancelados ao reiniciar.\nContinuar?",
     "restart_with_extractions_only": "Você tem extrações incompletas.\nElas serão canceladas ao reiniciar.\nContinuar?",
     "restart_title": "Reinicialização necessária",
-    "restart_theme_message": "O tema será aplicado após a reinicialização. Reiniciar agora?"
+    "restart_theme_message": "O tema será aplicado após a reinicialização. Reiniciar agora?",
+    "restart_debug_message": "O modo de depuração será aplicado após a reinicialização. Reiniciar agora?"
   },
   "dialog": {
     "tasks": "Tarefas",
@@ -153,10 +154,12 @@
     "notifications": "Notificações",
     "coming_soon": "Configurações adicionais em breve...",
     "tab_advanced": "Avançado",
-    "login_description": "Digite suas credenciais da Steam para autenticação na Oficina"
+    "login_description": "Digite suas credenciais da Steam para autenticação na Oficina",
+    "debug": "Depuração",
+    "debug_mode": "🔧 Modo de depuração",
+    "debug_description": "Ativar o modo de depuração para testes de webview"
   },
   "info": {
-    "version": "WE Workshop Manager v1.4.0",
     "description": "Este aplicativo permite baixar e gerenciar facilmente papéis de parede do Wallpaper Engine na Steam Oficina.",
     "developed": "Desenvolvido com ❤️ gratuitamente."
   },
