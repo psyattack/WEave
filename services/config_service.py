@@ -45,10 +45,10 @@ class ConfigService:
         self.set("settings.system.directory", path)
 
     def get_account_number(self) -> int:
-        return self.get("settings.system.account_number", 3)
+        return self.get("settings.account.account.account_number", 3)
 
     def set_account_number(self, number: int) -> None:
-        self.set("settings.system.account_number", number)
+        self.set("settings.account.account.account_number", number)
 
     def get_language(self) -> str:
         return self.get("settings.general.appearance.language", "en")
@@ -80,11 +80,35 @@ class ConfigService:
     def set_preload_next_page(self, value: bool) -> None:
         self.set("settings.general.behavior.preload_next_page", value)
 
+    def get_save_window_state(self) -> bool:
+        return self.get("settings.general.behavior.save_window_state", True)
+
+    def set_save_window_state(self, value: bool) -> None:
+        self.set("settings.general.behavior.save_window_state", value)
+
+    def get_window_geometry(self) -> dict:
+        return self.get("settings.general.behavior.window_geometry", {
+            "x": -1,
+            "y": -1,
+            "width": 1200,
+            "height": 730,
+            "is_maximized": False
+        })
+
+    def set_window_geometry(self, x: int, y: int, width: int, height: int, is_maximized: bool) -> None:
+        self.set("settings.general.behavior.window_geometry", {
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": height,
+            "is_maximized": is_maximized
+        })
+
     def get_debug_mode(self) -> bool:
-        return self.get("settings.general.debug.debug_mode", False)
+        return self.get("settings.advanced.debug.debug_mode", False)
 
     def set_debug_mode(self, value: bool) -> None:
-        self.set("settings.general.debug.debug_mode", value)
+        self.set("settings.advanced.debug.debug_mode", value)
 
     def get_wallpaper_metadata(self, pubfileid: str) -> Optional[dict]:
         metadata = self.get("wallpaper_metadata", {})

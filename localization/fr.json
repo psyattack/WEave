@@ -147,6 +147,8 @@
     "minimize_description": "Réduire la fenêtre après l'application du fond d'écran",
     "preload_next_page": "Précarger les pages (BETA)",
     "preload_description": "Précarger la prochaine page de l'atelier en arrière-plan pour une navigation plus rapide",
+    "save_window_state": "Enregistrer l'état de la fenêtre",
+    "save_window_state_description": "Enregistrer la taille et la position de la fenêtre à la fermeture et restaurer au démarrage",
     "tab_general": "Général",
     "account_selection": "Sélection de compte",
     "account_description": "Sélectionner un compte (pour télécharger)",

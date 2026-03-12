@@ -147,6 +147,8 @@
     "minimize_description": "壁纸を適用後にウィンドウを最小化",
     "preload_next_page": "ページの先読み (BETA)",
     "preload_description": "より早いナビゲーションのため、次のワークショッピングページをバックグラウンドで読み込む",
+    "save_window_state": "ウィンドウ状態を保存",
+    "save_window_state_description": "終了時にウィンドウサイズと位置を保存し、起動時に復元する",
     "tab_general": "一般",
     "account_selection": "アカウント選択",
     "account_description": "アカウントを選択(ダウンロード用)",

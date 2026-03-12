@@ -9,7 +9,11 @@ DEFAULT_CONFIG = {
     "settings": {
         "system": {
             "directory": "",
-            "account_number": 3,
+        },
+        "account": {
+            "account": {
+                "account_number": 3,
+            }
         },
         "general": {
             "appearance": {
@@ -20,10 +24,20 @@ DEFAULT_CONFIG = {
             "behavior": {
                 "minimize_on_apply": False,
                 "preload_next_page": True,
+                "window_geometry": {
+                    "x": -1,
+                    "y": -1,
+                    "width": 1200,
+                    "height": 730,
+                    "is_maximized": False
+                },
+                "save_window_state": True
             },
+        },
+        "advanced": {
             "debug": {
                 "debug_mode": False,
-            },
+            }
         },
     },
     "wallpaper_metadata": {},
