@@ -59,7 +59,6 @@ Desktop.ini
 *.tmp
 *.temp
 logs/
-cookies/
 
 # Application runtime files
 *.exe
@@ -67,7 +66,6 @@ cookies/
 *.pdb
 
 # Misc
-config.json
 notes.txt
 .spgignore
 assets/

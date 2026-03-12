@@ -9,7 +9,9 @@
     "install": "Installieren",
     "download_all": "Alle herunterladen",
     "yes": "Ja",
-    "no": "Nein"
+    "no": "Nein",
+    "open_data_folder": "Datenordner öffnen",
+    "check_updates": "Nach Updates suchen"
   },
   "tooltips": {
     "open_folder": "Ordner im Explorer öffnen",
@@ -30,10 +32,7 @@
   },
   "labels": {
     "wallpapers_filtered": "Zeige {filtered} von {total} Hintergründen",
-    "wallpapers_count": "Hintergründe: {count}",
     "total_size": "Gesamtgröße: {size}",
-    "sort_date": "Nach Datum sortieren",
-    "sort_name": "Nach Name sortieren",
     "id": "ID: {id}",
     "size": "Größe: {size}",
     "installed": "Installiert: {date}",
@@ -45,8 +44,6 @@
     "extract_prefix": "Extrahieren: {id}",
     "other": "Andere:",
     "minimize_on_apply": "Beim Anwenden minimieren",
-    "disabled": "Deaktiviert",
-    "enabled": "Aktiviert",
     "page": "Seite",
     "of": "von {total}",
     "filters": "Filter",
@@ -82,7 +79,6 @@
   "messages": {
     "download_started": "Download gestartet!",
     "extraction_started": "Extrahierung gestartet!",
-    "extraction_completed": "Extrahierung abgeschlossen!",
     "wallpaper_deleted": "Hintergrundbild gelöscht!",
     "id_copied": "ID in Zwischenablage kopiert!",
     "cannot_delete_active": "Diese Hintergründe sind gerade aktiv.\nBitte ändern Sie zuerst Ihr Hintergrundbild.",
@@ -108,13 +104,13 @@
     "error": "Fehler",
     "translation_error": "Übersetzung fehlgeschlagen",
     "language_changed": "Sprache geändert",
-    "restart_now_question": "Anwendung jetzt neu starten, um die Sprache anzuwenden?",
-    "restart_with_tasks": "Sie haben unvollständige Downloads oder Extrahierungen.\nSie werden beim Neustart abgebrochen.\nFortfahren?",
-    "restart_with_downloads_only": "Sie haben unvollständige Downloads.\nSie werden beim Neustart abgebrochen.\nFortfahren?",
-    "restart_with_extractions_only": "Sie haben unvollständige Extrahierungen.\nSie werden beim Neustart abgebrochen.\nFortfahren?",
+    "restart_now_question": "Anwendung jetzt schließen, um die Änderungen anzuwenden?",
+    "restart_with_tasks": "Sie haben unvollständige Downloads oder Extrahierungen.\nSie werden beim Schließen der Anwendung abgebrochen.\nFortfahren?",
+    "restart_with_downloads_only": "Sie haben unvollständige Downloads.\nSie werden beim Schließen der Anwendung abgebrochen.\nFortfahren?",
+    "restart_with_extractions_only": "Sie haben unvollständige Extrahierungen.\nSie werden beim Schließen der Anwendung abgebrochen.\nFortfahren?",
     "restart_title": "Neustart erforderlich",
-    "restart_theme_message": "Das Design wird nach dem Neustart angewendet. Jetzt neu starten?",
-    "restart_debug_message": "Der Debug-Modus wird nach dem Neustart angewendet. Jetzt neu starten?"
+    "restart_theme_message": "Das Design wird nach dem nächsten Start angewendet. Anwendung jetzt schließen?",
+    "restart_debug_message": "Der Debug-Modus wird nach dem nächsten Start angewendet. Anwendung jetzt schließen?"
   },
   "dialog": {
     "tasks": "Aufgaben",
@@ -149,12 +145,12 @@
     "preload_description": "Die nächste Workshop-Seite im Hintergrund vorladen für schnellere Navigation",
     "save_window_state": "Fensterstatus speichern",
     "save_window_state_description": "Fenstergröße und -position beim Beenden speichern und beim Start wiederherstellen",
+    "auto_check_updates": "Automatisch nach Updates suchen",
+    "auto_check_updates_description": "Automatisch GitHub-Releases beim Anwendungsstart überprüfen",
     "tab_general": "Allgemein",
     "account_selection": "Kontoauswahl",
     "account_description": "Konto auswählen (zum Herunterladen)",
     "tab_account": "Konto",
-    "notifications": "Benachrichtigungen",
-    "coming_soon": "Weitere Einstellungen kommen bald...",
     "tab_advanced": "Erweitert",
     "login_description": "Geben Sie Ihre Steam-Anmeldedaten für die Werkstatt-Authentifizierung ein",
     "debug": "Debug",

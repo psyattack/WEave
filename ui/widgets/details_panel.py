@@ -20,6 +20,7 @@ from shared.filesystem import get_directory_size, get_folder_mtime
 from shared.formatting import human_readable_size
 from ui.notifications import MessageBox, NotificationLabel
 from ui.widgets.animated_icon_label import AnimatedIconLabel
+from ui.widgets.custom_tooltip import install_tooltip
 from ui.widgets.tag_widgets import TagGroupWidget
 
 
@@ -694,8 +695,7 @@ class DetailsPanel(QWidget):
         button_hover = hover_color or self.theme.get_color("primary_hover")
 
         button = QPushButton()
-        button.setToolTip(tooltip)
-        button.setToolTipDuration(3000)
+        install_tooltip(button, tooltip, "bottom", self.theme)
         button.setFixedSize(43, 35)
         button.setIcon(get_icon(icon_name))
         button.setIconSize(QSize(22, 22))
@@ -710,15 +710,6 @@ class DetailsPanel(QWidget):
             QPushButton:hover {{
                 background-color: {button_hover};
             }}
-
-            QToolTip {{
-                background-color: {self.theme.get_color('bg_primary')};
-                color: {self.theme.get_color('text_primary')};
-                border: 1px solid {self.theme.get_color('border')};
-                border-radius: 6px;
-                padding: 4px 8px;
-                font-size: 12px;
-            }}
             """
         )
         button.clicked.connect(callback)
@@ -726,8 +717,7 @@ class DetailsPanel(QWidget):
 
     def _create_text_button(self, icon_name, text, tooltip, callback):
         button = QPushButton()
-        button.setToolTip(tooltip)
-        button.setToolTipDuration(3000)
+        install_tooltip(button, tooltip, "bottom", self.theme)
         button.setIcon(get_icon(icon_name))
         button.setIconSize(QSize(24, 24))
         button.setFixedSize(150, 35)
@@ -745,15 +735,6 @@ class DetailsPanel(QWidget):
 
             QPushButton:hover {{
                 background-color: {self.theme.get_color('primary')};
-            }}
-
-            QToolTip {{
-                background-color: {self.theme.get_color('bg_primary')};
-                color: {self.theme.get_color('text_primary')};
-                border: 1px solid {self.theme.get_color('border')};
-                border-radius: 6px;
-                padding: 4px 8px;
-                font-size: 12px;
             }}
             """
         )
@@ -946,8 +927,7 @@ class DetailsPanel(QWidget):
 
         if description and description.strip():
             self._translate_button = QPushButton()
-            self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
-            self._translate_button.setToolTipDuration(3000)
+            install_tooltip(self._translate_button, self.tr.t("tooltips.translate_description"), "bottom", self.theme)
             self._translate_button.setFixedSize(22, 22)
             self._translate_button.setIcon(get_icon("ICON_TRANSLATE"))
             self._translate_button.setIconSize(QSize(21, 21))
@@ -961,15 +941,6 @@ class DetailsPanel(QWidget):
 
                 QPushButton:hover {{
                     background-color: {self.theme.get_color('primary')};
-                }}
-
-                QToolTip {{
-                    background-color: {self.theme.get_color('bg_primary')};
-                    color: {self.theme.get_color('text_primary')};
-                    border: 1px solid {self.theme.get_color('border')};
-                    border-radius: 6px;
-                    padding: 4px 8px;
-                    font-size: 12px;
                 }}
                 """
             )
@@ -1001,15 +972,15 @@ class DetailsPanel(QWidget):
         if self._is_translated:
             self._description_label.setText(self._original_description)
             self._is_translated = False
-            if self._translate_button:
-                self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
+            if self._translate_button and hasattr(self._translate_button, '_custom_tooltip_filter'):
+                self._translate_button._custom_tooltip_filter.set_text(self.tr.t("tooltips.translate_description"))
             return
 
         if self._translated_description:
             self._description_label.setText(self._translated_description)
             self._is_translated = True
-            if self._translate_button:
-                self._translate_button.setToolTip(self.tr.t("tooltips.show_original"))
+            if self._translate_button and hasattr(self._translate_button, '_custom_tooltip_filter'):
+                self._translate_button._custom_tooltip_filter.set_text(self.tr.t("tooltips.show_original"))
             return
 
         target_language = self.tr.get_language()
@@ -1039,7 +1010,7 @@ class DetailsPanel(QWidget):
 
         if self._translate_button:
             self._translate_button.setEnabled(True)
-            self._translate_button.setToolTip(self.tr.t("tooltips.show_original"))
+            self._translate_button._custom_tooltip_filter.set_text(self.tr.t("tooltips.show_original"))
 
         self._translation_worker = None
 
@@ -1049,7 +1020,7 @@ class DetailsPanel(QWidget):
 
         if self._translate_button:
             self._translate_button.setEnabled(True)
-            self._translate_button.setToolTip(self.tr.t("tooltips.translate_description"))
+            self._translate_button._custom_tooltip_filter.set_text(self.tr.t("tooltips.translate_description"))
 
         self._show_notification(self.tr.t("messages.translation_error"))
         self._translation_worker = None

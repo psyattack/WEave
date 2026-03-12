@@ -1,18 +1,21 @@
+import os
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton
 
 from infrastructure.resources.resource_manager import get_pixmap
 from shared.constants import APP_FULL_NAME
+from shared.filesystem import get_app_data_dir
 from ui.dialogs.base_dialog import BaseDialog
 
 
 class InfoDialog(BaseDialog):
-    def __init__(self, translator, parent=None, theme_manager=None):
+    def __init__(self, translator, parent=None, theme_manager=None, main_window=None):
         super().__init__(translator.t("dialog.about"), parent, theme_manager)
-
         self.tr = translator
+        self.main_window = main_window
 
-        self.setMinimumSize(400, 280)
+        self.setMinimumSize(400, 330)
         self.adjustSize()
 
         icon = QLabel()
@@ -56,6 +59,54 @@ class InfoDialog(BaseDialog):
         github_container.addWidget(github_link)
         self.content_layout.addLayout(github_container)
 
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        buttons_layout.setSpacing(8)
+
+        check_updates_btn = QPushButton(self.tr.t("buttons.check_updates"))
+        check_updates_btn.setFixedHeight(38)
+        check_updates_btn.setMinimumWidth(175)
+        check_updates_btn.setStyleSheet(
+            f"""
+            QPushButton {{
+                background-color: {self.c_bg_tertiary};
+                color: {self.c_text_primary};
+                border: 2px solid {self.c_border_light};
+                border-radius: 8px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                border-color: {self.c_primary};
+                background-color: {self.c_bg_secondary};
+            }}
+            """
+        )
+        check_updates_btn.clicked.connect(self._on_check_updates_clicked)
+        buttons_layout.addWidget(check_updates_btn)
+
+        open_data_folder_btn = QPushButton(self.tr.t("buttons.open_data_folder"))
+        open_data_folder_btn.setFixedHeight(38)
+        open_data_folder_btn.setMinimumWidth(175)
+        open_data_folder_btn.setStyleSheet(
+            f"""
+            QPushButton {{
+                background-color: {self.c_bg_tertiary};
+                color: {self.c_text_primary};
+                border: 2px solid {self.c_border_light};
+                border-radius: 8px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                border-color: {self.c_primary};
+                background-color: {self.c_bg_secondary};
+            }}
+            """
+        )
+        open_data_folder_btn.clicked.connect(self._on_open_data_folder_clicked)
+        buttons_layout.addWidget(open_data_folder_btn)
+
+        self.content_layout.addLayout(buttons_layout)
+
         ok_btn = QPushButton(self.tr.t("buttons.ok"))
         ok_btn.setFixedHeight(40)
         ok_btn.setStyleSheet(
@@ -67,7 +118,6 @@ class InfoDialog(BaseDialog):
                 border-radius: 8px;
                 font-weight: 600;
             }}
-
             QPushButton:hover {{
                 background-color: {self.c_primary_hover};
             }}
@@ -75,3 +125,12 @@ class InfoDialog(BaseDialog):
         )
         ok_btn.clicked.connect(self.accept)
         self.content_layout.addWidget(ok_btn)
+
+    def _on_check_updates_clicked(self) -> None:
+        if self.main_window and hasattr(self.main_window, "check_for_updates"):
+            self.main_window.check_for_updates(silent=False)
+
+    def _on_open_data_folder_clicked(self) -> None:
+        app_data_path = get_app_data_dir()
+        if app_data_path.exists():
+            os.startfile(app_data_path)

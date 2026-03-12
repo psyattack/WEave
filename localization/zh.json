@@ -9,7 +9,9 @@
     "install": "安装",
     "download_all": "下载全部",
     "yes": "是",
-    "no": "否"
+    "no": "否",
+    "open_data_folder": "打开数据文件夹",
+    "check_updates": "检查更新"
   },
   "tooltips": {
     "open_folder": "在资源管理器中打开文件夹",
@@ -30,10 +32,7 @@
   },
   "labels": {
     "wallpapers_filtered": "显示 {filtered} / {total} 张壁纸",
-    "wallpapers_count": "壁纸数量: {count}",
     "total_size": "总大小: {size}",
-    "sort_date": "按日期排序",
-    "sort_name": "按名称排序",
     "id": "ID: {id}",
     "size": "大小: {size}",
     "installed": "已安装: {date}",
@@ -45,8 +44,6 @@
     "extract_prefix": "提取: {id}",
     "other": "其他:",
     "minimize_on_apply": "应用时最小化",
-    "disabled": "已禁用",
-    "enabled": "已启用",
     "page": "页",
     "of": "/ {total}",
     "filters": "筛选",
@@ -82,7 +79,6 @@
   "messages": {
     "download_started": "开始下载!",
     "extraction_started": "开始提取!",
-    "extraction_completed": "提取完成!",
     "wallpaper_deleted": "壁纸已删除!",
     "id_copied": "ID已复制到剪贴板!",
     "cannot_delete_active": "这些壁纸正在使用中。\n请先更换壁纸再删除。",
@@ -108,13 +104,13 @@
     "error": "错误",
     "translation_error": "翻译失败",
     "language_changed": "语言已更改",
-    "restart_now_question": "是否立即重启应用以应用新语言?",
-    "restart_with_tasks": "您有未完成的下载或提取。\n重启后将被取消。\n继续?",
-    "restart_with_downloads_only": "您有未完成的下载。\n重启后将被取消。\n继续?",
-    "restart_with_extractions_only": "您有未完成的提取。\n重启后将被取消。\n继续?",
+    "restart_now_question": "立即关闭应用程序以应用更改?",
+    "restart_with_tasks": "您有未完成的下载或提取。\n关闭应用程序时将被取消。\n继续?",
+    "restart_with_downloads_only": "您有未完成的下载。\n关闭应用程序时将被取消。\n继续?",
+    "restart_with_extractions_only": "您有未完成的提取。\n关闭应用程序时将被取消。\n继续?",
     "restart_title": "需要重启",
-    "restart_theme_message": "主题将在重启后应用。是否立即重启?",
-    "restart_debug_message": "调试模式将在重启后应用。是否立即重启?"
+    "restart_theme_message": "主题将在下次启动后应用。立即关闭应用程序?",
+    "restart_debug_message": "调试模式将在下次启动后应用。立即关闭应用程序?"
   },
   "dialog": {
     "tasks": "任务",
@@ -149,12 +145,12 @@
     "preload_description": "在后台预加载下一个创意工坊页面以加快导航速度",
     "save_window_state": "保存窗口状态",
     "save_window_state_description": "退出时保存窗口大小和位置，启动时恢复",
+    "auto_check_updates": "自动检查更新",
+    "auto_check_updates_description": "应用程序启动时自动检查GitHub发布版本",
     "tab_general": "常规",
     "account_selection": "账户选择",
     "account_description": "选择账户(用于下载)",
     "tab_account": "账户",
-    "notifications": "通知",
-    "coming_soon": "更多设置即将推出...",
     "tab_advanced": "高级",
     "login_description": "输入您的Steam凭据以在创意工坊中进行身份验证",
     "debug": "调试",

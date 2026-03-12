@@ -74,7 +74,7 @@ WEave (formerly WE Workshop Manager) is a Python/PyQt6 desktop application that 
 ### 📦 Option 1: Packaged PyInstaller version
 
 Download the latest version from the **[Releases](https://github.com/psyattack/we-workshop-manager/releases)** section  
-> All dependencies are already in the archive, just extract the archive to a convenient location and run `WEave.exe`
+> All dependencies are already built in, just unzip the archive to a convenient location and run `WEave.exe`
 
 ---
 
@@ -145,21 +145,21 @@ This project is licensed under the **[MIT](LICENSE)** license.
 
 ## 👁️‍🗨️ Known Issues
 
-- [ ] Incorrect window state return after pre-minimizing
-- [x] White dialogs when clearing filters
-- [ ] PyInstaller --onefile breaks restart, if building from source build in --onedir (~500mb)
+- [x] <strike>Incorrect window state return after pre-minimizing</strike>
+- [x] <strike>White dialogs when clearing filters</strike>
+- [x] <strike>PyInstaller --onefile breaks restart, if building from source build in --onedir (~500mb)</strike>
 
 ---
 
 ## 📋 TODO & Support
 
-- [x] Themes
-- [x] Login via personal Steam account (For use with Steam failed 50 and similar)
+- [x] <strike>Themes</strike>
+- [x] <strike>Login via personal Steam account (For use with Steam failed 50 and similar)</strike>
 - [ ] Autostart
 - [ ] Tray + silent mode
 - [ ] Original WE functions (Preset editor, creating playlists, profiles, etc.)
 - [ ] Automatic updates
-- [x] Interface optimization for different screen sizes and formats + window resize capability
+- [x] <strike>Interface optimization for different screen sizes and formats + window resize capability</strike>
 
 > If you have any problems or suggestions for improvement — create an [Issue](https://github.com/psyattack/we-workshop-manager/issues) in the repository.
 

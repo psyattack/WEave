@@ -1,8 +1,18 @@
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt, pyqtProperty, pyqtSignal
 from PyQt6.QtGui import QColor, QBrush, QPainter, QPen
-from PyQt6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QScrollArea,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-from shared.helpers import restart_application
+from shared.helpers import request_restart_or_exit
 from ui.dialogs.base_dialog import BaseDialog
 from ui.notifications import MessageBox
 
@@ -12,12 +22,10 @@ class AnimatedToggle(QWidget):
 
     def __init__(self, parent=None, theme_manager=None):
         super().__init__(parent)
-
         self.theme = theme_manager
         self._checked = False
         self._circle_position = 3.0
         self._background_color = QColor(self._get_color("bg_tertiary"))
-
         self.setFixedSize(44, 24)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -32,7 +40,6 @@ class AnimatedToggle(QWidget):
     def _get_color(self, color_name: str) -> str:
         if self.theme:
             return self.theme.get_color(color_name)
-
         colors = {
             "bg_tertiary": "#252938",
             "primary": "#4A7FD9",
@@ -46,7 +53,6 @@ class AnimatedToggle(QWidget):
     def setChecked(self, checked: bool) -> None:
         if self._checked == checked:
             return
-
         self._checked = checked
         self._animate()
 
@@ -105,7 +111,6 @@ class AnimatedToggle(QWidget):
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor("#FFFFFF")))
-
         circle_y = (self.height() - 18) / 2
         painter.drawEllipse(QRectF(self._circle_position, circle_y, 18, 18))
 
@@ -113,10 +118,8 @@ class AnimatedToggle(QWidget):
 class CollapsibleSection(QWidget):
     def __init__(self, title: str, parent=None, expanded: bool = True, theme_manager=None):
         super().__init__(parent)
-
         self.theme = theme_manager
         self._setup_colors()
-
         self._is_expanded = expanded
         self._title_text = title
 
@@ -137,12 +140,11 @@ class CollapsibleSection(QWidget):
 
         self._content_area = QWidget()
         self._apply_content_style()
-
         self._content_layout = QVBoxLayout(self._content_area)
         self._content_layout.setContentsMargins(14, 12, 14, 12)
         self._content_layout.setSpacing(10)
-
         self._main_layout.addWidget(self._content_area)
+
         self._content_area.setVisible(expanded)
 
     def content_layout(self) -> QVBoxLayout:
@@ -191,13 +193,11 @@ class CollapsibleSection(QWidget):
                 font-weight: 700;
                 text-align: left;
             }}
-
             QPushButton:hover {{
                 background-color: {self.c_bg_secondary};
                 border-color: {self.c_primary};
                 color: {self.c_text_primary};
             }}
-
             QPushButton:checked {{
                 background-color: {self.c_bg_secondary};
                 color: {self.c_text_primary};
@@ -232,9 +232,16 @@ class CollapsibleSection(QWidget):
 
 
 class SettingsField(QWidget):
-    def __init__(self, label_text: str, control_widget, description: str = None, stacked: bool = False, parent=None, theme_manager=None):
+    def __init__(
+        self,
+        label_text: str,
+        control_widget,
+        description: str = None,
+        stacked: bool = False,
+        parent=None,
+        theme_manager=None,
+    ):
         super().__init__(parent)
-
         self.theme = theme_manager
         self._setup_colors()
         self.setStyleSheet("background: transparent; border: none;")
@@ -331,19 +338,16 @@ class SettingsField(QWidget):
 class SettingsDialog(BaseDialog):
     def __init__(self, config, accounts, translator, theme_manager, main_window, parent=None):
         super().__init__(translator.t("settings.title"), parent, theme_manager)
-
         self.config = config
         self.accounts = accounts
         self.tr = translator
         self.main_window = main_window
-
         self.setFixedSize(900, 650)
         self._apply_container_style()
         self._setup_ui()
 
     def _setup_ui(self) -> None:
         self.content_layout.setSpacing(10)
-
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet(self._tab_widget_style())
         self.content_layout.addWidget(self.tab_widget)
@@ -367,7 +371,9 @@ class SettingsDialog(BaseDialog):
             SettingsField(
                 self.tr.t("settings.theme_dev"),
                 theme_combo,
-                description=self.tr.t("settings.theme_description") if self.tr.t("settings.theme_description") != "settings.theme_description" else "Select the visual theme for the application",
+                description=self.tr.t("settings.theme_description")
+                if self.tr.t("settings.theme_description") != "settings.theme_description"
+                else "Select the visual theme for the application",
                 theme_manager=self.theme,
             )
         )
@@ -377,7 +383,9 @@ class SettingsDialog(BaseDialog):
             SettingsField(
                 self.tr.t("settings.language"),
                 language_combo,
-                description=self.tr.t("settings.language_description") if self.tr.t("settings.language_description") != "settings.language_description" else "Change interface language (requires restart)",
+                description=self.tr.t("settings.language_description")
+                if self.tr.t("settings.language_description") != "settings.language_description"
+                else "Change interface language (requires close and next launch)",
                 theme_manager=self.theme,
             )
         )
@@ -385,9 +393,13 @@ class SettingsDialog(BaseDialog):
         show_id_toggle = self._create_show_id_toggle()
         appearance_section.add_widget(
             SettingsField(
-                self.tr.t("settings.show_id_section") if self.tr.t("settings.show_id_section") != "settings.show_id_section" else "Show ID Section",
+                self.tr.t("settings.show_id_section")
+                if self.tr.t("settings.show_id_section") != "settings.show_id_section"
+                else "Show ID Section",
                 show_id_toggle,
-                description=self.tr.t("settings.show_id_description") if self.tr.t("settings.show_id_description") != "settings.show_id_description" else "Show or hide the ID section in details panel",
+                description=self.tr.t("settings.show_id_description")
+                if self.tr.t("settings.show_id_description") != "settings.show_id_description"
+                else "Show or hide the ID section in details panel",
                 theme_manager=self.theme,
             )
         )
@@ -405,7 +417,9 @@ class SettingsDialog(BaseDialog):
             SettingsField(
                 self.tr.t("labels.minimize_on_apply"),
                 minimize_toggle,
-                description=self.tr.t("settings.minimize_description") if self.tr.t("settings.minimize_description") != "settings.minimize_description" else "Minimize window after applying changes",
+                description=self.tr.t("settings.minimize_description")
+                if self.tr.t("settings.minimize_description") != "settings.minimize_description"
+                else "Minimize window after applying changes",
                 theme_manager=self.theme,
             )
         )
@@ -413,9 +427,27 @@ class SettingsDialog(BaseDialog):
         preload_toggle = self._create_preload_toggle()
         behavior_section.add_widget(
             SettingsField(
-                self.tr.t("settings.preload_next_page") if self.tr.t("settings.preload_next_page") != "settings.preload_next_page" else "Preload Next Page",
+                self.tr.t("settings.preload_next_page")
+                if self.tr.t("settings.preload_next_page") != "settings.preload_next_page"
+                else "Preload Next Page",
                 preload_toggle,
-                description=self.tr.t("settings.preload_description") if self.tr.t("settings.preload_description") != "settings.preload_description" else "Preload the next workshop page in background for faster navigation",
+                description=self.tr.t("settings.preload_description")
+                if self.tr.t("settings.preload_description") != "settings.preload_description"
+                else "Preload the next workshop page in background for faster navigation",
+                theme_manager=self.theme,
+            )
+        )
+
+        updates_toggle = self._create_auto_updates_toggle()
+        behavior_section.add_widget(
+            SettingsField(
+                self.tr.t("settings.auto_check_updates")
+                if self.tr.t("settings.auto_check_updates") != "settings.auto_check_updates"
+                else "Auto Check Updates",
+                updates_toggle,
+                description=self.tr.t("settings.auto_check_updates_description")
+                if self.tr.t("settings.auto_check_updates_description") != "settings.auto_check_updates_description"
+                else "Automatically check GitHub releases on application startup",
                 theme_manager=self.theme,
             )
         )
@@ -423,9 +455,13 @@ class SettingsDialog(BaseDialog):
         save_window_toggle = self._create_save_window_state_toggle()
         behavior_section.add_widget(
             SettingsField(
-                self.tr.t("settings.save_window_state") if self.tr.t("settings.save_window_state") != "settings.save_window_state" else "Save Window State",
+                self.tr.t("settings.save_window_state")
+                if self.tr.t("settings.save_window_state") != "settings.save_window_state"
+                else "Save Window State",
                 save_window_toggle,
-                description=self.tr.t("settings.save_window_state_description") if self.tr.t("settings.save_window_state_description") != "settings.save_window_state_description" else "Save window size and position on exit and restore on startup",
+                description=self.tr.t("settings.save_window_state_description")
+                if self.tr.t("settings.save_window_state_description") != "settings.save_window_state_description"
+                else "Save window size and position on exit and restore on startup",
                 theme_manager=self.theme,
             )
         )
@@ -435,7 +471,9 @@ class SettingsDialog(BaseDialog):
 
         self.tab_widget.addTab(
             tab,
-            self.tr.t("settings.tab_general") if self.tr.t("settings.tab_general") != "settings.tab_general" else "General",
+            self.tr.t("settings.tab_general")
+            if self.tr.t("settings.tab_general") != "settings.tab_general"
+            else "General",
         )
 
     def _create_account_tab(self) -> None:
@@ -443,7 +481,9 @@ class SettingsDialog(BaseDialog):
         layout = tab._inner_layout
 
         account_section = CollapsibleSection(
-            self.tr.t("settings.account_selection") if self.tr.t("settings.account_selection") != "settings.account_selection" else "Account Selection",
+            self.tr.t("settings.account_selection")
+            if self.tr.t("settings.account_selection") != "settings.account_selection"
+            else "Account Selection",
             expanded=True,
             theme_manager=self.theme,
         )
@@ -453,10 +493,13 @@ class SettingsDialog(BaseDialog):
             SettingsField(
                 self.tr.t("settings.account"),
                 account_combo,
-                description=self.tr.t("settings.account_description") if self.tr.t("settings.account_description") != "settings.account_description" else "Select the active Steam account",
+                description=self.tr.t("settings.account_description")
+                if self.tr.t("settings.account_description") != "settings.account_description"
+                else "Select the active Steam account",
                 theme_manager=self.theme,
             )
         )
+
         layout.addWidget(account_section)
 
         login_section = CollapsibleSection(
@@ -464,15 +507,17 @@ class SettingsDialog(BaseDialog):
             expanded=True,
             theme_manager=self.theme,
         )
+
         login_widget = self._create_steam_login_section()
         login_section.add_widget(login_widget)
-
         layout.addWidget(login_section)
         layout.addStretch()
 
         self.tab_widget.addTab(
             tab,
-            self.tr.t("settings.tab_account") if self.tr.t("settings.tab_account") != "settings.tab_account" else "Account",
+            self.tr.t("settings.tab_account")
+            if self.tr.t("settings.tab_account") != "settings.tab_account"
+            else "Account",
         )
 
     def _create_advanced_tab(self) -> None:
@@ -486,7 +531,11 @@ class SettingsDialog(BaseDialog):
         )
 
         debug_toggle = self._create_debug_toggle()
-        debug_description = self.tr.t("settings.debug_description") if self.tr.t("settings.debug_description") != "settings.debug_description" else "Enable debug mode for webview testing"
+        debug_description = (
+            self.tr.t("settings.debug_description")
+            if self.tr.t("settings.debug_description") != "settings.debug_description"
+            else "Enable debug mode for webview testing"
+        )
 
         debug_section.add_widget(
             SettingsField(
@@ -502,7 +551,9 @@ class SettingsDialog(BaseDialog):
 
         self.tab_widget.addTab(
             tab,
-            self.tr.t("settings.tab_advanced") if self.tr.t("settings.tab_advanced") != "settings.tab_advanced" else "Advanced",
+            self.tr.t("settings.tab_advanced")
+            if self.tr.t("settings.tab_advanced") != "settings.tab_advanced"
+            else "Advanced",
         )
 
     def _create_scrollable_tab(self) -> QScrollArea:
@@ -515,27 +566,22 @@ class SettingsDialog(BaseDialog):
                 background: transparent;
                 border: none;
             }}
-
             QScrollArea > QWidget > QWidget {{
                 background: transparent;
             }}
-
             QScrollBar:vertical {{
                 background: {self.c_bg_secondary};
                 width: 6px;
                 border-radius: 3px;
             }}
-
             QScrollBar::handle:vertical {{
                 background: {self.c_border_light};
                 border-radius: 3px;
                 min-height: 30px;
             }}
-
             QScrollBar::handle:vertical:hover {{
                 background: {self.c_primary};
             }}
-
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
             }}
@@ -544,7 +590,6 @@ class SettingsDialog(BaseDialog):
 
         inner = QWidget()
         inner.setStyleSheet("background: transparent;")
-
         inner_layout = QVBoxLayout(inner)
         inner_layout.setContentsMargins(4, 8, 4, 8)
         inner_layout.setSpacing(12)
@@ -555,23 +600,19 @@ class SettingsDialog(BaseDialog):
 
     def _create_account_combo(self) -> QComboBox:
         combo = QComboBox()
-
         last_login_account = 1
         for index in range(len(self.accounts.get_accounts()) - last_login_account):
             combo.addItem(f"{self.tr.t('labels.account')} {index + 1}")
-
         combo.setCurrentIndex(self.config.get_account_number())
         combo.currentIndexChanged.connect(lambda idx: self.config.set_account_number(idx))
         combo.setStyleSheet(self._combo_style())
-
         return combo
 
     def _create_theme_combo(self) -> QComboBox:
         combo = QComboBox()
-
         self._theme_keys = list(self.theme.get_available_themes())
-        display_names = []
 
+        display_names = []
         for key in self._theme_keys:
             translation_key = f"labels.theme_{key}"
             translated = self.tr.t(translation_key)
@@ -589,35 +630,32 @@ class SettingsDialog(BaseDialog):
 
         combo.currentIndexChanged.connect(self._on_theme_changed)
         combo.setStyleSheet(self._combo_style())
-
         return combo
 
     def _create_language_combo(self) -> QComboBox:
         combo = QComboBox()
-
         languages = list(self.tr.get_available_languages().values())
         combo.addItems(languages)
 
         current_language = self.config.get_language()
         language_codes = list(self.tr.get_available_languages().keys())
-
         current_index = language_codes.index(current_language) if current_language in language_codes else 0
         combo.setCurrentIndex(current_index)
         combo.currentIndexChanged.connect(self._on_language_changed)
         combo.setStyleSheet(self._combo_style())
-
         return combo
 
     def _create_steam_login_section(self) -> QWidget:
         container = QWidget()
         container.setStyleSheet("background: transparent; border: none;")
-
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
 
         desc = QLabel(
-            self.tr.t("settings.login_description") if self.tr.t("settings.login_description") != "settings.login_description" else "Enter your Steam credentials to authenticate"
+            self.tr.t("settings.login_description")
+            if self.tr.t("settings.login_description") != "settings.login_description"
+            else "Enter your Steam credentials to authenticate"
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
@@ -662,7 +700,6 @@ class SettingsDialog(BaseDialog):
                 font-weight: 600;
                 font-size: 13px;
             }}
-
             QPushButton:hover {{
                 border-color: {self.c_primary};
                 background-color: {self.c_bg_secondary};
@@ -689,6 +726,15 @@ class SettingsDialog(BaseDialog):
         toggle.toggled.connect(self._on_preload_changed)
         return toggle
 
+    def _create_auto_updates_toggle(self):
+        toggle = AnimatedToggle(theme_manager=self.theme)
+        toggle.setChecked(self.config.get_auto_check_updates())
+        toggle.toggled.connect(self._on_auto_updates_changed)
+        return toggle
+
+    def _on_auto_updates_changed(self, checked: bool) -> None:
+        self.config.set_auto_check_updates(checked)
+
     def _create_save_window_state_toggle(self):
         toggle = AnimatedToggle(theme_manager=self.theme)
         toggle.setChecked(self.config.get_save_window_state())
@@ -707,13 +753,27 @@ class SettingsDialog(BaseDialog):
         toggle.toggled.connect(self._on_debug_mode_changed)
         return toggle
 
+    def _cleanup_before_restart_or_exit(self, download_service=None) -> None:
+        if download_service is None and self.main_window and hasattr(self.main_window, "dm"):
+            download_service = self.main_window.dm
+
+        if download_service:
+            try:
+                download_service.cleanup_all()
+            except Exception:
+                pass
+
+        if self.main_window and hasattr(self.main_window, "workshop_tab"):
+            try:
+                self.main_window.workshop_tab.cleanup()
+            except Exception:
+                pass
+
     def _on_show_id_changed(self, checked: bool) -> None:
         self.config.set_show_id_section(checked)
-
         if self.main_window:
             if hasattr(self.main_window, "wallpapers_tab") and hasattr(self.main_window.wallpapers_tab, "details_panel"):
                 self.main_window.wallpapers_tab.details_panel._update_id_section_visibility()
-
             if hasattr(self.main_window, "workshop_tab") and hasattr(self.main_window.workshop_tab, "details_panel"):
                 self.main_window.workshop_tab.details_panel._update_id_section_visibility()
 
@@ -745,7 +805,8 @@ class SettingsDialog(BaseDialog):
         msg_box.exec()
 
         if msg_box.clickedButton() == yes_btn:
-            restart_application()
+            self._cleanup_before_restart_or_exit()
+            request_restart_or_exit()
 
     def _on_login_clicked(self) -> None:
         login = self.login_input.text().strip()
@@ -776,7 +837,8 @@ class SettingsDialog(BaseDialog):
 
         if msg_box.clickedButton() == yes_btn:
             self._clear_cookies()
-            restart_application(quit_app=True, login=login, password=password)
+            self._cleanup_before_restart_or_exit()
+            request_restart_or_exit(quit_app=True, login=login, password=password)
 
     def _on_reset_clicked(self) -> None:
         msg_box = MessageBox(
@@ -790,7 +852,8 @@ class SettingsDialog(BaseDialog):
         msg_box.exec()
 
         self._clear_cookies()
-        restart_application()
+        self._cleanup_before_restart_or_exit()
+        request_restart_or_exit()
 
     def _clear_cookies(self) -> None:
         try:
@@ -803,7 +866,6 @@ class SettingsDialog(BaseDialog):
 
     def _on_theme_changed(self, index: int) -> None:
         theme = self._theme_keys[index] if 0 <= index < len(self._theme_keys) else "dark"
-
         current_theme = self.config.get_theme()
         if theme == current_theme:
             return
@@ -822,7 +884,8 @@ class SettingsDialog(BaseDialog):
         msg_box.exec()
 
         if msg_box.clickedButton() == yes_btn:
-            restart_application()
+            self._cleanup_before_restart_or_exit()
+            request_restart_or_exit()
 
     def _on_language_changed(self, index: int) -> None:
         language_codes = list(self.tr.get_available_languages().keys())
@@ -863,13 +926,8 @@ class SettingsDialog(BaseDialog):
         msg_box.exec()
 
         if msg_box.clickedButton() == yes_btn:
-            if download_service:
-                download_service.cleanup_all()
-
-            if self.main_window and hasattr(self.main_window, "workshop_tab"):
-                self.main_window.workshop_tab.cleanup()
-
-            restart_application()
+            self._cleanup_before_restart_or_exit(download_service)
+            request_restart_or_exit()
 
     def _combo_style(self) -> str:
         return f"""
@@ -883,33 +941,27 @@ class SettingsDialog(BaseDialog):
             font-weight: 500;
             min-height: 18px;
         }}
-
         QComboBox:hover {{
             border-color: {self.c_primary};
             background-color: {self.c_bg_secondary};
         }}
-
         QComboBox:focus {{
             border-color: {self.c_primary};
         }}
-
         QComboBox::drop-down {{
             width: 0px;
             border: none;
         }}
-
         QComboBox::down-arrow {{
             width: 0px;
             height: 0px;
             image: none;
         }}
-
         QComboBox:on {{
             border-color: {self.c_primary};
             border-bottom-left-radius: 0px;
             border-bottom-right-radius: 0px;
         }}
-
         QComboBox QAbstractItemView {{
             background-color: {self.c_bg_tertiary};
             color: {self.c_text_primary};
@@ -922,18 +974,15 @@ class SettingsDialog(BaseDialog):
             padding: 4px;
             outline: none;
         }}
-
         QComboBox QAbstractItemView::item {{
             padding: 6px 10px;
             border-radius: 4px;
             margin: 2px 4px;
             min-height: 20px;
         }}
-
         QComboBox QAbstractItemView::item:hover {{
             background-color: {self.c_bg_secondary};
         }}
-
         QComboBox QAbstractItemView::item:selected {{
             background-color: {self.c_primary};
         }}
@@ -949,7 +998,6 @@ class SettingsDialog(BaseDialog):
             padding: 8px 12px;
             font-size: 13px;
         }}
-
         QLineEdit:focus {{
             border-color: {self.c_primary};
         }}
@@ -966,7 +1014,6 @@ class SettingsDialog(BaseDialog):
             font-weight: 700;
             font-size: 12px;
         }}
-
         QPushButton:hover {{
             background-color: {self.c_primary_hover};
         }}
@@ -977,14 +1024,12 @@ class SettingsDialog(BaseDialog):
         QTabBar {{
             background-color: {self.c_bg_secondary};
         }}
-
         QTabWidget::pane {{
             background-color: transparent;
             border: 1px solid {self.c_border_light};
             border-radius: 8px;
             margin-top: 15px;
         }}
-
         QTabBar::tab {{
             background-color: {self.c_bg_tertiary};
             color: {self.c_text_secondary};
@@ -997,18 +1042,15 @@ class SettingsDialog(BaseDialog):
             font-size: 12px;
             font-weight: 600;
         }}
-
         QTabBar::tab:selected {{
             background-color: {self.c_bg_secondary};
             color: {self.c_text_primary};
             border-bottom: 2px solid {self.c_primary};
         }}
-
         QTabBar::tab:hover:!selected {{
             background-color: {self.c_bg_secondary};
             color: {self.c_text_primary};
         }}
-
         QTabBar::tab:first {{
             margin-left: 0px;
         }}

@@ -145,21 +145,21 @@ we-workshop-manager/
 
 ## 👁️‍🗨️ 已知问题
 
-- [ ] 最小化后窗口状态返回不正确
-- [x] 清除过滤器时的白色对话框
-- [ ] PyInstaller --onefile会导致重启失败，如果需要从源码编译请使用--onedir模式（~500mb）
+- [x] <strike>最小化后窗口状态返回不正确</strike>
+- [x] <strike>清除过滤器时的白色对话框</strike>
+- [x] <strike>PyInstaller --onefile会导致重启失败，如果需要从源码编译请使用--onedir模式（~500mb）</strike>
 
 ---
 
 ## 📋 TODO 与支持
 
-- [x] 主题
-- [x] 通过个人 Steam 账户登录（用于 Steam failed 50 等情况）
+- [x] <strike>主题</strike>
+- [x] <strike>通过个人 Steam 账户登录（用于 Steam failed 50 等情况）</strike>
 - [ ] 自动启动
 - [ ] 托盘 + 静默模式
 - [ ] 原始 WE 功能（预设编辑器、创建播放列表、个人资料等）
 - [ ] 自动更新
-- [x] 针对不同屏幕尺寸和格式优化界面 + 窗口调整大小功能
+- [x] <strike>针对不同屏幕尺寸和格式优化界面 + 窗口调整大小功能</strike>
 
 > 如果您遇到问题或有改进建议 — 请在仓库中创建 [Issue](https://github.com/psyattack/we-workshop-manager/issues)。
 

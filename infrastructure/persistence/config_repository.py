@@ -1,9 +1,7 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
 
 from infrastructure.persistence.json_storage import JsonStorage
-
 
 DEFAULT_CONFIG = {
     "settings": {
@@ -24,6 +22,8 @@ DEFAULT_CONFIG = {
             "behavior": {
                 "minimize_on_apply": False,
                 "preload_next_page": True,
+                "auto_check_updates": True,
+                "skip_version": "",
                 "window_geometry": {
                     "x": -1,
                     "y": -1,
@@ -57,15 +57,9 @@ class ConfigRepository:
 
     def _deep_merge(self, base: dict, override: dict) -> dict:
         result = deepcopy(base)
-
         for key, value in override.items():
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
-
         return result
