@@ -74,7 +74,7 @@ WEave (元 WE Workshop Manager)は、Steamクライアントを実行せずにWa
 ### 📦オプション1: PyInstallerパッケージバージョン
 
 **[Releases](https://github.com/psyattack/we-workshop-manager/releases)** セクションから最新バージョンをダウンロードしてください  
-> すべての依存関係はすでにアーカイブに含まれているので、アーカイブを удобное место выпрямите и `WEave.exe` を実行するだけです
+> すべての依存関係はすでにアーカイブに含まれているので、アーカイブを `WEave.exe` を実行するだけです
 
 ---
 
@@ -145,21 +145,21 @@ we-workshop-manager/
 
 ## 👁️‍🗨️既知の問題
 
-- [ ] 最小化後のウィンドウ状態の不適切な復帰
-- [x] フィルターをクリアする際の白いダイアログ
-- [ ] PyInstaller --onefileは再起動を壊すため、ソースからビルドする場合は--onedirでビルドしてください（~500mb）
+- [x] <strike>最小化後のウィンドウ状態の不適切な復帰</strike>
+- [x] <strike>フィルターをクリアする際の白いダイアログ</strike>
+- [x] <strike>PyInstaller --onefileは再起動を壊すため、ソースからビルドする場合は--onedirでビルドしてください（~500mb）</strike>
 
 ---
 
 ## 📋 TODOとサポート
 
-- [x] テーマ
-- [x] 個人Steamアカウントでのログイン（Steam failed 50などの場合に使用）
+- [x] <strike>テーマ</strike>
+- [x] <strike>個人Steamアカウントでのログイン（Steam failed 50などの場合に使用）</strike>
 - [ ] 自動起動
 - [ ] トレイ + シレットモード
 - [ ] 元のWE機能（プリセットエディター、プレイリスト作成、プロファイルなど）
 - [ ] 自動更新
-- [x] 異なる画面サイズと形式に合わせてインターフェースを最適化 + ウィンドウのリサイズ機能
+- [x] <strike>異なる画面サイズと形式に合わせてインターフェースを最適化 + ウィンドウのリサイズ機能</strike>
 
 > 問題がある場合や改善提案がある場合は、リポジトリに[Issue](https://github.com/psyattack/we-workshop-manager/issues)を作成してください。
 

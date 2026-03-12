@@ -1,6 +1,15 @@
-from pathlib import Path
-
-from PyQt6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, pyqtProperty, pyqtSignal, QTimer
+from PyQt6.QtCore import (
+    QEasingCurve,
+    QPoint,
+    QPropertyAnimation,
+    QSize,
+    Qt,
+    pyqtProperty,
+    pyqtSignal,
+    QTimer,
+    QRect,
+    QEvent,
+)
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
     QApplication,
@@ -18,30 +27,32 @@ from PyQt6.QtWidgets import (
 
 from infrastructure.resources.resource_manager import get_icon
 from shared.constants import APP_NAME
-from shared.filesystem import clear_cache_if_needed
+from shared.filesystem import clear_cache_if_needed, get_app_data_dir
 from ui.dialogs.batch_download_dialog import BatchDownloadDialog
 from ui.dialogs.info_dialog import InfoDialog
 from ui.dialogs.settings_dialog import SettingsDialog
 from ui.notifications import MessageBox
 from ui.tabs.wallpapers_tab import WallpapersTab
 from ui.tabs.workshop_tab import WorkshopTab
+from ui.dialogs.update_dialog import UpdateDialog
+from ui.widgets.update_checker import UpdateCheckWorker
+from ui.widgets.custom_tooltip import install_tooltip
 
 
 class AnimatedIconButton(QPushButton):
-    def __init__(self, icon_name: str, tooltip_text: str = "", parent=None):
+    def __init__(self, icon_name: str, tooltip_text: str = "", theme_manager=None, parent=None):
         QPushButton.__init__(self, parent)
-
         self._icon_name = icon_name
         self._tooltip_text = tooltip_text or icon_name
         self._icon_scale = 1.0
         self._bg_opacity = 0.0
         self._is_active = False
-
         self.setIcon(get_icon(icon_name))
-        self.setToolTip(self._tooltip_text)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTipDuration(3000)
+
+        if self._tooltip_text and theme_manager:
+            install_tooltip(self, self._tooltip_text, "right", theme_manager)
 
         self._scale_anim = QPropertyAnimation(self, b"icon_scale")
         self._scale_anim.setDuration(200)
@@ -73,12 +84,10 @@ class AnimatedIconButton(QPushButton):
 
     def set_active(self, active: bool) -> None:
         self._is_active = active
-
         self._bg_anim.stop()
         self._bg_anim.setStartValue(self._bg_opacity)
         self._bg_anim.setEndValue(1.0 if active else 0.0)
         self._bg_anim.start()
-
         if active:
             self._bounce_icon()
 
@@ -98,12 +107,10 @@ class AnimatedIconButton(QPushButton):
             self._scale_anim.setDuration(200)
             self._scale_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
             self._scale_anim.start()
-
             self._bg_anim.stop()
             self._bg_anim.setStartValue(self._bg_opacity)
             self._bg_anim.setEndValue(0.4)
             self._bg_anim.start()
-
         super().enterEvent(event)
 
     def leaveEvent(self, event):
@@ -114,12 +121,10 @@ class AnimatedIconButton(QPushButton):
             self._scale_anim.setDuration(200)
             self._scale_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
             self._scale_anim.start()
-
             self._bg_anim.stop()
             self._bg_anim.setStartValue(self._bg_opacity)
             self._bg_anim.setEndValue(0.0)
             self._bg_anim.start()
-
         super().leaveEvent(event)
 
     def mousePressEvent(self, event):
@@ -146,12 +151,10 @@ class SideNavBar(QWidget):
 
     def __init__(self, theme_manager, parent=None):
         super().__init__(parent)
-
         self.theme = theme_manager
         self._current_index = 0
         self._nav_buttons: list[AnimatedIconButton] = []
         self._action_buttons: list[AnimatedIconButton] = []
-
         self.setFixedWidth(68)
         self.setContentsMargins(0, 0, 0, 0)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -170,60 +173,47 @@ class SideNavBar(QWidget):
 
         sep_container = QWidget()
         sep_container.setStyleSheet("background: transparent;")
-
         sep_layout = QHBoxLayout(sep_container)
         sep_layout.setContentsMargins(14, 6, 14, 6)
-
         self._sep_line = QFrame()
         self._sep_line.setFixedHeight(1)
         sep_layout.addWidget(self._sep_line)
-
         self._layout.addWidget(sep_container)
 
         self._actions_container = QVBoxLayout()
         self._actions_container.setSpacing(0)
         self._actions_container.setContentsMargins(0, 4, 0, 4)
         self._layout.addLayout(self._actions_container)
-
         self._apply_styles()
 
     def addNavTab(self, icon_name: str, tooltip: str):
         tooltip = tooltip or icon_name
         index = len(self._nav_buttons)
-
-        button = AnimatedIconButton(icon_name, tooltip, self)
-        button.setToolTip(tooltip)
+        button = AnimatedIconButton(icon_name, tooltip, self.theme, self)
         button.setFixedSize(42, 42)
         button.setIconSize(QSize(22, 22))
         button.clicked.connect(lambda checked=False, i=index: self._on_nav_clicked(i))
-
         self._apply_nav_button_style(button, index == self._current_index)
         if index == self._current_index:
             button.set_active(True)
-
         self._nav_buttons.append(button)
 
         wrapper = QWidget()
         wrapper.setFixedSize(68, 58)
         wrapper.setStyleSheet("background: transparent;")
         wrapper.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
         wrapper_layout = QHBoxLayout(wrapper)
         wrapper_layout.setContentsMargins(13, 8, 13, 8)
         wrapper_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         wrapper_layout.addWidget(button)
-
         self._nav_container.addWidget(wrapper)
 
     def addActionButton(self, icon_name: str, tooltip: str, callback):
         tooltip = tooltip or icon_name
-
-        button = AnimatedIconButton(icon_name, tooltip, self)
-        button.setToolTip(tooltip)
+        button = AnimatedIconButton(icon_name, tooltip, self.theme, self)
         button.setFixedSize(42, 42)
         button.setIconSize(QSize(22, 22))
         button.clicked.connect(callback)
-
         self._apply_action_button_style(button)
         self._action_buttons.append(button)
 
@@ -231,19 +221,16 @@ class SideNavBar(QWidget):
         wrapper.setFixedSize(68, 48)
         wrapper.setStyleSheet("background: transparent;")
         wrapper.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
         wrapper_layout = QHBoxLayout(wrapper)
         wrapper_layout.setContentsMargins(10, 6, 10, 6)
         wrapper_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         wrapper_layout.addWidget(button)
-
         self._actions_container.addWidget(wrapper)
         return button
 
     def setCurrentIndex(self, index: int) -> None:
         if not (0 <= index < len(self._nav_buttons)):
             return
-
         old_index = self._current_index
         self._current_index = index
 
@@ -260,10 +247,8 @@ class SideNavBar(QWidget):
 
     def update_theme(self) -> None:
         self._apply_styles()
-
         for i, button in enumerate(self._nav_buttons):
             self._apply_nav_button_style(button, i == self._current_index)
-
         for button in self._action_buttons:
             self._apply_action_button_style(button)
 
@@ -274,13 +259,11 @@ class SideNavBar(QWidget):
     def _apply_styles(self) -> None:
         background = self.theme.get_color("bg_secondary")
         border = self.theme.get_color("border")
-
         self.setStyleSheet(
             f"""
             SideNavBar {{
                 background-color: {background};
             }}
-
             QToolTip {{
                 background-color: {self.theme.get_color('bg_primary')};
                 color: {self.theme.get_color('text_primary')};
@@ -296,7 +279,6 @@ class SideNavBar(QWidget):
     def _apply_nav_button_style(self, button: AnimatedIconButton, is_active: bool) -> None:
         primary = self.theme.get_color("primary")
         bg_tertiary = self.theme.get_color("bg_tertiary")
-
         if is_active:
             button.setStyleSheet(
                 f"""
@@ -306,13 +288,11 @@ class SideNavBar(QWidget):
                     border-radius: 12px;
                     padding: 0px;
                 }}
-
                 QPushButton:hover {{
                     background-color: {self._lighten_color(primary)};
                 }}
                 """
             )
-
             shadow = QGraphicsDropShadowEffect()
             shadow.setBlurRadius(18)
             shadow.setColor(QColor(primary))
@@ -327,7 +307,6 @@ class SideNavBar(QWidget):
                     border-radius: 12px;
                     padding: 0px;
                 }}
-
                 QPushButton:hover {{
                     background-color: {bg_tertiary};
                 }}
@@ -338,7 +317,6 @@ class SideNavBar(QWidget):
     def _apply_action_button_style(self, button: AnimatedIconButton) -> None:
         bg_tertiary = self.theme.get_color("bg_tertiary")
         border = self.theme.get_color("border")
-
         button.setStyleSheet(
             f"""
             QPushButton {{
@@ -347,11 +325,9 @@ class SideNavBar(QWidget):
                 border-radius: 10px;
                 padding: 0px;
             }}
-
             QPushButton:hover {{
                 background-color: {bg_tertiary};
             }}
-
             QPushButton:pressed {{
                 background-color: {border};
             }}
@@ -368,7 +344,6 @@ class SideNavBar(QWidget):
 class ContentSwitcher(QStackedWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self._fade_duration = 200
         self._animation_running = False
 
@@ -437,7 +412,6 @@ class MainWindow(QMainWindow):
         metadata_service=None,
     ):
         super().__init__()
-
         self.config = config_service
         self.accounts = account_service
         self.dm = download_service
@@ -447,19 +421,34 @@ class MainWindow(QMainWindow):
         self.metadata_service = metadata_service
 
         self._is_maximized = False
+        self._pseudo_fullscreen = False
+        self._normal_geometry_before_fullscreen: QRect | None = None
+        self._geometry_anim: QPropertyAnimation | None = None
+
+        self._minimize_pos_anim: QPropertyAnimation | None = None
+        self._was_minimized_animated = False
+        self._pre_minimize_geometry: QRect | None = None
+        self._restoring_from_minimize = False
+
+        self._restoring_startup_state = False
+
         self.old_pos = None
         self._resize_edge = None
         self._resize_start_pos = None
         self._resize_start_geometry = None
+
+        self._drag_restore_pending = False
+        self._drag_cursor_offset = QPoint()
 
         self._apply_theme()
         self._setup_ui()
         self._load_window_geometry()
 
         self.dm.download_completed.connect(self._on_download_completed_signal)
-
         self.setMouseTracking(True)
         self.centralWidget().setMouseTracking(True)
+        self._update_worker = None
+        QTimer.singleShot(1800, self._auto_check_updates)
 
     def _apply_theme(self) -> None:
         theme_name = self.config.get_theme()
@@ -488,6 +477,7 @@ class MainWindow(QMainWindow):
         root_layout.setSpacing(0)
 
         self.title_bar = self._create_title_bar()
+        self.title_bar.installEventFilter(self)
         root_layout.addWidget(self.title_bar)
 
         body_layout = QHBoxLayout()
@@ -500,7 +490,6 @@ class MainWindow(QMainWindow):
         divider_container = QWidget()
         divider_container.setFixedWidth(1)
         divider_container.setStyleSheet("background: transparent;")
-
         divider_layout = QVBoxLayout(divider_container)
         divider_layout.setContentsMargins(0, 12, 0, 12)
         divider_layout.setSpacing(0)
@@ -509,7 +498,6 @@ class MainWindow(QMainWindow):
         self._nav_divider.setFixedWidth(1)
         self._nav_divider.setStyleSheet(f"background-color: {self.theme.get_color('border')};")
         divider_layout.addWidget(self._nav_divider)
-
         body_layout.addWidget(divider_container)
 
         self._create_tabs()
@@ -562,44 +550,33 @@ class MainWindow(QMainWindow):
         window_buttons_layout = QHBoxLayout()
         window_buttons_layout.setSpacing(2)
 
-        min_btn = self._create_window_button("minimize", self.showMinimized)
+        min_btn = self._create_window_button("minimize", self._animate_minimize)
         self.max_btn = self._create_window_button("maximize", self._toggle_maximize)
         close_btn = self._create_window_button("close", self._on_close)
 
         window_buttons_layout.addWidget(min_btn)
         window_buttons_layout.addWidget(self.max_btn)
         window_buttons_layout.addWidget(close_btn)
-
         layout.addLayout(window_buttons_layout)
         return title_bar
 
     def _create_side_nav(self) -> SideNavBar:
         nav = SideNavBar(self.theme, self)
-
         nav.addNavTab("ICON_WORKSHOP", self.tr.t("tabs.workshop"))
         nav.addNavTab("ICON_WALLPAPER", self.tr.t("tabs.wallpapers"))
 
         self.downloads_btn = nav.addActionButton(
-            "ICON_TASK",
-            self.tr.t("tooltips.tasks"),
-            self._toggle_downloads_popup,
+            "ICON_TASK", self.tr.t("tooltips.tasks"), self._toggle_downloads_popup
         )
         self.batch_btn = nav.addActionButton(
-            "ICON_UPLOAD",
-            self.tr.t("tooltips.batch_download"),
-            self._show_batch_download,
+            "ICON_UPLOAD", self.tr.t("tooltips.batch_download"), self._show_batch_download
         )
         self.settings_btn = nav.addActionButton(
-            "ICON_USER_SETTINGS",
-            self.tr.t("tooltips.settings"),
-            self._show_settings,
+            "ICON_USER_SETTINGS", self.tr.t("tooltips.settings"), self._show_settings
         )
         self.info_btn = nav.addActionButton(
-            "ICON_INFO",
-            self.tr.t("tooltips.info"),
-            self._show_info,
+            "ICON_INFO", self.tr.t("tooltips.info"), self._show_info
         )
-
         return nav
 
     def _create_tabs(self) -> None:
@@ -628,12 +605,10 @@ class MainWindow(QMainWindow):
 
         self.stack.addWidget(self.workshop_tab)
         self.stack.addWidget(self.wallpapers_tab)
-
         self.side_nav.currentChanged.connect(self.stack.setCurrentIndex)
 
     def _create_corner_covers(self) -> None:
         self._corner_covers = []
-
         bg_color = self.theme.get_color("bg_primary")
         title_bg = self.theme.get_color("bg_secondary")
         colors = [title_bg, title_bg, bg_color, bg_color]
@@ -653,7 +628,6 @@ class MainWindow(QMainWindow):
         width = self.centralWidget().width()
         height = self.centralWidget().height()
         size = 16
-
         positions = [
             (0, 0),
             (width - size, 0),
@@ -663,19 +637,219 @@ class MainWindow(QMainWindow):
 
         for cover, pos in zip(self._corner_covers, positions):
             cover.move(pos[0], pos[1])
-            cover.setVisible(self._is_maximized)
+            cover.setVisible(self._pseudo_fullscreen)
+
+    def _auto_check_updates(self) -> None:
+        if not self.config.get_auto_check_updates():
+            return
+        self.check_for_updates(silent=True)
+
+    def check_for_updates(self, silent: bool = False) -> None:
+        if self._update_worker is not None and self._update_worker.isRunning():
+            return
+
+        skipped_version = self.config.get_skip_version() if silent else ""
+        self._update_worker = UpdateCheckWorker(skipped_version=skipped_version, parent=self)
+        self._update_worker.completed.connect(lambda result: self._on_update_check_completed(result, silent))
+        self._update_worker.start()
+
+    def _on_update_check_completed(self, result, silent: bool) -> None:
+        self._update_worker = None
+
+        if result.error:
+            if not silent:
+                MessageBox.warning(
+                    self,
+                    self.tr.t("dialog.warning"),
+                    f"Update check failed:\n{result.error}",
+                )
+            return
+
+        if result.update_available:
+            dialog = UpdateDialog(self.tr, self.theme, result, self.config, self)
+            dialog.exec()
+            return
+
+        if not silent:
+            MessageBox.information(
+                self,
+                self.tr.t("dialog.about"),
+                f"You are using the latest version: v{result.current_version}",
+            )
+
+    def _get_available_screen_geometry(self) -> QRect:
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen:
+            return screen.availableGeometry()
+        return QRect(0, 0, 1200, 730)
+
+    def _update_window_state_ui(self) -> None:
+        self._is_maximized = self._pseudo_fullscreen
+        if hasattr(self, "max_btn"):
+            self.max_btn.setIcon(get_icon("ICON_RESTORE" if self._pseudo_fullscreen else "ICON_MAXIMIZE"))
+        self._update_corner_covers()
+
+    def _animate_geometry_to(self, target_rect: QRect, on_finished=None, duration: int = 260) -> None:
+        if self._geometry_anim is not None:
+            try:
+                self._geometry_anim.stop()
+                self._geometry_anim.deleteLater()
+            except Exception:
+                pass
+
+        self._geometry_anim = QPropertyAnimation(self, b"geometry")
+        self._geometry_anim.setDuration(duration)
+        self._geometry_anim.setStartValue(self.geometry())
+        self._geometry_anim.setEndValue(target_rect)
+        self._geometry_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
+
+        if on_finished is not None:
+            self._geometry_anim.finished.connect(on_finished)
+
+        self._geometry_anim.start()
+
+    def _enter_pseudo_fullscreen(self, animated: bool = True) -> None:
+        if self._pseudo_fullscreen:
+            return
+
+        if not self._restoring_startup_state:
+            self._normal_geometry_before_fullscreen = QRect(self.geometry())
+        elif self._normal_geometry_before_fullscreen is None:
+            saved = self.config.get_window_geometry()
+            self._normal_geometry_before_fullscreen = QRect(
+                saved.get("x", self.x()),
+                saved.get("y", self.y()),
+                saved.get("width", self.width()),
+                saved.get("height", self.height()),
+            )
+
+        target = self._get_available_screen_geometry()
+        self._pseudo_fullscreen = True
+        self._update_window_state_ui()
+
+        if animated and not self._restoring_startup_state:
+            self._animate_geometry_to(target)
+        else:
+            self.setGeometry(target)
+
+    def _exit_pseudo_fullscreen(self, animated: bool = True) -> None:
+        if not self._pseudo_fullscreen:
+            return
+
+        target = self._normal_geometry_before_fullscreen
+        if target is None or not target.isValid():
+            target = QRect(100, 100, 1200, 730)
+
+        self._pseudo_fullscreen = False
+        self._update_window_state_ui()
+
+        if animated and not self._restoring_startup_state:
+            self._animate_geometry_to(target)
+        else:
+            self.setGeometry(target)
 
     def _toggle_maximize(self) -> None:
-        if self._is_maximized:
-            self.showNormal()
-            self.max_btn.setIcon(get_icon("ICON_MAXIMIZE"))
-            self._is_maximized = False
+        if self._restoring_from_minimize:
+            return
+        if self._pseudo_fullscreen:
+            self._exit_pseudo_fullscreen(animated=True)
         else:
-            self.showMaximized()
-            self.max_btn.setIcon(get_icon("ICON_RESTORE"))
-            self._is_maximized = True
+            self._enter_pseudo_fullscreen(animated=True)
 
-        self._update_corner_covers()
+    def _get_minimize_target_pos(self) -> QPoint:
+        screen_rect = self._get_available_screen_geometry()
+        current = self.geometry()
+
+        target_x = screen_rect.x() + (screen_rect.width() - current.width()) // 2
+        target_y = screen_rect.y() + screen_rect.height() - current.height()
+
+        return QPoint(target_x, target_y)
+
+    def _animate_minimize(self) -> None:
+        if self.isMinimized() or self._restoring_from_minimize:
+            return
+
+        if self._geometry_anim is not None:
+            try:
+                self._geometry_anim.stop()
+            except Exception:
+                pass
+
+        self._pre_minimize_geometry = QRect(self.geometry())
+        self._was_minimized_animated = True
+
+        start_pos = self.pos()
+        end_pos = self._get_minimize_target_pos()
+
+        if self._minimize_pos_anim is not None:
+            try:
+                self._minimize_pos_anim.stop()
+                self._minimize_pos_anim.deleteLater()
+            except Exception:
+                pass
+
+        self._minimize_pos_anim = QPropertyAnimation(self, b"pos")
+        self._minimize_pos_anim.setDuration(220)
+        self._minimize_pos_anim.setStartValue(start_pos)
+        self._minimize_pos_anim.setEndValue(end_pos)
+        self._minimize_pos_anim.setEasingCurve(QEasingCurve.Type.InCubic)
+
+        def finish_minimize():
+            self.showMinimized()
+
+            if self._pseudo_fullscreen:
+                self.setGeometry(self._get_available_screen_geometry())
+            elif self._pre_minimize_geometry and self._pre_minimize_geometry.isValid():
+                self.setGeometry(self._pre_minimize_geometry)
+
+        self._minimize_pos_anim.finished.connect(finish_minimize)
+        self._minimize_pos_anim.start()
+
+    def _animate_restore_from_minimize(self) -> None:
+        if not self._was_minimized_animated or self._restoring_from_minimize:
+            return
+
+        self._restoring_from_minimize = True
+
+        if self._minimize_pos_anim is not None:
+            try:
+                self._minimize_pos_anim.stop()
+                self._minimize_pos_anim.deleteLater()
+            except Exception:
+                pass
+
+        end_rect = (
+            self._get_available_screen_geometry()
+            if self._pseudo_fullscreen
+            else self._pre_minimize_geometry
+            if self._pre_minimize_geometry and self._pre_minimize_geometry.isValid()
+            else QRect(self.geometry())
+        )
+
+        start_pos = QPoint(
+            self._get_available_screen_geometry().x() + (self._get_available_screen_geometry().width() - end_rect.width()) // 2,
+            self._get_available_screen_geometry().y() + self._get_available_screen_geometry().height() - end_rect.height(),
+        )
+
+        self.showNormal()
+        self.resize(end_rect.size())
+        self.move(start_pos)
+        self.raise_()
+        self.activateWindow()
+
+        self._minimize_pos_anim = QPropertyAnimation(self, b"pos")
+        self._minimize_pos_anim.setDuration(260)
+        self._minimize_pos_anim.setStartValue(start_pos)
+        self._minimize_pos_anim.setEndValue(end_rect.topLeft())
+        self._minimize_pos_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+        def finish_restore():
+            self.setGeometry(end_rect)
+            self._restoring_from_minimize = False
+            self._was_minimized_animated = False
+
+        self._minimize_pos_anim.finished.connect(finish_restore)
+        self._minimize_pos_anim.start()
 
     def _create_window_button(self, button_type: str, callback):
         button = QPushButton()
@@ -689,7 +863,6 @@ class MainWindow(QMainWindow):
             "restore": "ICON_RESTORE",
             "close": "ICON_CLOSE",
         }
-
         button.setIcon(get_icon(icon_map.get(button_type, "ICON_CLOSE")))
         button.setIconSize(QSize(16, 16))
 
@@ -701,13 +874,11 @@ class MainWindow(QMainWindow):
                 border: none;
                 border-radius: 8px;
             }}
-
             QPushButton:hover {{
                 background-color: {hover_color};
             }}
             """
         )
-
         button.clicked.connect(callback)
         return button
 
@@ -733,22 +904,19 @@ class MainWindow(QMainWindow):
         dialog = BatchDownloadDialog(self.tr, self, self.theme)
         if dialog.exec() == dialog.DialogCode.Accepted:
             pubfileids = dialog.get_pubfileids()
-
             new_ids = [
                 pubfileid
                 for pubfileid in pubfileids
                 if not self.we.is_installed(pubfileid) and not self.dm.is_downloading(pubfileid)
             ]
-
             if not new_ids:
                 return
-
             account_index = self.config.get_account_number()
             for pubfileid in new_ids:
                 self.dm.start_download(pubfileid, account_index)
 
     def _show_info(self) -> None:
-        dialog = InfoDialog(self.tr, self, self.theme)
+        dialog = InfoDialog(self.tr, self, self.theme, self)
         dialog.exec()
 
     def _on_download_completed_signal(self, pubfileid: str, success: bool) -> None:
@@ -776,16 +944,16 @@ class MainWindow(QMainWindow):
                 return
 
         self.dm.cleanup_all()
-
         if hasattr(self, "workshop_tab"):
             self.workshop_tab.cleanup()
 
-        clear_cache_if_needed(Path("cookies/Cache"), 200)
+        clear_cache_if_needed(get_app_data_dir() / "cookies" / "Cache", 200)
         self._save_window_geometry()
         self.close()
 
     def _load_window_geometry(self) -> None:
         if not self.config.get_save_window_state():
+            self._update_window_state_ui()
             return
 
         geometry = self.config.get_window_geometry()
@@ -797,43 +965,128 @@ class MainWindow(QMainWindow):
 
         if width > 0 and height > 0:
             self.resize(width, height)
-
         if x >= 0 and y >= 0:
             self.move(x, y)
 
+        self._normal_geometry_before_fullscreen = QRect(
+            x if x >= 0 else self.x(),
+            y if y >= 0 else self.y(),
+            width if width > 0 else self.width(),
+            height if height > 0 else self.height(),
+        )
+
         if is_maximized:
-            self._is_maximized = True
-            self.max_btn.setIcon(get_icon("ICON_RESTORE"))
-            self.showMaximized()
+            self._restoring_startup_state = True
+            self._enter_pseudo_fullscreen(animated=False)
+            self._restoring_startup_state = False
+        else:
+            self._pseudo_fullscreen = False
+            self._update_window_state_ui()
 
     def _save_window_geometry(self) -> None:
         if not self.config.get_save_window_state():
             return
 
-        is_maximized = self.isMaximized()
-
-        if is_maximized:
-            geometry = self.config.get_window_geometry()
-            x = geometry.get("x", -1)
-            y = geometry.get("y", -1)
-            self.config.set_window_geometry(x, y, self.width(), self.height(), is_maximized)
+        if self._pseudo_fullscreen:
+            normal = self._normal_geometry_before_fullscreen
+            if normal is None or not normal.isValid():
+                normal = QRect(self.x(), self.y(), self.width(), self.height())
+            self.config.set_window_geometry(
+                normal.x(),
+                normal.y(),
+                normal.width(),
+                normal.height(),
+                True,
+            )
         else:
-            self.config.set_window_geometry(self.x(), self.y(), self.width(), self.height(), is_maximized)
+            self.config.set_window_geometry(
+                self.x(),
+                self.y(),
+                self.width(),
+                self.height(),
+                False,
+            )
+
+    def _is_in_title_bar_drag_zone(self, pos: QPoint) -> bool:
+        if pos.y() > self.title_bar.height():
+            return False
+
+        widget = self.childAt(pos)
+        if widget is None:
+            return True
+
+        current = widget
+        while current is not None:
+            if isinstance(current, QPushButton):
+                return False
+            if current == self.title_bar:
+                return True
+            current = current.parentWidget()
+
+        return False
+
+    def _begin_drag_from_pseudo_fullscreen(self, global_pos: QPoint) -> None:
+        if not self._pseudo_fullscreen:
+            return
+
+        screen_rect = self._get_available_screen_geometry()
+        normal = self._normal_geometry_before_fullscreen
+        if normal is None or not normal.isValid():
+            normal = QRect(100, 100, 1200, 730)
+
+        ratio_x = 0.5
+        if screen_rect.width() > 0:
+            ratio_x = max(0.0, min(1.0, (global_pos.x() - screen_rect.x()) / screen_rect.width()))
+
+        target_width = normal.width()
+        target_height = normal.height()
+
+        new_x = global_pos.x() - int(target_width * ratio_x)
+        new_y = global_pos.y() - 18
+
+        max_x = screen_rect.right() - target_width + 1
+        min_x = screen_rect.left()
+
+        new_x = max(min_x, min(new_x, max_x))
+        new_y = max(screen_rect.top(), new_y)
+
+        self._pseudo_fullscreen = False
+        self._update_window_state_ui()
+        self.setGeometry(new_x, new_y, target_width, target_height)
+
+        self.old_pos = global_pos
+        self._drag_cursor_offset = global_pos - self.frameGeometry().topLeft()
+
+    def eventFilter(self, obj, event):
+        if obj == self.title_bar and event.type() == QEvent.Type.MouseButtonDblClick:
+            if event.button() == Qt.MouseButton.LeftButton:
+                pos = event.position().toPoint()
+                if self._is_in_title_bar_drag_zone(pos):
+                    self._toggle_maximize()
+                    return True
+        return super().eventFilter(obj, event)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+
+        if event.type() == QEvent.Type.WindowStateChange:
+            if not self.isMinimized() and self._was_minimized_animated:
+                QTimer.singleShot(0, self._animate_restore_from_minimize)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._update_corner_covers()
 
     def _get_resize_edge(self, pos: QPoint) -> str:
-        if self._is_maximized:
+        if self._pseudo_fullscreen:
             return ""
 
         rect = self.rect()
         x = pos.x()
         y = pos.y()
         margin = self.RESIZE_MARGIN
-
         edges = ""
+
         if y <= margin:
             edges += "top"
         elif y >= rect.height() - margin:
@@ -857,7 +1110,6 @@ class MainWindow(QMainWindow):
             "bottomleft": Qt.CursorShape.SizeBDiagCursor,
             "bottomright": Qt.CursorShape.SizeFDiagCursor,
         }
-
         if edge in cursor_map:
             self.setCursor(cursor_map[edge])
         else:
@@ -872,26 +1124,42 @@ class MainWindow(QMainWindow):
                 self._resize_edge = edge
                 self._resize_start_pos = event.globalPosition().toPoint()
                 self._resize_start_geometry = self.geometry()
-            elif not self._is_maximized and pos.y() <= self.title_bar.height():
-                self.old_pos = event.globalPosition().toPoint()
+            elif self._is_in_title_bar_drag_zone(pos):
+                global_pos = event.globalPosition().toPoint()
+                if self._pseudo_fullscreen:
+                    self._begin_drag_from_pseudo_fullscreen(global_pos)
+                else:
+                    self.old_pos = global_pos
+                    self._drag_cursor_offset = global_pos - self.frameGeometry().topLeft()
+
+        super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        global_pos = event.globalPosition().toPoint()
+
         if self._resize_edge and event.buttons() == Qt.MouseButton.LeftButton:
-            self._perform_resize(event.globalPosition().toPoint())
+            self._perform_resize(global_pos)
         elif self.old_pos and event.buttons() == Qt.MouseButton.LeftButton:
-            delta = event.globalPosition().toPoint() - self.old_pos
-            self.move(self.pos() + delta)
-            self.old_pos = event.globalPosition().toPoint()
+            if not self._drag_cursor_offset.isNull():
+                self.move(global_pos - self._drag_cursor_offset)
+            else:
+                delta = global_pos - self.old_pos
+                self.move(self.pos() + delta)
+                self.old_pos = global_pos
         else:
             edge = self._get_resize_edge(event.position().toPoint())
             self._update_cursor_for_edge(edge)
+
+        super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
         self._resize_edge = None
         self._resize_start_pos = None
         self._resize_start_geometry = None
+        self._drag_cursor_offset = QPoint()
         self.setCursor(Qt.CursorShape.ArrowCursor)
+        super().mouseReleaseEvent(event)
 
     def _perform_resize(self, global_pos: QPoint) -> None:
         if not self._resize_edge or not self._resize_start_geometry:

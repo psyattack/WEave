@@ -2,10 +2,13 @@ from pathlib import Path
 from typing import Any, Optional
 
 from infrastructure.persistence.config_repository import ConfigRepository
+from shared.filesystem import get_app_data_dir
 
 
 class ConfigService:
-    def __init__(self, config_path: str | Path = "config.json"):
+    def __init__(self, config_path: str | Path | None = None):
+        if config_path is None:
+            config_path = get_app_data_dir() / "config.json"
         self.repository = ConfigRepository(config_path)
         self.config = self.repository.load()
 
@@ -28,15 +31,26 @@ class ConfigService:
     def set(self, key: str, value: Any) -> None:
         parts = key.split(".")
         current = self.config
-
         for part in parts[:-1]:
             existing = current.get(part)
             if not isinstance(existing, dict):
                 current[part] = {}
             current = current[part]
-
         current[parts[-1]] = value
         self.save()
+
+    def remove(self, key: str) -> None:
+        parts = key.split(".")
+        current = self.config
+        for part in parts[:-1]:
+            if not isinstance(current, dict):
+                return
+            current = current.get(part)
+            if current is None:
+                return
+        if isinstance(current, dict) and parts[-1] in current:
+            del current[parts[-1]]
+            self.save()
 
     def get_directory(self) -> str:
         return self.get("settings.system.directory", "")
@@ -80,6 +94,18 @@ class ConfigService:
     def set_preload_next_page(self, value: bool) -> None:
         self.set("settings.general.behavior.preload_next_page", value)
 
+    def get_auto_check_updates(self) -> bool:
+        return self.get("settings.general.behavior.auto_check_updates", True)
+
+    def set_auto_check_updates(self, value: bool) -> None:
+        self.set("settings.general.behavior.auto_check_updates", value)
+
+    def get_skip_version(self) -> str:
+        return self.get("settings.general.behavior.skip_version", "")
+
+    def set_skip_version(self, value: str) -> None:
+        self.set("settings.general.behavior.skip_version", value)
+
     def get_save_window_state(self) -> bool:
         return self.get("settings.general.behavior.save_window_state", True)
 
@@ -87,22 +113,28 @@ class ConfigService:
         self.set("settings.general.behavior.save_window_state", value)
 
     def get_window_geometry(self) -> dict:
-        return self.get("settings.general.behavior.window_geometry", {
-            "x": -1,
-            "y": -1,
-            "width": 1200,
-            "height": 730,
-            "is_maximized": False
-        })
+        return self.get(
+            "settings.general.behavior.window_geometry",
+            {
+                "x": -1,
+                "y": -1,
+                "width": 1200,
+                "height": 730,
+                "is_maximized": False,
+            },
+        )
 
     def set_window_geometry(self, x: int, y: int, width: int, height: int, is_maximized: bool) -> None:
-        self.set("settings.general.behavior.window_geometry", {
-            "x": x,
-            "y": y,
-            "width": width,
-            "height": height,
-            "is_maximized": is_maximized
-        })
+        self.set(
+            "settings.general.behavior.window_geometry",
+            {
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height,
+                "is_maximized": is_maximized,
+            },
+        )
 
     def get_debug_mode(self) -> bool:
         return self.get("settings.advanced.debug.debug_mode", False)
@@ -126,7 +158,6 @@ class ConfigService:
         metadata = self.get("wallpaper_metadata", {})
         if not isinstance(metadata, dict):
             metadata = {}
-
         metadata[pubfileid] = data
         self.set("wallpaper_metadata", metadata)
 
@@ -134,7 +165,6 @@ class ConfigService:
         metadata = self.get("wallpaper_metadata", {})
         if not isinstance(metadata, dict):
             return
-
         if pubfileid in metadata:
             del metadata[pubfileid]
             self.set("wallpaper_metadata", metadata)

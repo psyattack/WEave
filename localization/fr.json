@@ -9,7 +9,9 @@
     "install": "Installer",
     "download_all": "Tout télécharger",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "open_data_folder": "Ouvrir le dossier de données",
+    "check_updates": "Vérifier les mises à jour"
   },
   "tooltips": {
     "open_folder": "Ouvrir le dossier dans l'Explorateur",
@@ -30,10 +32,7 @@
   },
   "labels": {
     "wallpapers_filtered": "Affichage de {filtered} sur {total} fonds d'écran",
-    "wallpapers_count": "Fonds d'écran: {count}",
     "total_size": "Taille totale: {size}",
-    "sort_date": "Trier par date",
-    "sort_name": "Trier par nom",
     "id": "ID: {id}",
     "size": "Taille: {size}",
     "installed": "Installé: {date}",
@@ -45,8 +44,6 @@
     "extract_prefix": "Extraction: {id}",
     "other": "Autre:",
     "minimize_on_apply": "Réduire après application",
-    "disabled": "Désactivé",
-    "enabled": "Activé",
     "page": "Page",
     "of": "sur {total}",
     "filters": "Filtres",
@@ -82,7 +79,6 @@
   "messages": {
     "download_started": "Téléchargement commencé!",
     "extraction_started": "Extraction commencée!",
-    "extraction_completed": "Extraction terminée!",
     "wallpaper_deleted": "Fond d'écran supprimé!",
     "id_copied": "ID copié dans le presse-papiers!",
     "cannot_delete_active": "Ces fonds d'écran sont actuellement actifs.\nVeuillez d'abord changer votre fond d'écran avant de supprimer.",
@@ -108,13 +104,13 @@
     "error": "Erreur",
     "translation_error": "Échec de la traduction",
     "language_changed": "Langue modifiée",
-    "restart_now_question": "Redémarrer l'application maintenant pour appliquer la langue?",
-    "restart_with_tasks": "Vous avez des téléchargements ou extractions incomplets.\nIls seront annulés au redémarrage.\nContinuer?",
-    "restart_with_downloads_only": "Vous avez des téléchargements incomplets.\nIls seront annulés au redémarrage.\nContinuer?",
-    "restart_with_extractions_only": "Vous avez des extractions incomplètes.\nElles seront annulées au redémarrage.\nContinuer?",
+    "restart_now_question": "Fermer l'application maintenant pour appliquer les changements?",
+    "restart_with_tasks": "Vous avez des téléchargements ou extractions incomplets.\nIls seront annulés lors de la fermeture de l'application.\nContinuer?",
+    "restart_with_downloads_only": "Vous avez des téléchargements incomplets.\nIls seront annulés lors de la fermeture de l'application.\nContinuer?",
+    "restart_with_extractions_only": "Vous avez des extractions incomplètes.\nElles seront annulées lors de la fermeture de l'application.\nContinuer?",
     "restart_title": "Redémarrage requis",
-    "restart_theme_message": "Le thème sera appliqué après le redémarrage. Redémarrer maintenant?",
-    "restart_debug_message": "Le mode débogage sera appliqué après le redémarrage. Redémarrer maintenant?"
+    "restart_theme_message": "Le thème sera appliqué après le prochain lancement. Fermer l'application maintenant?",
+    "restart_debug_message": "Le mode débogage sera appliqué après le prochain lancement. Fermer l'application maintenant?"
   },
   "dialog": {
     "tasks": "Tâches",
@@ -149,12 +145,12 @@
     "preload_description": "Précarger la prochaine page de l'atelier en arrière-plan pour une navigation plus rapide",
     "save_window_state": "Enregistrer l'état de la fenêtre",
     "save_window_state_description": "Enregistrer la taille et la position de la fenêtre à la fermeture et restaurer au démarrage",
+    "auto_check_updates": "Vérifier automatiquement les mises à jour",
+    "auto_check_updates_description": "Vérifier automatiquement les versions GitHub au démarrage de l'application",
     "tab_general": "Général",
     "account_selection": "Sélection de compte",
     "account_description": "Sélectionner un compte (pour télécharger)",
     "tab_account": "Compte",
-    "notifications": "Notifications",
-    "coming_soon": "Paramètres supplémentaires à venir...",
     "tab_advanced": "Avancé",
     "login_description": "Entrez vos identifiants Steam pour l'authentification dans l'Workshop",
     "debug": "Débogage",

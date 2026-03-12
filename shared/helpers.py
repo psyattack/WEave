@@ -6,6 +6,12 @@ from typing import Optional
 
 from PyQt6.QtWidgets import QApplication
 
+from services.config_service import ConfigService
+
+
+def is_frozen_build() -> bool:
+    return bool(getattr(sys, "frozen", False))
+
 
 def restart_application(
     quit_app: bool = True,
@@ -27,31 +33,48 @@ def restart_application(
         elif isinstance(value, str):
             args.extend([arg_key, value])
 
-    if getattr(sys, "frozen", False):
-        executable = sys.executable
-        restart_args = args
-    else:
-        executable = sys.executable
-        filtered_args = []
-        skip_next = False
-
-        for arg in sys.argv:
-            if skip_next:
-                skip_next = False
-                continue
-
-            if arg in ["-login", "-password", "--restart"]:
-                skip_next = True
-                continue
-
-            filtered_args.append(arg)
-
-        restart_args = filtered_args + args
-
+    executable = sys.executable
+    filtered_args = []
+    skip_next = False
+    for arg in sys.argv:
+        if skip_next:
+            skip_next = False
+            continue
+        if arg in ["-login", "-password", "--restart"]:
+            skip_next = True
+            continue
+        filtered_args.append(arg)
+    restart_args = filtered_args + args
     subprocess.Popen([executable] + restart_args)
 
     if quit_app:
         QApplication.quit()
+
+
+def request_restart_or_exit(
+    quit_app: bool = True,
+    login: Optional[str] = None,
+    password: Optional[str] = None,
+    **kwargs,
+) -> None:
+    if is_frozen_build():
+        if login is not None and password is not None:
+            try:
+                config_service = ConfigService()
+                config_service.set("system.temp_login", login)
+                config_service.set("system.temp_password", password)
+            except Exception:
+                pass
+        if quit_app:
+            QApplication.quit()
+        return
+
+    restart_application(
+        quit_app=quit_app,
+        login=login,
+        password=password,
+        **kwargs,
+    )
 
 
 def extract_pubfileid(url_or_text: str) -> str:
@@ -92,7 +115,6 @@ def parse_depot_status(status_text: str) -> dict:
         "total_bytes": 0,
         "percent": -1.0,
     }
-
     if not status_text:
         return result
 

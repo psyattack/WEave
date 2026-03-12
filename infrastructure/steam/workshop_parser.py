@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from pathlib import Path
 from typing import Callable, Optional
 
 from PyQt6.QtCore import QObject, QTimer, QUrl, pyqtSignal
@@ -18,6 +17,7 @@ from infrastructure.steam.workshop_scripts import (
     login_state_check_script,
 )
 from infrastructure.steam.workshop_url_builder import WorkshopUrlBuilder
+from shared.filesystem import get_app_data_dir
 
 
 class WorkshopPageCache:
@@ -140,7 +140,7 @@ class WorkshopParser(QObject):
             self._container.setFixedSize(1, 1)
             self._container.hide()
 
-        profile_path = Path.cwd() / "cookies" / self.profile_name
+        profile_path = get_app_data_dir() / "cookies" / self.profile_name
 
         self._profile = QWebEngineProfile(self.profile_name, self._container)
         self._profile.setPersistentStoragePath(str(profile_path))

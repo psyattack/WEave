@@ -5,7 +5,9 @@ from domain.config.workshop_filter_config import WorkshopFilterConfig
 from domain.models.workshop import WorkshopFilters
 from infrastructure.resources.resource_manager import get_icon
 from ui.widgets.animated_container import AnimatedContainer
+from ui.widgets.custom_tooltip import install_tooltip
 from ui.widgets.filter_bar_local import StateTagCheckBoxLocal
+from ui.widgets.filter_tag_widgets import FilterTagsFlowWidget
 
 
 class CompactFilterBar(QWidget):
@@ -63,7 +65,7 @@ class CompactFilterBar(QWidget):
         layout.addWidget(self.search_input)
 
         search_btn = QPushButton()
-        search_btn.setToolTip(self.tr.t("tooltips.search"))
+        install_tooltip(search_btn, self.tr.t("tooltips.search"), "bottom", self.theme)
         search_btn.setIcon(get_icon("ICON_SEARCH"))
         search_btn.setIconSize(QSize(18, 18))
         search_btn.setFixedSize(26, 26)
@@ -111,7 +113,7 @@ class CompactFilterBar(QWidget):
         layout.addWidget(self.expand_btn)
 
         refresh_btn = QPushButton()
-        refresh_btn.setToolTip(self.tr.t("tooltips.refresh"))
+        install_tooltip(refresh_btn, self.tr.t("tooltips.refresh"), "bottom", self.theme)
         refresh_btn.setIcon(get_icon("ICON_REFRASH"))
         refresh_btn.setIconSize(QSize(18, 18))
         refresh_btn.setFixedSize(26, 26)
@@ -200,10 +202,9 @@ class CompactFilterBar(QWidget):
             }}
             """
         )
-
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(10, 4, 10, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(8)
 
         combo_frame = QFrame()
         combo_layout = QHBoxLayout(combo_frame)
@@ -212,24 +213,21 @@ class CompactFilterBar(QWidget):
 
         combo_layout.addWidget(self._label(self.tr.t("labels.asset_type")))
         self.asset_type_combo = self._create_combo(
-            WorkshopFilterConfig.get_translated_asset_types(self.tr.t),
-            110,
+            WorkshopFilterConfig.get_translated_asset_types(self.tr.t), 110
         )
         self.asset_type_combo.currentTextChanged.connect(self._emit_filters)
         combo_layout.addWidget(self.asset_type_combo)
 
         combo_layout.addWidget(self._label(self.tr.t("labels.asset_genre")))
         self.asset_genre_combo = self._create_combo(
-            WorkshopFilterConfig.get_translated_asset_genres(self.tr.t),
-            130,
+            WorkshopFilterConfig.get_translated_asset_genres(self.tr.t), 130
         )
         self.asset_genre_combo.currentTextChanged.connect(self._emit_filters)
         combo_layout.addWidget(self.asset_genre_combo)
 
         combo_layout.addWidget(self._label(self.tr.t("labels.script_type")))
         self.script_type_combo = self._create_combo(
-            WorkshopFilterConfig.get_translated_script_types(self.tr.t),
-            120,
+            WorkshopFilterConfig.get_translated_script_types(self.tr.t), 120
         )
         self.script_type_combo.currentTextChanged.connect(self._emit_filters)
         combo_layout.addWidget(self.script_type_combo)
@@ -238,67 +236,39 @@ class CompactFilterBar(QWidget):
         layout.addWidget(combo_frame)
 
         misc_frame = QFrame()
-        misc_layout = QHBoxLayout(misc_frame)
+        misc_layout = QVBoxLayout(misc_frame)
         misc_layout.setContentsMargins(0, 0, 0, 0)
-        misc_layout.setSpacing(6)
+        misc_layout.setSpacing(4)
+
         misc_layout.addWidget(self._label(self.tr.t("labels.miscellaneous"), bold=True))
-
-        misc_scroll = QScrollArea()
-        misc_scroll.setWidgetResizable(True)
-        misc_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        misc_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        misc_scroll.setFixedHeight(26)
-        misc_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-
-        misc_content = QWidget()
-        misc_content_layout = QHBoxLayout(misc_content)
-        misc_content_layout.setContentsMargins(0, 0, 0, 0)
-        misc_content_layout.setSpacing(4)
-
-        self.misc_checkboxes: dict[str, StateTagCheckBoxLocal] = {}
         misc_translations = WorkshopFilterConfig.get_translated_misc_tags(self.tr.t)
-
-        for tag in WorkshopFilterConfig.MISC_TAG_KEYS:
-            translated_tag = misc_translations.get(tag, tag)
-            checkbox = StateTagCheckBoxLocal(translated_tag, self.theme)
-            checkbox.state_changed_tri.connect(self._emit_filters)
-            self.misc_checkboxes[tag] = checkbox
-            misc_content_layout.addWidget(checkbox)
-
-        misc_scroll.setWidget(misc_content)
-        misc_layout.addWidget(misc_scroll, 1)
+        self.misc_tags_widget = FilterTagsFlowWidget(
+            tags=WorkshopFilterConfig.MISC_TAG_KEYS,
+            translated_map=misc_translations,
+            theme_manager=self.theme,
+            max_width=780,
+            parent=self,
+        )
+        self.misc_tags_widget.changed.connect(self._emit_filters)
+        misc_layout.addWidget(self.misc_tags_widget)
         layout.addWidget(misc_frame)
 
         genre_frame = QFrame()
-        genre_layout = QHBoxLayout(genre_frame)
+        genre_layout = QVBoxLayout(genre_frame)
         genre_layout.setContentsMargins(0, 0, 0, 0)
-        genre_layout.setSpacing(6)
+        genre_layout.setSpacing(4)
+
         genre_layout.addWidget(self._label(self.tr.t("labels.genre"), bold=True))
-
-        genre_scroll = QScrollArea()
-        genre_scroll.setWidgetResizable(True)
-        genre_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        genre_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        genre_scroll.setFixedHeight(26)
-        genre_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-
-        genre_content = QWidget()
-        genre_content_layout = QHBoxLayout(genre_content)
-        genre_content_layout.setContentsMargins(0, 0, 0, 0)
-        genre_content_layout.setSpacing(4)
-
-        self.genre_checkboxes: dict[str, StateTagCheckBoxLocal] = {}
         genre_translations = WorkshopFilterConfig.get_translated_genre_tags(self.tr.t)
-
-        for tag in WorkshopFilterConfig.GENRE_TAG_KEYS:
-            translated_tag = genre_translations.get(tag, tag)
-            checkbox = StateTagCheckBoxLocal(translated_tag, self.theme)
-            checkbox.state_changed_tri.connect(self._emit_filters)
-            self.genre_checkboxes[tag] = checkbox
-            genre_content_layout.addWidget(checkbox)
-
-        genre_scroll.setWidget(genre_content)
-        genre_layout.addWidget(genre_scroll, 1)
+        self.genre_tags_widget = FilterTagsFlowWidget(
+            tags=WorkshopFilterConfig.GENRE_TAG_KEYS,
+            translated_map=genre_translations,
+            theme_manager=self.theme,
+            max_width=780,
+            parent=self,
+        )
+        self.genre_tags_widget.changed.connect(self._emit_filters)
+        genre_layout.addWidget(self.genre_tags_widget)
         layout.addWidget(genre_frame)
 
         incompatible_frame = QFrame()
@@ -307,15 +277,12 @@ class CompactFilterBar(QWidget):
         incompatible_layout.setSpacing(6)
 
         incompatible_layout.addWidget(self._label(self.tr.t("labels.other"), bold=True))
-
         self.incompatible_checkbox = QCheckBox(self.tr.t("labels.incompatible_items"))
         self.incompatible_checkbox.setStyleSheet(self._checkbox_style())
-        self.incompatible_checkbox.setToolTip(self.tr.t("tooltips_extended.incompatible_items"))
+        install_tooltip(self.incompatible_checkbox, self.tr.t("tooltips_extended.incompatible_items"), "right", self.theme)
         self.incompatible_checkbox.stateChanged.connect(self._emit_filters)
-
         incompatible_layout.addWidget(self.incompatible_checkbox)
         incompatible_layout.addStretch()
-
         layout.addWidget(incompatible_frame)
 
         return frame
@@ -449,11 +416,10 @@ class CompactFilterBar(QWidget):
         self.age_combo.setCurrentIndex(0)
         self.resolution_combo.setCurrentIndex(0)
 
-        for checkbox in self.misc_checkboxes.values():
-            checkbox.reset()
-
-        for checkbox in self.genre_checkboxes.values():
-            checkbox.reset()
+        if hasattr(self, "misc_tags_widget"):
+            self.misc_tags_widget.reset_all()
+        if hasattr(self, "genre_tags_widget"):
+            self.genre_tags_widget.reset_all()
 
         self.asset_type_combo.setCurrentIndex(0)
         self.asset_genre_combo.setCurrentIndex(0)
@@ -470,10 +436,10 @@ class CompactFilterBar(QWidget):
         self.filters_changed.emit(self.get_current_filters())
 
     def get_current_filters(self) -> WorkshopFilters:
-        misc_tags = [tag for tag, checkbox in self.misc_checkboxes.items() if checkbox.tri_state() == 1]
-        excluded_misc = [tag for tag, checkbox in self.misc_checkboxes.items() if checkbox.tri_state() == 2]
-        genre_tags = [tag for tag, checkbox in self.genre_checkboxes.items() if checkbox.tri_state() == 1]
-        excluded_genre = [tag for tag, checkbox in self.genre_checkboxes.items() if checkbox.tri_state() == 2]
+        misc_tags = self.misc_tags_widget.get_included() if hasattr(self, "misc_tags_widget") else []
+        excluded_misc = self.misc_tags_widget.get_excluded() if hasattr(self, "misc_tags_widget") else []
+        genre_tags = self.genre_tags_widget.get_included() if hasattr(self, "genre_tags_widget") else []
+        excluded_genre = self.genre_tags_widget.get_excluded() if hasattr(self, "genre_tags_widget") else []
 
         required_flags = []
         if self.incompatible_checkbox.isChecked():

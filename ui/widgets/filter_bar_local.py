@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 
 from domain.config.workshop_filter_config import WorkshopFilterConfig
 from ui.widgets.animated_container import AnimatedContainer
+from ui.widgets.filter_tag_widgets import FilterTagsFlowWidget
 
 
 @dataclass
@@ -285,73 +286,44 @@ class LocalFilterBar(QWidget):
             }}
             """
         )
-
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(10, 4, 10, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(8)
 
         misc_frame = QFrame()
-        misc_layout = QHBoxLayout(misc_frame)
+        misc_layout = QVBoxLayout(misc_frame)
         misc_layout.setContentsMargins(0, 0, 0, 0)
-        misc_layout.setSpacing(6)
+        misc_layout.setSpacing(4)
+
         misc_layout.addWidget(self._label(self.tr.t("labels.miscellaneous"), bold=True))
-
-        misc_scroll = QScrollArea()
-        misc_scroll.setWidgetResizable(True)
-        misc_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        misc_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        misc_scroll.setFixedHeight(26)
-        misc_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-
-        misc_content = QWidget()
-        misc_content_layout = QHBoxLayout(misc_content)
-        misc_content_layout.setContentsMargins(0, 0, 0, 0)
-        misc_content_layout.setSpacing(4)
-
-        self.misc_checkboxes: dict[str, StateTagCheckBoxLocal] = {}
         misc_translations = WorkshopFilterConfig.get_translated_misc_tags(self.tr.t)
-
-        for tag in WorkshopFilterConfig.MISC_TAG_KEYS:
-            translated_tag = misc_translations.get(tag, tag)
-            checkbox = StateTagCheckBoxLocal(translated_tag, self.theme)
-            checkbox.state_changed_tri.connect(self._emit_filters)
-            self.misc_checkboxes[tag] = checkbox
-            misc_content_layout.addWidget(checkbox)
-
-        misc_scroll.setWidget(misc_content)
-        misc_layout.addWidget(misc_scroll, 1)
+        self.misc_tags_widget = FilterTagsFlowWidget(
+            tags=WorkshopFilterConfig.MISC_TAG_KEYS,
+            translated_map=misc_translations,
+            theme_manager=self.theme,
+            max_width=780,
+            parent=self,
+        )
+        self.misc_tags_widget.changed.connect(self._emit_filters)
+        misc_layout.addWidget(self.misc_tags_widget)
         layout.addWidget(misc_frame)
 
         genre_frame = QFrame()
-        genre_layout = QHBoxLayout(genre_frame)
+        genre_layout = QVBoxLayout(genre_frame)
         genre_layout.setContentsMargins(0, 0, 0, 0)
-        genre_layout.setSpacing(6)
+        genre_layout.setSpacing(4)
+
         genre_layout.addWidget(self._label(self.tr.t("labels.genre"), bold=True))
-
-        genre_scroll = QScrollArea()
-        genre_scroll.setWidgetResizable(True)
-        genre_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        genre_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        genre_scroll.setFixedHeight(26)
-        genre_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-
-        genre_content = QWidget()
-        genre_content_layout = QHBoxLayout(genre_content)
-        genre_content_layout.setContentsMargins(0, 0, 0, 0)
-        genre_content_layout.setSpacing(4)
-
-        self.genre_checkboxes: dict[str, StateTagCheckBoxLocal] = {}
         genre_translations = WorkshopFilterConfig.get_translated_genre_tags(self.tr.t)
-
-        for tag in WorkshopFilterConfig.GENRE_TAG_KEYS:
-            translated_tag = genre_translations.get(tag, tag)
-            checkbox = StateTagCheckBoxLocal(translated_tag, self.theme)
-            checkbox.state_changed_tri.connect(self._emit_filters)
-            self.genre_checkboxes[tag] = checkbox
-            genre_content_layout.addWidget(checkbox)
-
-        genre_scroll.setWidget(genre_content)
-        genre_layout.addWidget(genre_scroll, 1)
+        self.genre_tags_widget = FilterTagsFlowWidget(
+            tags=WorkshopFilterConfig.GENRE_TAG_KEYS,
+            translated_map=genre_translations,
+            theme_manager=self.theme,
+            max_width=780,
+            parent=self,
+        )
+        self.genre_tags_widget.changed.connect(self._emit_filters)
+        genre_layout.addWidget(self.genre_tags_widget)
         layout.addWidget(genre_frame)
 
         return frame
@@ -455,11 +427,10 @@ class LocalFilterBar(QWidget):
         self.resolution_combo.setCurrentIndex(0)
         self._current_filters.sort_order = "desc"
 
-        for checkbox in self.misc_checkboxes.values():
-            checkbox.reset()
-
-        for checkbox in self.genre_checkboxes.values():
-            checkbox.reset()
+        if hasattr(self, "misc_tags_widget"):
+            self.misc_tags_widget.reset_all()
+        if hasattr(self, "genre_tags_widget"):
+            self.genre_tags_widget.reset_all()
 
         self.refresh_requested.emit()
 
@@ -467,10 +438,10 @@ class LocalFilterBar(QWidget):
         self.filters_changed.emit(self.get_current_filters())
 
     def get_current_filters(self) -> LocalFilters:
-        misc_tags = [tag for tag, checkbox in self.misc_checkboxes.items() if checkbox.tri_state() == 1]
-        excluded_misc = [tag for tag, checkbox in self.misc_checkboxes.items() if checkbox.tri_state() == 2]
-        genre_tags = [tag for tag, checkbox in self.genre_checkboxes.items() if checkbox.tri_state() == 1]
-        excluded_genre = [tag for tag, checkbox in self.genre_checkboxes.items() if checkbox.tri_state() == 2]
+        misc_tags = self.misc_tags_widget.get_included() if hasattr(self, "misc_tags_widget") else []
+        excluded_misc = self.misc_tags_widget.get_excluded() if hasattr(self, "misc_tags_widget") else []
+        genre_tags = self.genre_tags_widget.get_included() if hasattr(self, "genre_tags_widget") else []
+        excluded_genre = self.genre_tags_widget.get_excluded() if hasattr(self, "genre_tags_widget") else []
 
         return LocalFilters(
             search=self.search_input.text().strip(),

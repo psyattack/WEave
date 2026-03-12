@@ -9,7 +9,9 @@
     "install": "インストール",
     "download_all": "すべてダウンロード",
     "yes": "はい",
-    "no": "いいえ"
+    "no": "いいえ",
+    "open_data_folder": "データフォルダを開く",
+    "check_updates": "アップデートを確認"
   },
   "tooltips": {
     "open_folder": "エクスプローラーでフォルダーを開く",
@@ -29,11 +31,8 @@
     "sort_order": "並べ替え順序を切り替え"
   },
   "labels": {
-    "wallpapers_filtered": "{total}件中{filtered}件の壁纸を表示",
-    "wallpapers_count": "壁紙数: {count}",
+    "wallpapers_filtered": "{total}件中{filtered}件の壁紙を表示",
     "total_size": "合計サイズ: {size}",
-    "sort_date": "日付順",
-    "sort_name": "名前順",
     "id": "ID: {id}",
     "size": "サイズ: {size}",
     "installed": "インストール済み: {date}",
@@ -45,8 +44,6 @@
     "extract_prefix": "展開: {id}",
     "other": "その他:",
     "minimize_on_apply": "適用時に最小化",
-    "disabled": "無効",
-    "enabled": "有効",
     "page": "ページ",
     "of": "/ {total}",
     "filters": "フィルター",
@@ -82,8 +79,7 @@
   "messages": {
     "download_started": "ダウンロードを開始しました!",
     "extraction_started": "展開を開始しました!",
-    "extraction_completed": "展開が完了しました!",
-    "wallpaper_deleted": "壁紙を削除しました!",
+    "wallpaper_deleted": "壁纸を削除しました!",
     "id_copied": "IDをクリップボードにコピーしました!",
     "cannot_delete_active": "これらの壁纸は現在アクティブです。\n削除する前に壁纸を変更してください。",
     "confirm_delete": "この壁纸を削除してもよろしいですか?",
@@ -108,13 +104,13 @@
     "error": "エラー",
     "translation_error": "翻訳失敗",
     "language_changed": "言語が変更されました",
-    "restart_now_question": "今すぐアプリを再起動して言語を適用しますか?",
-    "restart_with_tasks": "未完了のダウンロードまたは展開があります。\n再起動時にキャンセルされます。\n続行しますか?",
-    "restart_with_downloads_only": "未完了のダウンロードがあります。\n再起動時にキャンセルされます。\n続行しますか?",
-    "restart_with_extractions_only": "未完了の展開があります。\n再起動時にキャンセルされます。\n続行しますか?",
+    "restart_now_question": "今すぐアプリを閉じて変更を適用しますか?",
+    "restart_with_tasks": "未完了のダウンロードまたは展開があります。\nアプリを閉じるとキャンセルされます。\n続行しますか?",
+    "restart_with_downloads_only": "未完了のダウンロードがあります。\nアプリを閉じるとキャンセルされます。\n続行しますか?",
+    "restart_with_extractions_only": "未完了の展開があります。\nアプリを閉じるとキャンセルされます。\n続行しますか?",
     "restart_title": "再起動が必要",
-    "restart_theme_message": "テーマは再起動後に適用されます。今すぐ再起動しますか?",
-    "restart_debug_message": "デバッグモードは再起動後に適用されます。今すぐ再起動しますか?"
+    "restart_theme_message": "テーマは次回起動時に適用されます。今すぐアプリを閉じますか?",
+    "restart_debug_message": "デバッグモードは次回起動時に適用されます。今すぐアプリを閉じますか?"
   },
   "dialog": {
     "tasks": "タスク",
@@ -149,12 +145,12 @@
     "preload_description": "より早いナビゲーションのため、次のワークショッピングページをバックグラウンドで読み込む",
     "save_window_state": "ウィンドウ状態を保存",
     "save_window_state_description": "終了時にウィンドウサイズと位置を保存し、起動時に復元する",
+    "auto_check_updates": "自動更新チェック",
+    "auto_check_updates_description": "アプリケーション起動時にGitHubリリースを自動的に確認する",
     "tab_general": "一般",
     "account_selection": "アカウント選択",
     "account_description": "アカウントを選択(ダウンロード用)",
     "tab_account": "アカウント",
-    "notifications": "通知",
-    "coming_soon": "追加の設定は近日公開...",
     "tab_advanced": "高度な設定",
     "login_description": "ワークショップ認証用のSteam認証情報を入力",
     "debug": "デバッグ",
@@ -196,7 +192,7 @@
     },
     "category": {
       "empty": "すべて",
-      "Wallpaper": "壁紙",
+      "Wallpaper": "壁纸",
       "Preset": "プリセット",
       "Asset": "アセット"
     },

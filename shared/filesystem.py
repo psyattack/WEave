@@ -3,11 +3,18 @@ import shutil
 from pathlib import Path
 from typing import Union
 
+from shared.constants import APP_NAME
+
 
 def ensure_directory(path: Union[str, Path]) -> Path:
     target = Path(path)
     target.mkdir(parents=True, exist_ok=True)
     return target
+
+
+def get_app_data_dir() -> Path:
+    app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    return app_data / APP_NAME
 
 
 def get_directory_size(path: Union[str, Path]) -> int:

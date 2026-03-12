@@ -2,6 +2,7 @@ import base64
 import sys
 
 from domain.models.account import AccountCredentials
+from services.config_service import ConfigService
 
 
 class AccountService:
@@ -41,6 +42,21 @@ class AccountService:
                     custom_password = sys.argv[index + 1]
             except Exception:
                 custom_password = None
+
+        if not custom_login or not custom_password:
+            try:
+                config_service = ConfigService()
+                config_login = config_service.get("system.temp_login")
+                config_password = config_service.get("system.temp_password")
+                if config_login and config_password:
+                    if not custom_login:
+                        custom_login = config_login
+                    if not custom_password:
+                        custom_password = config_password
+                    config_service.remove("system.temp_login")
+                    config_service.remove("system.temp_password")
+            except Exception:
+                pass
 
         accounts = cls._build_default_accounts()
 

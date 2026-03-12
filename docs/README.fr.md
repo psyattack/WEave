@@ -145,21 +145,21 @@ Ce projet est sous licence **[MIT](LICENSE)**.
 
 ## 👁️‍🗨️ Problèmes connus
 
-- [ ] Retour incorrect de l'état de la fenêtre après la pré-réduction
-- [x] Dialogues blancs lors du nettoyage des filtres
-- [ ] PyInstaller --onefile casse le redémarrage, si compilé depuis les sources, compiler en --onedir (~500mb)
+- [x] <strike>Retour incorrect de l'état de la fenêtre après la pré-réduction</strike>
+- [x] <strike>Dialogues blancs lors du nettoyage des filtres</strike>
+- [x] <strike>PyInstaller --onefile casse le redémarrage, si compilé depuis les sources, compiler en --onedir (~500mb)</strike>
 
 ---
 
 ## 📋 TODO et Support
 
-- [x] Thèmes
-- [x] Connexion via un compte Steam personnel (Pour utilisation avec Steam failed 50 et similaire)
+- [x] <strike>Thèmes</strike>
+- [x] <strike>Connexion via un compte Steam personnel (Pour utilisation avec Steam failed 50 et similaire)</strike>
 - [ ] Démarrage automatique
 - [ ] Barre d'état + mode silencieux
 - [ ] Fonctions originales de WE (Éditeur de préréglages, création de playlists, profils, etc.)
 - [ ] Mises à jour automatiques
-- [x] Optimisation de l'interface pour différentes tailles et formats d'écran + capacité de redimensionnement de fenêtre
+- [x] <strike>Optimisation de l'interface pour différentes tailles et formats d'écran + capacité de redimensionnement de fenêtre</strike>
 
 > Si vous avez des problèmes ou des suggestions d'amélioration — créez une [Issue](https://github.com/psyattack/we-workshop-manager/issues) dans le dépôt.
 

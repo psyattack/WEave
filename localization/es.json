@@ -9,7 +9,9 @@
     "install": "Instalar",
     "download_all": "Descargar todo",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "open_data_folder": "Abrir carpeta de datos",
+    "check_updates": "Buscar actualizaciones"
   },
   "tooltips": {
     "open_folder": "Abrir carpeta en el explorador",
@@ -30,10 +32,7 @@
   },
   "labels": {
     "wallpapers_filtered": "Mostrando {filtered} de {total} fondos de pantalla",
-    "wallpapers_count": "Fondos de pantalla: {count}",
     "total_size": "Tamaño total: {size}",
-    "sort_date": "Ordenar por fecha",
-    "sort_name": "Ordenar por nombre",
     "id": "ID: {id}",
     "size": "Tamaño: {size}",
     "installed": "Instalado: {date}",
@@ -45,8 +44,6 @@
     "extract_prefix": "Extracción: {id}",
     "other": "Otro:",
     "minimize_on_apply": "Minimizar al aplicar",
-    "disabled": "Deshabilitado",
-    "enabled": "Habilitado",
     "page": "Página",
     "of": "de {total}",
     "filters": "Filtros",
@@ -82,7 +79,6 @@
   "messages": {
     "download_started": "¡Descarga iniciada!",
     "extraction_started": "¡Extracción iniciada!",
-    "extraction_completed": "¡Extracción completada!",
     "wallpaper_deleted": "¡Fondo de pantalla eliminado!",
     "id_copied": "¡ID copiado al portapapeles!",
     "cannot_delete_active": "Estos fondos de pantalla están activos.\nPor favor, cambie su fondo de pantalla antes de eliminarlo.",
@@ -108,13 +104,13 @@
     "error": "Error",
     "translation_error": "Error de traducción",
     "language_changed": "Idioma cambiado",
-    "restart_now_question": "¿Reiniciar la aplicación ahora para aplicar el idioma?",
-    "restart_with_tasks": "Tiene descargas o extracciones incompletas.\nSe cancelarán al reiniciar.\n¿Continuar?",
-    "restart_with_downloads_only": "Tiene descargas incompletas.\nSe cancelarán al reiniciar.\n¿Continuar?",
-    "restart_with_extractions_only": "Tiene extracciones incompletas.\nSe cancelarán al reiniciar.\n¿Continuar?",
+    "restart_now_question": "¿Cerrar la aplicación ahora para aplicar los cambios?",
+    "restart_with_tasks": "Tiene descargas o extracciones incompletas.\nSe cancelarán al cerrar la aplicación.\n¿Continuar?",
+    "restart_with_downloads_only": "Tiene descargas incompletas.\nSe cancelarán al cerrar la aplicación.\n¿Continuar?",
+    "restart_with_extractions_only": "Tiene extracciones incompletas.\nSe cancelarán al cerrar la aplicación.\n¿Continuar?",
     "restart_title": "Reinicio requerido",
-    "restart_theme_message": "El tema se aplicará después del reiniciar. ¿Reiniciar ahora?",
-    "restart_debug_message": "El modo de depuración se aplicará después del reinicio. ¿Reiniciar ahora?"
+    "restart_theme_message": "El tema se aplicará después del próximo inicio. ¿Cerrar la aplicación ahora?",
+    "restart_debug_message": "El modo de depuración se aplicará después del próximo inicio. ¿Cerrar la aplicación ahora?"
   },
   "dialog": {
     "tasks": "Tareas",
@@ -149,12 +145,12 @@
     "preload_description": "Precargar la siguiente página del taller en segundo plano para una navegación más rápida",
     "save_window_state": "Guardar estado de ventana",
     "save_window_state_description": "Guardar tamaño y posición de la ventana al salir y restaurar al iniciar",
+    "auto_check_updates": "Verificar actualizaciones automáticamente",
+    "auto_check_updates_description": "Verificar automáticamente los lanzamientos de GitHub al iniciar la aplicación",
     "tab_general": "General",
     "account_selection": "Selección de cuenta",
     "account_description": "Seleccionar una cuenta (para descargar)",
     "tab_account": "Cuenta",
-    "notifications": "Notificaciones",
-    "coming_soon": "¡Configuración adicional próximamente...",
     "tab_advanced": "Avanzado",
     "login_description": "Ingrese sus credenciales de Steam para autenticarse en el Taller",
     "debug": "Depuración",
