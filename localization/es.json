@@ -147,6 +147,8 @@
     "minimize_description": "Minimizar la ventana después de aplicar el fondo de pantalla",
     "preload_next_page": "Precargar siguiente página (BETA)",
     "preload_description": "Precargar la siguiente página del taller en segundo plano para una navegación más rápida",
+    "save_window_state": "Guardar estado de ventana",
+    "save_window_state_description": "Guardar tamaño y posición de la ventana al salir y restaurar al iniciar",
     "tab_general": "General",
     "account_selection": "Selección de cuenta",
     "account_description": "Seleccionar una cuenta (para descargar)",

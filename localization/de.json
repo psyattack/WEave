@@ -147,6 +147,8 @@
     "minimize_description": "Fenster nach dem Anwenden des Hintergrundbildes minimieren",
     "preload_next_page": "Seiten vorladen (BETA)",
     "preload_description": "Die nächste Workshop-Seite im Hintergrund vorladen für schnellere Navigation",
+    "save_window_state": "Fensterstatus speichern",
+    "save_window_state_description": "Fenstergröße und -position beim Beenden speichern und beim Start wiederherstellen",
     "tab_general": "Allgemein",
     "account_selection": "Kontoauswahl",
     "account_description": "Konto auswählen (zum Herunterladen)",

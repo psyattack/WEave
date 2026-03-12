@@ -147,6 +147,8 @@
     "minimize_description": "应用壁纸后最小化窗口",
     "preload_next_page": "预加载页面 (BETA)",
     "preload_description": "在后台预加载下一个创意工坊页面以加快导航速度",
+    "save_window_state": "保存窗口状态",
+    "save_window_state_description": "退出时保存窗口大小和位置，启动时恢复",
     "tab_general": "常规",
     "account_selection": "账户选择",
     "account_description": "选择账户(用于下载)",

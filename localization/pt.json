@@ -147,6 +147,8 @@
     "minimize_description": "Minimizar a janela após aplicar o papel de parede",
     "preload_next_page": "Precarregar páginas (BETA)",
     "preload_description": "Precarregar a próxima página da oficina em segundo plano para uma navegação mais rápida",
+    "save_window_state": "Salvar estado da janela",
+    "save_window_state_description": "Salvar tamanho e posição da janela ao sair e restaurar ao iniciar",
     "tab_general": "Geral",
     "account_selection": "Seleção de conta",
     "account_description": "Selecione uma conta (para baixar)",

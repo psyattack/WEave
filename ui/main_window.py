@@ -454,6 +454,7 @@ class MainWindow(QMainWindow):
 
         self._apply_theme()
         self._setup_ui()
+        self._load_window_geometry()
 
         self.dm.download_completed.connect(self._on_download_completed_signal)
 
@@ -780,7 +781,44 @@ class MainWindow(QMainWindow):
             self.workshop_tab.cleanup()
 
         clear_cache_if_needed(Path("cookies/Cache"), 200)
+        self._save_window_geometry()
         self.close()
+
+    def _load_window_geometry(self) -> None:
+        if not self.config.get_save_window_state():
+            return
+
+        geometry = self.config.get_window_geometry()
+        x = geometry.get("x", -1)
+        y = geometry.get("y", -1)
+        width = geometry.get("width", 1200)
+        height = geometry.get("height", 730)
+        is_maximized = geometry.get("is_maximized", False)
+
+        if width > 0 and height > 0:
+            self.resize(width, height)
+
+        if x >= 0 and y >= 0:
+            self.move(x, y)
+
+        if is_maximized:
+            self._is_maximized = True
+            self.max_btn.setIcon(get_icon("ICON_RESTORE"))
+            self.showMaximized()
+
+    def _save_window_geometry(self) -> None:
+        if not self.config.get_save_window_state():
+            return
+
+        is_maximized = self.isMaximized()
+
+        if is_maximized:
+            geometry = self.config.get_window_geometry()
+            x = geometry.get("x", -1)
+            y = geometry.get("y", -1)
+            self.config.set_window_geometry(x, y, self.width(), self.height(), is_maximized)
+        else:
+            self.config.set_window_geometry(self.x(), self.y(), self.width(), self.height(), is_maximized)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

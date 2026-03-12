@@ -420,6 +420,16 @@ class SettingsDialog(BaseDialog):
             )
         )
 
+        save_window_toggle = self._create_save_window_state_toggle()
+        behavior_section.add_widget(
+            SettingsField(
+                self.tr.t("settings.save_window_state") if self.tr.t("settings.save_window_state") != "settings.save_window_state" else "Save Window State",
+                save_window_toggle,
+                description=self.tr.t("settings.save_window_state_description") if self.tr.t("settings.save_window_state_description") != "settings.save_window_state_description" else "Save window size and position on exit and restore on startup",
+                theme_manager=self.theme,
+            )
+        )
+
         layout.addWidget(behavior_section)
         layout.addStretch()
 
@@ -679,6 +689,12 @@ class SettingsDialog(BaseDialog):
         toggle.toggled.connect(self._on_preload_changed)
         return toggle
 
+    def _create_save_window_state_toggle(self):
+        toggle = AnimatedToggle(theme_manager=self.theme)
+        toggle.setChecked(self.config.get_save_window_state())
+        toggle.toggled.connect(self._on_save_window_state_changed)
+        return toggle
+
     def _create_minimize_toggle(self):
         toggle = AnimatedToggle(theme_manager=self.theme)
         toggle.setChecked(self.config.get_minimize_on_apply())
@@ -703,6 +719,9 @@ class SettingsDialog(BaseDialog):
 
     def _on_preload_changed(self, checked: bool) -> None:
         self.config.set_preload_next_page(checked)
+
+    def _on_save_window_state_changed(self, checked: bool) -> None:
+        self.config.set_save_window_state(checked)
 
     def _on_minimize_changed(self, checked: bool) -> None:
         self.config.set_minimize_on_apply(checked)

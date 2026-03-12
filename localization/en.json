@@ -147,6 +147,8 @@
     "minimize_description": "Minimize the window after applying wallpaper",
     "preload_next_page": "Preload Next Page (BETA)",
     "preload_description": "Preload the next workshop page in background for faster navigation",
+    "save_window_state": "Save Window State",
+    "save_window_state_description": "Save window size and position on exit and restore on startup",
     "tab_general": "General",
     "account_selection": "Account selection",
     "account_description": "Select an account (to download)",
