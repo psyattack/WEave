@@ -25,7 +25,7 @@
     "batch_download": "一括ダウンロード",
     "info": "情報",
     "search": "検索",
-    "refresh": "更新",
+    "refresh": "ページを更新",
     "translate_description": "説明を翻訳",
     "show_original": "原文を表示",
     "sort_order": "並べ替え順序を切り替え"
@@ -53,7 +53,7 @@
     "type": "タイプ:",
     "age": "年齢制限:",
     "resolution": "解像度:",
-    "clear": "✕ クリア",
+    "clear": "フィルターをクリア",
     "more_filters": "▼ 詳細フィルター",
     "less_filters": "▲ 簡易フィルター",
     "asset_type": "アセットタイプ:",
@@ -74,7 +74,8 @@
     "search_placeholder": "検索...",
     "id_url_placeholder": "ID, URL...",
     "account": "アカウント",
-    "translating": "翻訳中..."
+    "translating": "翻訳中...",
+    "action": "アクション"
   },
   "messages": {
     "download_started": "ダウンロードを開始しました!",
@@ -167,6 +168,10 @@
     "incompatible_items": "一部のアイテムは 含めることができません。ただし、このチェックボックスをオンにすると見つけることができます。"
   },
   "filters": {
+    "sort_order": {
+      "asc": "ASC",
+      "desc": "DESC"
+    },
     "local_sort": {
       "install_date": "インストール日",
       "name": "名前",

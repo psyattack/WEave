@@ -25,7 +25,7 @@
     "batch_download": "批量下载",
     "info": "信息",
     "search": "搜索",
-    "refresh": "刷新",
+    "refresh": "刷新页面",
     "translate_description": "翻译描述",
     "show_original": "显示原文",
     "sort_order": "切换排序顺序"
@@ -53,7 +53,7 @@
     "type": "类型:",
     "age": "年龄:",
     "resolution": "分辨率:",
-    "clear": "✕ 清除",
+    "clear": "清除筛选",
     "more_filters": "▼ 更多筛选",
     "less_filters": "▲ 收起筛选",
     "asset_type": "资源类型:",
@@ -74,7 +74,8 @@
     "search_placeholder": "搜索...",
     "id_url_placeholder": "ID, URL...",
     "account": "账户",
-    "translating": "翻译中..."
+    "translating": "翻译中...",
+    "action": "操作"
   },
   "messages": {
     "download_started": "开始下载!",
@@ -167,6 +168,10 @@
     "incompatible_items": "某些项目无法包含。但是，您可以通过选中此复选框来找到它们。"
   },
   "filters": {
+    "sort_order": {
+      "asc": "ASC",
+      "desc": "DESC"
+    },
     "local_sort": {
       "install_date": "安装日期",
       "name": "名称",

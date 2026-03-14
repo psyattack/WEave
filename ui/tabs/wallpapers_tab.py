@@ -3,22 +3,19 @@ from pathlib import Path
 from typing import Any
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtProperty
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from shared.filesystem import get_directory_size, get_folder_mtime
 from shared.formatting import human_readable_size
-from ui.widgets.animated_container import AnimatedContainer
 from ui.widgets.details_panel import DetailsPanel
-from ui.widgets.filter_bar_local import LocalFilterBar, LocalFilters
+from ui.widgets.filter_bar import UnifiedFilterBar, LocalFilters
 from ui.widgets.flow_layout import AdaptiveGridWidget
 from ui.widgets.grid_items import LocalGridItem
-from ui.widgets.toggle_switch import ToggleSwitch
 
 
 class AnimatedDetailsContainerLocal(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self._target_width = 320
         self._current_width = 320
         self._is_panel_visible = True
@@ -52,13 +49,10 @@ class AnimatedDetailsContainerLocal(QWidget):
     def show_panel(self) -> None:
         if self._is_panel_visible:
             return
-
         self._is_panel_visible = True
         self.setVisible(True)
-
         for child in self.findChildren(QWidget):
             child.setVisible(True)
-
         self._animation.stop()
         self._animation.setStartValue(0)
         self._animation.setEndValue(self._target_width)
@@ -67,7 +61,6 @@ class AnimatedDetailsContainerLocal(QWidget):
     def hide_panel(self) -> None:
         if not self._is_panel_visible:
             return
-
         self._is_panel_visible = False
         self._animation.stop()
         self._animation.setStartValue(self._current_width)
@@ -91,7 +84,6 @@ class WallpapersTab(QWidget):
         parent=None,
     ):
         super().__init__(parent)
-
         self.config = config_service
         self.dm = download_service
         self.we = wallpaper_engine_client
@@ -139,7 +131,6 @@ class WallpapersTab(QWidget):
             self,
         )
         self.details_panel.panel_collapse_requested.connect(self._on_collapse_requested)
-
         self.details_scroll.setWidget(self.details_panel)
         details_layout.addWidget(self.details_scroll)
 
@@ -147,23 +138,15 @@ class WallpapersTab(QWidget):
 
     def _create_left_panel(self) -> QWidget:
         widget = QWidget()
-
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(15, 10, 5, 10)
         layout.setSpacing(0)
 
-        self.filter_bar = LocalFilterBar(self.theme, self.tr, self)
+        self.filter_bar = UnifiedFilterBar(self.theme, self.tr, UnifiedFilterBar.MODE_LOCAL, self)
         self.filter_bar.filters_changed.connect(self._on_filters_changed)
         self.filter_bar.refresh_requested.connect(self._on_refresh_requested)
 
-        self.filter_animated = AnimatedContainer(self)
-        self.filter_animated.set_content_widget(self.filter_bar)
-        layout.addWidget(self.filter_animated)
-
-        self.filter_bar.tags_animated.height_changed.connect(self.filter_animated.update_height)
-
-        self.info_bar = self._create_info_bar()
-        layout.addWidget(self.info_bar)
+        layout.addWidget(self.filter_bar)
         layout.addSpacing(10)
 
         self.scroll_area = QScrollArea()
@@ -175,32 +158,26 @@ class WallpapersTab(QWidget):
                 border: none;
                 background-color: transparent;
             }}
-
             QScrollBar:vertical {{
                 background-color: {self.theme.get_color('bg_secondary')};
                 width: 10px;
                 margin: 2px 2px 2px 2px;
                 border-radius: 4px;
             }}
-
             QScrollBar::handle:vertical {{
                 background-color: {self.theme.get_color('border')};
                 min-height: 30px;
                 border-radius: 4px;
             }}
-
             QScrollBar::handle:vertical:hover {{
                 background-color: {self.theme.get_color('primary')};
             }}
-
             QScrollBar::handle:vertical:pressed {{
                 background-color: {self.theme.get_color('primary_hover')};
             }}
-
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
             }}
-
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
                 background: none;
             }}
@@ -210,75 +187,11 @@ class WallpapersTab(QWidget):
         self.grid_widget = AdaptiveGridWidget()
         self.grid_widget.set_item_size_range(160, 240, 185)
         self.grid_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
         self.scroll_area.setWidget(self.grid_widget)
+
         layout.addWidget(self.scroll_area)
 
         return widget
-
-    def _create_info_bar(self) -> QFrame:
-        bar = QFrame()
-        bar.setFixedHeight(30)
-        bar.setStyleSheet(
-            f"""
-            QFrame {{
-                background-color: {self.theme.get_color('bg_elevated')};
-                border-radius: 8px;
-                padding: 0px;
-            }}
-            """
-        )
-
-        layout = QHBoxLayout(bar)
-        layout.setContentsMargins(12, 0, 12, 0)
-        layout.setSpacing(8)
-
-        self.results_label = QLabel()
-        self.results_label.setStyleSheet(
-            f"""
-            color: {self.theme.get_color('text_secondary')};
-            font-size: 10px;
-            font-weight: 600;
-            """
-        )
-        layout.addWidget(self.results_label)
-
-        layout.addStretch()
-
-        self.size_label = QLabel()
-        self.size_label.setStyleSheet(
-            f"""
-            color: {self.theme.get_color('text_secondary')};
-            font-size: 10px;
-            font-weight: 600;
-            """
-        )
-        layout.addWidget(self.size_label)
-
-        layout.addSpacing(10)
-
-        self.filter_toggle_label = QLabel(self.tr.t("labels.filters"))
-        self.filter_toggle_label.setStyleSheet(
-            f"""
-            color: {self.theme.get_color('text_secondary')};
-            font-size: 10px;
-            font-weight: 600;
-            """
-        )
-        layout.addWidget(self.filter_toggle_label)
-
-        self.filter_toggle = ToggleSwitch(
-            checked=False,
-            theme_manager=self.theme,
-            parent=bar,
-        )
-        self.filter_toggle.toggled.connect(self._on_filter_toggle)
-        layout.addWidget(self.filter_toggle)
-
-        return bar
-
-    def _on_filter_toggle(self, checked: bool) -> None:
-        self.filter_animated.toggle(checked)
 
     def _on_collapse_requested(self) -> None:
         self.details_container.hide_panel()
@@ -304,7 +217,6 @@ class WallpapersTab(QWidget):
     def _safe_refresh(self) -> None:
         if self._is_refreshing:
             return
-
         try:
             self._is_refreshing = True
             self.refresh()
@@ -316,7 +228,6 @@ class WallpapersTab(QWidget):
 
     def _load_wallpaper_data(self, wallpaper_path: Path) -> dict[str, Any]:
         pubfileid = wallpaper_path.name
-
         data = {
             "path": wallpaper_path,
             "pubfileid": pubfileid,
@@ -334,7 +245,7 @@ class WallpapersTab(QWidget):
             try:
                 with project_json.open("r", encoding="utf-8") as file:
                     project_data = json.load(file)
-                data["title"] = project_data.get("title", pubfileid)
+                    data["title"] = project_data.get("title", pubfileid)
             except Exception:
                 pass
 
@@ -380,7 +291,6 @@ class WallpapersTab(QWidget):
             search_lower = filters.search.lower()
             title = wallpaper_data.get("title", "").lower()
             pubfileid = wallpaper_data.get("pubfileid", "").lower()
-
             if search_lower not in title and search_lower not in pubfileid:
                 return False
 
@@ -398,15 +308,12 @@ class WallpapersTab(QWidget):
         for required_tag in filters.misc_tags:
             if required_tag not in tags["misc"]:
                 return False
-
         for excluded_tag in filters.excluded_misc_tags:
             if excluded_tag in tags["misc"]:
                 return False
-
         for required_tag in filters.genre_tags:
             if required_tag not in tags["genre"]:
                 return False
-
         for excluded_tag in filters.excluded_genre_tags:
             if excluded_tag in tags["genre"]:
                 return False
@@ -452,7 +359,7 @@ class WallpapersTab(QWidget):
         self._display_wallpapers(sorted_wallpapers)
 
         total_size = get_directory_size(self.we.projects_path)
-        self._update_info(len(sorted_wallpapers), len(self._all_wallpapers_data), total_size)
+        self._update_info_text(len(sorted_wallpapers), len(self._all_wallpapers_data), total_size)
 
         QTimer.singleShot(50, self._force_grid_update)
 
@@ -493,12 +400,11 @@ class WallpapersTab(QWidget):
         self._clear_grid()
 
         if not wallpapers:
-            self._update_info(0, len(self._all_wallpapers_data), get_directory_size(self.we.projects_path))
+            self._update_info_text(0, len(self._all_wallpapers_data), get_directory_size(self.we.projects_path))
             self._show_empty_state(self.tr.t("labels.no_wallpapers_found"))
             return
 
         item_size = self.grid_widget.get_current_item_size()
-
         for wallpaper_data in wallpapers:
             item = LocalGridItem(str(wallpaper_data["path"]), item_size, self.theme, self)
             item.clicked.connect(self._on_item_clicked)
@@ -506,7 +412,8 @@ class WallpapersTab(QWidget):
             self.grid_items.append(item)
 
         total_size = get_directory_size(self.we.projects_path)
-        self._update_info(len(wallpapers), len(self._all_wallpapers_data), total_size)
+        self._update_info_text(len(wallpapers), len(self._all_wallpapers_data), total_size)
+
         QTimer.singleShot(50, self._force_grid_update)
 
     def _clear_grid(self) -> None:
@@ -520,11 +427,10 @@ class WallpapersTab(QWidget):
         self.grid_widget.clear_items()
         self.grid_items.clear()
 
-    def _update_info(self, filtered_count: int, total_count: int, total_size: int) -> None:
-        self.results_label.setText(
-            self.tr.t("labels.wallpapers_filtered", filtered=filtered_count, total=total_count)
-        )
-        self.size_label.setText(self.tr.t("labels.total_size", size=human_readable_size(total_size)))
+    def _update_info_text(self, filtered_count: int, total_count: int, total_size: int) -> None:
+        primary = self.tr.t("labels.wallpapers_filtered", filtered=filtered_count, total=total_count)
+        secondary = self.tr.t("labels.total_size", size=human_readable_size(total_size))
+        self.filter_bar.set_info_texts(primary=primary, secondary=secondary)
 
     def _on_item_clicked(self, folder_path: str) -> None:
         if not self.details_container.is_panel_visible():
