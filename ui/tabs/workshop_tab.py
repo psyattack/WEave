@@ -1,99 +1,26 @@
 from typing import Optional
 
-from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, QRectF, pyqtSignal, pyqtProperty, QPropertyAnimation, QEasingCurve
-from PyQt6.QtGui import QColor, QPainter
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, pyqtSignal, pyqtProperty, QPropertyAnimation, QEasingCurve
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from infrastructure.cache.image_cache import ImageCache
 from infrastructure.resources.resource_manager import get_icon
 from shared.helpers import parse_file_size_to_bytes
 from ui.dialogs.downloads_dialog import DownloadsDialog
 from ui.notifications import NotificationLabel
-from ui.widgets.animated_container import AnimatedContainer
 from ui.widgets.details_panel import DetailsPanel
-from ui.widgets.filter_bar_workshop import CompactFilterBar
+from ui.widgets.filter_bar import UnifiedFilterBar
 from ui.widgets.flow_layout import AdaptiveGridWidget
 from ui.widgets.grid_items import SkeletonGridItem, WorkshopGridItem
 from ui.widgets.loading_overlay import LoadingOverlay
 from ui.widgets.preview_popup import PreviewPopup
-
-
-class ToggleSwitch(QWidget):
-    toggled = pyqtSignal(bool)
-
-    def __init__(self, checked=True, theme_manager=None, parent=None):
-        super().__init__(parent)
-
-        self.theme = theme_manager
-        self._checked = checked
-        self._handle_pos = 1.0 if checked else 0.0
-
-        self.setFixedSize(36, 18)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        self._animation = QPropertyAnimation(self, b"handlePos")
-        self._animation.setDuration(150)
-
-    def _get_primary_color(self) -> str:
-        if self.theme:
-            return self.theme.get_color("primary")
-        return "#4A7FD9"
-
-    def _get_background_color(self) -> str:
-        if self.theme:
-            return self.theme.get_color("bg_tertiary")
-        return "#252938"
-
-    def isChecked(self):
-        return self._checked
-
-    def get_handle_pos(self):
-        return self._handle_pos
-
-    def set_handle_pos(self, pos):
-        self._handle_pos = pos
-        self.update()
-
-    handlePos = pyqtProperty(float, get_handle_pos, set_handle_pos)
-
-    def mousePressEvent(self, event):
-        self._checked = not self._checked
-        self._animation.setStartValue(self._handle_pos)
-        self._animation.setEndValue(1.0 if self._checked else 0.0)
-        self._animation.start()
-        self.toggled.emit(self._checked)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        width = self.width()
-        height = self.height()
-        radius = height / 2
-
-        if self._checked:
-            background_color = QColor(self._get_primary_color())
-        else:
-            background_color = QColor(self._get_background_color())
-
-        painter.setBrush(background_color)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRoundedRect(QRectF(0, 0, width, height), radius, radius)
-
-        handle_diameter = height - 4
-        x = 2 + self._handle_pos * (width - handle_diameter - 4)
-
-        painter.setBrush(QColor("white"))
-        painter.drawEllipse(QRectF(x, 2, handle_diameter, handle_diameter))
-        painter.end()
-
+from infrastructure.steam.workshop_parser import WorkshopParser
 
 class AnimatedDetailsContainer(QWidget):
     animation_finished = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self._target_width = 320
         self._current_width = 320
         self._is_panel_visible = True
@@ -127,13 +54,10 @@ class AnimatedDetailsContainer(QWidget):
     def show_panel(self) -> None:
         if self._is_panel_visible:
             return
-
         self._is_panel_visible = True
         self.setVisible(True)
-
         for child in self.findChildren(QWidget):
             child.setVisible(True)
-
         self._animation.stop()
         self._animation.setStartValue(0)
         self._animation.setEndValue(self._target_width)
@@ -142,7 +66,6 @@ class AnimatedDetailsContainer(QWidget):
     def hide_panel(self) -> None:
         if not self._is_panel_visible:
             return
-
         self._is_panel_visible = False
         self._animation.stop()
         self._animation.setStartValue(self._current_width)
@@ -170,7 +93,6 @@ class WorkshopTab(QWidget):
         parent=None,
     ):
         super().__init__(parent)
-
         self.config = config_service
         self.accounts = account_service
         self.dm = download_service
@@ -182,15 +104,12 @@ class WorkshopTab(QWidget):
         self.current_page = 1
         self.total_pages = 1
         self.selected_pubfileid: Optional[str] = None
-
         self.grid_items: list[WorkshopGridItem] = []
         self.skeleton_items: list[SkeletonGridItem] = []
-
         self._current_page_data = None
         self._is_loading_page = False
         self._is_loading_details = False
         self._initial_load_done = False
-
         self._preview_url_cache: dict[str, str] = {}
         self._file_size_cache: dict[str, int] = {}
         self._details_panel_margin = 15
@@ -236,7 +155,6 @@ class WorkshopTab(QWidget):
             self,
         )
         self.details_panel.panel_collapse_requested.connect(self._on_collapse_requested)
-
         self.details_scroll.setWidget(self.details_panel)
         details_layout.addWidget(self.details_scroll)
 
@@ -246,23 +164,15 @@ class WorkshopTab(QWidget):
 
     def _create_left_panel(self) -> QWidget:
         widget = QWidget()
-
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(15, 10, 5, 10)
         layout.setSpacing(0)
 
-        self.filter_bar = CompactFilterBar(self.theme, self.tr, self)
+        self.filter_bar = UnifiedFilterBar(self.theme, self.tr, UnifiedFilterBar.MODE_WORKSHOP, self)
         self.filter_bar.filters_changed.connect(self._on_filters_changed)
         self.filter_bar.refresh_requested.connect(self._on_refresh_requested)
 
-        self.filter_animated = AnimatedContainer(self)
-        self.filter_animated.set_content_widget(self.filter_bar)
-        layout.addWidget(self.filter_animated)
-
-        self.filter_bar.tags_animated.height_changed.connect(self.filter_animated.update_height)
-
-        self.info_bar = self._create_info_bar()
-        layout.addWidget(self.info_bar)
+        layout.addWidget(self.filter_bar)
         layout.addSpacing(10)
 
         self.scroll_area = QScrollArea()
@@ -274,32 +184,26 @@ class WorkshopTab(QWidget):
                 border: none;
                 background-color: transparent;
             }}
-
             QScrollBar:vertical {{
                 background-color: {self.theme.get_color('bg_secondary')};
                 width: 10px;
                 margin: 2px 2px 2px 2px;
                 border-radius: 4px;
             }}
-
             QScrollBar::handle:vertical {{
                 background-color: {self.theme.get_color('border')};
                 min-height: 30px;
                 border-radius: 4px;
             }}
-
             QScrollBar::handle:vertical:hover {{
                 background-color: {self.theme.get_color('primary')};
             }}
-
             QScrollBar::handle:vertical:pressed {{
                 background-color: {self.theme.get_color('primary_hover')};
             }}
-
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
             }}
-
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
                 background: none;
             }}
@@ -309,7 +213,6 @@ class WorkshopTab(QWidget):
         self.grid_widget = AdaptiveGridWidget()
         self.grid_widget.set_item_size_range(160, 240, 185)
         self.grid_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
         self.scroll_area.setWidget(self.grid_widget)
 
         self._loading_overlay = LoadingOverlay(self.theme, self.scroll_area)
@@ -320,56 +223,12 @@ class WorkshopTab(QWidget):
 
         return widget
 
-    def _create_info_bar(self) -> QFrame:
-        bar = QFrame()
-        bar.setFixedHeight(30)
-        bar.setStyleSheet(
-            f"""
-            QFrame {{
-                background-color: {self.theme.get_color('bg_elevated')};
-                border-radius: 8px;
-                padding: 0px;
-            }}
-            """
-        )
-
-        layout = QHBoxLayout(bar)
-        layout.setContentsMargins(12, 0, 12, 0)
-        layout.setSpacing(8)
-
-        self.results_label = QLabel(self.tr.t("labels.loading_dots"))
-        self.results_label.setStyleSheet(
-            f"""
-            color: {self.theme.get_color('text_secondary')};
-            font-size: 10px;
-            font-weight: 600;
-            """
-        )
-        layout.addWidget(self.results_label)
-        layout.addStretch()
-
-        self.filter_toggle_label = QLabel(self.tr.t("labels.filters"))
-        self.filter_toggle_label.setStyleSheet(
-            f"""
-            color: {self.theme.get_color('text_secondary')};
-            font-size: 10px;
-            font-weight: 600;
-            """
-        )
-        layout.addWidget(self.filter_toggle_label)
-
-        self.filter_toggle = ToggleSwitch(checked=False, theme_manager=self.theme, parent=bar)
-        self.filter_toggle.toggled.connect(self._on_filter_toggle)
-        layout.addWidget(self.filter_toggle)
-
-        return bar
-
-    def _create_pagination_bar(self) -> QFrame:
-        bar = QFrame()
+    def _create_pagination_bar(self) -> QWidget:
+        bar = QWidget()
         bar.setFixedHeight(40)
         bar.setStyleSheet(
             f"""
-            QFrame {{
+            QWidget {{
                 background-color: {self.theme.get_color('bg_secondary')};
                 border-radius: 10px;
             }}
@@ -414,7 +273,6 @@ class WorkshopTab(QWidget):
                 font-size: 12px;
                 text-align: center;
             }}
-
             QLineEdit:focus {{
                 border-color: {self.theme.get_color('primary')};
             }}
@@ -458,11 +316,9 @@ class WorkshopTab(QWidget):
                 border: none;
                 border-radius: 6px;
             }}
-
             QPushButton:hover {{
                 background-color: {self.theme.get_color('primary')};
             }}
-
             QPushButton:disabled {{
                 background-color: transparent;
             }}
@@ -485,12 +341,7 @@ class WorkshopTab(QWidget):
         else:
             layout.setContentsMargins(15, 10, self._details_panel_margin, 10)
 
-    def _on_filter_toggle(self, checked: bool) -> None:
-        self.filter_animated.toggle(checked)
-
     def _setup_parser(self) -> None:
-        from infrastructure.steam.workshop_parser import WorkshopParser
-
         self.parser = WorkshopParser(self.accounts, self.config, self)
         self.parser.page_loaded.connect(self._on_page_loaded)
         self.parser.item_details_loaded.connect(self._on_item_details_loaded)
@@ -510,7 +361,6 @@ class WorkshopTab(QWidget):
 
     def _on_page_input(self) -> None:
         self.page_input.clearFocus()
-
         try:
             page = int(self.page_input.text().strip())
             if 1 <= page <= self.total_pages:
@@ -530,11 +380,9 @@ class WorkshopTab(QWidget):
         if page != self.current_page:
             self.current_page = page
             self.selected_pubfileid = None
-
             filters = self.filter_bar.get_current_filters()
             filters.page = page
             self.filter_bar.set_page(page)
-
             self.parser.load_page(filters)
             self.scroll_area.verticalScrollBar().setValue(0)
 
@@ -551,7 +399,6 @@ class WorkshopTab(QWidget):
     def _on_refresh_requested(self, filters) -> None:
         if self._is_loading_page:
             return
-
         filters.page = self.current_page
         self.filter_bar.set_page(self.current_page)
         self.selected_pubfileid = None
@@ -560,7 +407,6 @@ class WorkshopTab(QWidget):
     def _on_filters_changed(self, filters) -> None:
         if self._is_loading_page:
             return
-
         self.current_page = 1
         filters.page = 1
         self.filter_bar.set_page(1)
@@ -587,6 +433,7 @@ class WorkshopTab(QWidget):
         self._clear_grid()
         self._populate_grid(page_data.items)
         self._update_pagination()
+        self._update_info_text()
 
         QTimer.singleShot(50, self._force_grid_update)
 
@@ -607,7 +454,6 @@ class WorkshopTab(QWidget):
             return
         if self.current_page >= self.total_pages:
             return
-
         self.parser.preload_next_page(self._current_page_data.filters)
 
     def _on_item_details_loaded(self, item) -> None:
@@ -621,13 +467,13 @@ class WorkshopTab(QWidget):
             if size_bytes > 0:
                 self._file_size_cache[item.pubfileid] = size_bytes
 
-                for grid_item in self.grid_items:
-                    try:
-                        if grid_item and grid_item.pubfileid == item.pubfileid:
-                            grid_item.set_file_size_bytes(size_bytes)
-                            break
-                    except RuntimeError:
-                        pass
+            for grid_item in self.grid_items:
+                try:
+                    if grid_item and grid_item.pubfileid == item.pubfileid:
+                        grid_item.set_file_size_bytes(size_bytes)
+                        break
+                except RuntimeError:
+                    pass
 
         self.details_panel.set_workshop_item(item)
 
@@ -652,7 +498,6 @@ class WorkshopTab(QWidget):
                 self.metadata_service.save_from_workshop_item(cached_item)
 
         self._update_item_statuses()
-
         if self.selected_pubfileid == pubfileid:
             self.details_panel.refresh_after_state_change()
 
@@ -771,31 +616,31 @@ class WorkshopTab(QWidget):
             except RuntimeError:
                 pass
 
-    def _update_pagination(self) -> None:
-        self.page_label2.setText(self.tr.t("labels.of", total=self.total_pages))
-        self.page_input.setText(str(self.current_page))
-        self._update_pagination_buttons()
-
+    def _update_info_text(self) -> None:
         if self._current_page_data:
             total_items = self._current_page_data.total_items
             current_count = len(self._current_page_data.items)
-
             start_item = (self.current_page - 1) * 15 + 1
             end_item = min(start_item + current_count - 1, total_items)
 
             if total_items > 0:
-                self.results_label.setText(
-                    self.tr.t(
-                        "labels.showing_wallpapers",
-                        start=start_item,
-                        end=end_item,
-                        total=total_items,
-                    )
+                text = self.tr.t(
+                    "labels.showing_wallpapers",
+                    start=start_item,
+                    end=end_item,
+                    total=total_items,
                 )
             else:
-                self.results_label.setText(self.tr.t("labels.no_wallpapers_found"))
+                text = self.tr.t("labels.no_wallpapers_found")
         else:
-            self.results_label.setText(self.tr.t("labels.loading_dots"))
+            text = self.tr.t("labels.loading_dots")
+
+        self.filter_bar.set_info_text(text)
+
+    def _update_pagination(self) -> None:
+        self.page_label2.setText(self.tr.t("labels.of", total=self.total_pages))
+        self.page_input.setText(str(self.current_page))
+        self._update_pagination_buttons()
 
     def _update_pagination_buttons(self) -> None:
         can_go_back = self.current_page > 1 and not self._is_loading_page
@@ -811,7 +656,6 @@ class WorkshopTab(QWidget):
             return
 
         cached_item = self.parser.get_cached_item(pubfileid)
-
         if cached_item and cached_item.preview_url:
             self._preview_url_cache[pubfileid] = cached_item.preview_url
 
@@ -819,7 +663,6 @@ class WorkshopTab(QWidget):
             size_bytes = parse_file_size_to_bytes(cached_item.file_size)
             if size_bytes > 0:
                 self._file_size_cache[pubfileid] = size_bytes
-
                 for grid_item in self.grid_items:
                     try:
                         if grid_item and grid_item.pubfileid == pubfileid:
@@ -830,7 +673,6 @@ class WorkshopTab(QWidget):
 
         self.dm.start_download(pubfileid, self.config.get_account_number())
         self._update_item_statuses()
-
         NotificationLabel.show_notification(
             self.details_panel,
             self.tr.t("messages.download_started"),
@@ -848,13 +690,10 @@ class WorkshopTab(QWidget):
     def cleanup(self) -> None:
         if hasattr(self, "_status_timer"):
             self._status_timer.stop()
-
         if hasattr(self, "parser"):
             self.parser.cleanup()
-
         if self._loading_overlay:
             self._loading_overlay.hide()
-
         ImageCache.instance().clear()
         self._preview_url_cache.clear()
         self._file_size_cache.clear()

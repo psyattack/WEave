@@ -25,7 +25,7 @@
     "batch_download": "Descarga por lotes",
     "info": "Información",
     "search": "Buscar",
-    "refresh": "Actualizar",
+    "refresh": "Actualizar página",
     "translate_description": "Traducir descripción",
     "show_original": "Mostrar original",
     "sort_order": "Cambiar orden de clasificación"
@@ -53,7 +53,7 @@
     "type": "Tipo:",
     "age": "Edad:",
     "resolution": "Resolución:",
-    "clear": "✕ Limpiar",
+    "clear": "Limpiar filtros",
     "more_filters": "▼ Más filtros",
     "less_filters": "▲ Menos filtros",
     "asset_type": "Tipo de activo:",
@@ -74,7 +74,8 @@
     "search_placeholder": "Buscar...",
     "id_url_placeholder": "ID, URL...",
     "account": "Cuenta",
-    "translating": "Traduciendo..."
+    "translating": "Traduciendo...",
+    "action": "Acción"
   },
   "messages": {
     "download_started": "¡Descarga iniciada!",
@@ -167,6 +168,10 @@
     "incompatible_items": "Algunos elementos no pueden incluirse. Sin embargo, puede encontrarlos marcando esta opción."
   },
   "filters": {
+    "sort_order": {
+      "asc": "ASC",
+      "desc": "DESC"
+    },
     "local_sort": {
       "install_date": "Fecha de instalación",
       "name": "Nombre",

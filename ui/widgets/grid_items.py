@@ -436,7 +436,7 @@ class WorkshopGridItem(BaseGridItem):
                     self.download_overlay.hide()
                     self._overlay_visible = False
 
-                self.status_indicator.setPixmap(get_pixmap("IMG_CHECK", 18))
+                self.status_indicator.setPixmap(get_pixmap("ICON_CHECK", 18))
                 self.status_indicator.show()
 
             elif status == self.STATUS_DOWNLOADING:

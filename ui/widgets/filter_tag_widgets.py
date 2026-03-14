@@ -1,4 +1,5 @@
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 
@@ -14,21 +15,40 @@ class FilterTagChip(QFrame):
         self.theme = theme_manager
         self._text = text
         self._state = self.STATE_NEUTRAL
+        self._horizontal_padding = 8
+        self._vertical_padding = 2
+        self._fixed_height = 20
         self._setup_ui()
         self._apply_style()
 
     def _setup_ui(self) -> None:
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-        self.setFixedHeight(20)
+        self.setFixedHeight(self._fixed_height)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 2, 8, 2)
+        layout.setContentsMargins(
+            self._horizontal_padding,
+            self._vertical_padding,
+            self._horizontal_padding,
+            self._vertical_padding,
+        )
         layout.setSpacing(0)
 
         self.label = QLabel(self._text)
+        self.label.setWordWrap(False)
+        self.label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         self.label.setStyleSheet("background: transparent; border: none;")
         layout.addWidget(self.label)
+
+    def sizeHint(self) -> QSize:
+        metrics = QFontMetrics(self.label.font())
+        text_width = metrics.horizontalAdvance(self._text)
+        width = text_width + self._horizontal_padding * 2 + 2
+        return QSize(width, self._fixed_height)
+
+    def minimumSizeHint(self) -> QSize:
+        return self.sizeHint()
 
     def state_value(self) -> int:
         return self._state
@@ -36,21 +56,6 @@ class FilterTagChip(QFrame):
     def reset(self) -> None:
         self._state = self.STATE_NEUTRAL
         self._apply_style()
-
-    def set_included(self) -> None:
-        self._state = self.STATE_INCLUDED
-        self._apply_style()
-        self.state_changed.emit()
-
-    def set_excluded(self) -> None:
-        self._state = self.STATE_EXCLUDED
-        self._apply_style()
-        self.state_changed.emit()
-
-    def set_neutral(self) -> None:
-        self._state = self.STATE_NEUTRAL
-        self._apply_style()
-        self.state_changed.emit()
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
@@ -60,7 +65,6 @@ class FilterTagChip(QFrame):
                 self._state = self.STATE_NEUTRAL
             elif self._state == self.STATE_EXCLUDED:
                 self._state = self.STATE_NEUTRAL
-
             self._apply_style()
             self.state_changed.emit()
             return
@@ -72,7 +76,6 @@ class FilterTagChip(QFrame):
                 self._state = self.STATE_NEUTRAL
             elif self._state == self.STATE_INCLUDED:
                 self._state = self.STATE_EXCLUDED
-
             self._apply_style()
             self.state_changed.emit()
             return
@@ -102,6 +105,7 @@ class FilterTagChip(QFrame):
             }}
             """
         )
+
         self.label.setStyleSheet(
             f"""
             QLabel {{
@@ -114,6 +118,9 @@ class FilterTagChip(QFrame):
             """
         )
 
+    def text(self) -> str:
+        return self._text
+
 
 class CompactFlowLayout(QVBoxLayout):
     def __init__(self, parent=None):
@@ -121,15 +128,18 @@ class CompactFlowLayout(QVBoxLayout):
         self._max_width = 280
         self._current_row = None
         self._current_row_width = 0
-        self._horizontal_spacing = 4
-        self._vertical_spacing = 4
+        self._horizontal_spacing = 5
+        self._vertical_spacing = 5
         self.setSpacing(self._vertical_spacing)
 
     def set_max_width(self, width: int) -> None:
         self._max_width = width
 
     def add_widget_flow(self, widget: QWidget) -> None:
-        widget_width = widget.sizeHint().width() + self._horizontal_spacing
+        hint = widget.sizeHint()
+        min_hint = widget.minimumSizeHint()
+        widget_width = max(hint.width(), min_hint.width()) + self._horizontal_spacing
+
         if self._current_row is None or self._current_row_width + widget_width > self._max_width:
             self._start_new_row()
 
@@ -143,6 +153,8 @@ class CompactFlowLayout(QVBoxLayout):
     def _start_new_row(self) -> None:
         row_widget = QWidget()
         row_widget.setStyleSheet("background: transparent; border: none;")
+        row_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
         row_layout = QHBoxLayout(row_widget)
         row_layout.setContentsMargins(0, 0, 0, 0)
         row_layout.setSpacing(self._horizontal_spacing)
@@ -156,7 +168,14 @@ class CompactFlowLayout(QVBoxLayout):
 class FilterTagsFlowWidget(QWidget):
     changed = pyqtSignal()
 
-    def __init__(self, tags: list[str], translated_map: dict[str, str], theme_manager, max_width: int = 700, parent=None):
+    def __init__(
+        self,
+        tags: list[str],
+        translated_map: dict[str, str],
+        theme_manager,
+        max_width: int = 700,
+        parent=None,
+    ):
         super().__init__(parent)
         self.theme = theme_manager
         self._tags = tags
@@ -178,6 +197,7 @@ class FilterTagsFlowWidget(QWidget):
         container = QWidget()
         container.setStyleSheet("background: transparent; border: none;")
         container.setLayout(flow)
+        container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         for tag in self._tags:
             chip = FilterTagChip(self._translated_map.get(tag, tag), self.theme, self)
@@ -189,10 +209,18 @@ class FilterTagsFlowWidget(QWidget):
         self._main_layout.addWidget(container)
 
     def get_included(self) -> list[str]:
-        return [tag for tag, chip in self._chips.items() if chip.state_value() == FilterTagChip.STATE_INCLUDED]
+        return [
+            tag
+            for tag, chip in self._chips.items()
+            if chip.state_value() == FilterTagChip.STATE_INCLUDED
+        ]
 
     def get_excluded(self) -> list[str]:
-        return [tag for tag, chip in self._chips.items() if chip.state_value() == FilterTagChip.STATE_EXCLUDED]
+        return [
+            tag
+            for tag, chip in self._chips.items()
+            if chip.state_value() == FilterTagChip.STATE_EXCLUDED
+        ]
 
     def reset_all(self) -> None:
         for chip in self._chips.values():

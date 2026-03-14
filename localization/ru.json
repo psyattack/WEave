@@ -25,7 +25,7 @@
     "batch_download": "Пакетная загрузка",
     "info": "Информация",
     "search": "Поиск",
-    "refresh": "Обновить",
+    "refresh": "Обновить страницу",
     "translate_description": "Перевести описание",
     "show_original": "Показать оригинал",
     "sort_order": "Переключить порядок сортировки"
@@ -53,7 +53,7 @@
     "type": "Тип:",
     "age": "Возраст:",
     "resolution": "Разрешение:",
-    "clear": "✕ Сброс",
+    "clear": "Сбросить фильтры",
     "more_filters": "▼ Больше",
     "less_filters": "▲ Меньше",
     "asset_type": "Тип актива:",
@@ -74,7 +74,8 @@
     "search_placeholder": "Поиск...",
     "id_url_placeholder": "ID, URL...",
     "account": "Аккаунт",
-    "translating": "Перевод..."
+    "translating": "Перевод...",
+    "action": "Действие"
   },
   "messages": {
     "download_started": "Загрузка началась!",
@@ -167,6 +168,10 @@
     "incompatible_items": "Некоторые элементы не могут быть включены. Однако вы можете найти их, установив этот флажок."
   },
   "filters": {
+    "sort_order": {
+      "asc": "ASC",
+      "desc": "DESC"
+    },
     "local_sort": {
       "install_date": "Дата установки",
       "name": "Имя",

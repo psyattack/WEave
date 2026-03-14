@@ -2,13 +2,12 @@
 import json
 import os
 import shutil
-import tempfile
 import webbrowser
 import weakref
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QByteArray, QThread, QTimer, Qt, QSize, pyqtSignal, QRectF
+from PyQt6.QtCore import QBuffer, QByteArray, QIODevice, QThread, QTimer, Qt, QSize, pyqtSignal, QRectF
 from PyQt6.QtGui import QMovie, QPainter, QPainterPath, QPixmap
 from PyQt6.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
@@ -77,7 +76,7 @@ class DetailsPanel(QWidget):
         self._current_preview_url: str = ""
 
         self.movie: Optional[QMovie] = None
-        self._temp_gif_file: Optional[str] = None
+        self._gif_buffer = None
         self._project_data: dict = {}
 
         self._original_description: str = ""
@@ -605,12 +604,13 @@ class DetailsPanel(QWidget):
                 pass
             self.movie = None
 
-        if self._temp_gif_file and os.path.exists(self._temp_gif_file):
+        if self._gif_buffer is not None:
             try:
-                os.remove(self._temp_gif_file)
+                self._gif_buffer.close()
+                self._gif_buffer.deleteLater()
             except Exception:
                 pass
-            self._temp_gif_file = None
+            self._gif_buffer = None
 
     def _stop_loading_animation(self) -> None:
         if self._loading_icon is not None:
@@ -928,19 +928,15 @@ class DetailsPanel(QWidget):
         if description and description.strip():
             self._translate_button = QPushButton()
             install_tooltip(self._translate_button, self.tr.t("tooltips.translate_description"), "bottom", self.theme)
-            self._translate_button.setFixedSize(22, 22)
+            self._translate_button.setFixedSize(18, 18)
             self._translate_button.setIcon(get_icon("ICON_TRANSLATE"))
-            self._translate_button.setIconSize(QSize(21, 21))
+            self._translate_button.setIconSize(QSize(24, 24))
             self._translate_button.setStyleSheet(
                 f"""
                 QPushButton {{
                     background-color: transparent;
                     border-radius: 6px;
                     border: none;
-                }}
-
-                QPushButton:hover {{
-                    background-color: {self.theme.get_color('primary')};
                 }}
                 """
             )
@@ -1424,11 +1420,11 @@ class DetailsPanel(QWidget):
             self._stop_movie()
             self._stop_loading_animation()
 
-            fd, self._temp_gif_file = tempfile.mkstemp(suffix=".gif")
-            os.write(fd, bytes(data))
-            os.close(fd)
+            self._gif_buffer = QBuffer(self)
+            self._gif_buffer.setData(data)
+            self._gif_buffer.open(QIODevice.OpenModeFlag.ReadOnly)
 
-            self.movie = QMovie(self._temp_gif_file)
+            self.movie = QMovie(self._gif_buffer, QByteArray(), self)
             self.movie.setScaledSize(self.preview_label.size())
             self.preview_label.setMovie(self.movie)
             self.movie.frameChanged.connect(self._on_gif_frame_changed)
