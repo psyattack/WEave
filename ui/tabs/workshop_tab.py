@@ -135,7 +135,7 @@ class WorkshopTab(QWidget):
         main_layout.addWidget(self.left_panel, 1)
 
         self.details_container = AnimatedDetailsContainer(self)
-        self.details_container.set_target_width(312)
+        self.details_container.set_target_width(322)
         self.details_container.animation_finished.connect(self._on_details_animation_finished)
 
         details_outer_layout = QVBoxLayout(self.details_container)

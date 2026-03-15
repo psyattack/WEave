@@ -1,14 +1,16 @@
 import re
 
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTextEdit
+from PyQt6.QtCore import QSize
 
+from infrastructure.resources.resource_manager import get_icon
 from ui.dialogs.base_dialog import BaseDialog
 from ui.notifications import MessageBox
 
 
 class BatchDownloadDialog(BaseDialog):
     def __init__(self, translator, parent=None, theme_manager=None):
-        super().__init__(translator.t("dialog.batch_download"), parent, theme_manager)
+        super().__init__(translator.t("dialog.multi_download"), parent, theme_manager, icon="ICON_EXTRACT")
 
         self.tr = translator
         self.pubfileids: list[str] = []
@@ -16,7 +18,7 @@ class BatchDownloadDialog(BaseDialog):
         self.setFixedSize(450, 350)
 
         label = QLabel(self.tr.t("messages.batch_input_placeholder"))
-        label.setStyleSheet(f"color: {self.c_text_primary}; background: transparent;")
+        label.setStyleSheet(f"color: {self.c_text_primary}; background: transparent; border: none;")
         label.setWordWrap(True)
         self.content_layout.addWidget(label)
 
@@ -42,7 +44,9 @@ class BatchDownloadDialog(BaseDialog):
 
         button_layout = QHBoxLayout()
 
-        download_btn = QPushButton(self.tr.t("buttons.download_all"))
+        download_btn = QPushButton(self.tr.t("buttons.install"))
+        download_btn.setIcon(get_icon("ICON_UPLOAD"))
+        download_btn.setIconSize(QSize(24, 24))
         download_btn.setFixedHeight(40)
         download_btn.setStyleSheet(
             f"""

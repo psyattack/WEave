@@ -1,13 +1,12 @@
 {
   "tabs": {
-    "workshop": "Werkstatt",
+    "workshop": "Workshop",
     "wallpapers": "Hintergründe"
   },
   "buttons": {
     "ok": "OK",
     "open_workshop": "Browser",
     "install": "Installieren",
-    "download_all": "Alle herunterladen",
     "yes": "Ja",
     "no": "Nein",
     "open_data_folder": "Datenordner öffnen",
@@ -15,20 +14,20 @@
   },
   "tooltips": {
     "open_folder": "Ordner im Explorer öffnen",
-    "open_workshop": "In Steam-Werkstatt öffnen",
+    "open_workshop": "Im Steam Workshop öffnen",
     "delete_wallpaper": "Hintergrundbild löschen",
     "extract_wallpaper": ".pkg-Datei extrahieren",
     "install_wallpaper": "Hintergrundbild installieren",
-    "install_open_we": "Installieren und in Wallpaper Engine öffnen",
-    "tasks": "Aktive Downloads und Extrahierungen",
+    "install_open_we": "Hintergrundbild installieren und in Wallpaper Engine öffnen",
+    "tasks": "Aktive Downloads und Extraktionen",
     "settings": "Einstellungen",
-    "batch_download": "Stapel-Download",
+    "multi_download": "Mehrfach-Download",
     "info": "Information",
     "search": "Suchen",
     "refresh": "Seite aktualisieren",
     "translate_description": "Beschreibung übersetzen",
     "show_original": "Original anzeigen",
-    "sort_order": "Sortierung umschalten"
+    "sort_order": "Sortierreihenfolge umschalten"
   },
   "labels": {
     "wallpapers_filtered": "Zeige {filtered} von {total} Hintergründen",
@@ -42,12 +41,11 @@
     "no_tasks": "Keine aktiven Aufgaben",
     "download_prefix": "Download: {id}",
     "extract_prefix": "Extrahieren: {id}",
-    "other": "Andere:",
-    "minimize_on_apply": "Beim Anwenden minimieren",
+    "minimize_on_apply": "Bei Anwenden minimieren",
     "page": "Seite",
     "of": "von {total}",
     "filters": "Filter",
-    "sort": "Sortierung:",
+    "sort": "Sortieren:",
     "period": "Zeitraum:",
     "category": "Kategorie:",
     "type": "Typ:",
@@ -74,30 +72,26 @@
     "search_placeholder": "Suchen...",
     "id_url_placeholder": "ID, URL...",
     "account": "Konto",
-    "translating": "Übersetze...",
-    "action": "Aktion"
+    "translating": "Übersetzen...",
+    "action": "Aktion",
+    "content_descriptors": "Inhaltsdeskriptoren:"
   },
   "messages": {
     "download_started": "Download gestartet!",
-    "extraction_started": "Extrahierung gestartet!",
+    "extraction_started": "Extraktion gestartet!",
     "wallpaper_deleted": "Hintergrundbild gelöscht!",
-    "id_copied": "ID in Zwischenablage kopiert!",
-    "cannot_delete_active": "Diese Hintergründe sind gerade aktiv.\nBitte ändern Sie zuerst Ihr Hintergrundbild.",
-    "confirm_delete": "Sind Sie sicher, dass Sie dieses Hintergrundbild löschen möchten?",
+    "id_copied": "ID in die Zwischenablage kopiert!",
+    "cannot_delete_active": "Diese Hintergründe sind gerade aktiv.\nBitte ändern Sie zuerst Ihr Hintergrundbild, bevor Sie es löschen.",
+    "confirm_delete": "Möchten Sie dieses Hintergrundbild wirklich löschen?",
     "no_wallpaper_selected": "Kein Hintergrundbild ausgewählt.",
     "no_pkg_file": "Keine .pkg-Datei gefunden.",
-    "invalid_input": "Keine gültigen Werkstatt-IDs oder Links gefunden.",
+    "invalid_input": "Keine gültigen Workshop-IDs oder Links gefunden.",
     "select_we_folder": "Wallpaper Engine-Ordner auswählen",
-    "exit_with_downloads": "Sie haben unvollständige Downloads oder Extrahierungen.\nFenster schließen?",
+    "exit_with_downloads": "Sie haben unvollständige Downloads oder Extraktionen.\nFenster schließen?",
     "exit_with_downloads_only": "Sie haben unvollständige Downloads.\nFenster schließen?",
-    "exit_with_extractions_only": "Sie haben unvollständige Extrahierungen.\nFenster schließen?",
-    "dotnet_required": "Diese Anwendung erfordert .NET 9 Desktop Runtime für einige Plugins.",
-    "dotnet_install_now": "Möchten Sie es jetzt installieren?",
-    "dotnet_installation_started": ".NET 9 Desktop Runtime-Installation wurde gestartet.\nBitte schließen Sie die Installation ab und klicken Sie auf OK.",
-    "dotnet_installation_failed": ".NET 9 Desktop Runtime-Installer konnte nicht gefunden werden.\nBitte manuell herunterladen von:\nhttps://dotnet.microsoft.com/en-us/download/dotnet/9.0/runtime",
-    "dotnet_warning": ".NET 9 Desktop Runtime ist für den korrekten Betrieb erforderlich.\nKommen Sie zurück, wenn Sie bereit sind, es zu installieren.",
-    "batch_input_placeholder": "Werkstatt-IDs und/oder URLs eingeben\n(durch Leerzeichen oder Zeilenumbruch getrennt):",
-    "invalid_page_number": "Ungültige Seitennummer",
+    "exit_with_extractions_only": "Sie haben unvollständige Extraktionen.\nFenster schließen?",
+    "batch_input_placeholder": "Workshop-IDs und/oder URLs eingeben\n(durch Leerzeichen oder Zeilenumbruch getrennt):",
+    "invalid_page_number": "Ungültige Seitenzahl",
     "invalid_we_directory": "Ungültiges Wallpaper Engine-Verzeichnis.\nBitte wählen Sie den richtigen Ordner.",
     "failed_start_installer": "Installer konnte nicht gestartet werden: {error}",
     "select_output_directory": "Ausgabeverzeichnis auswählen",
@@ -106,9 +100,9 @@
     "translation_error": "Übersetzung fehlgeschlagen",
     "language_changed": "Sprache geändert",
     "restart_now_question": "Anwendung jetzt schließen, um die Änderungen anzuwenden?",
-    "restart_with_tasks": "Sie haben unvollständige Downloads oder Extrahierungen.\nSie werden beim Schließen der Anwendung abgebrochen.\nFortfahren?",
-    "restart_with_downloads_only": "Sie haben unvollständige Downloads.\nSie werden beim Schließen der Anwendung abgebrochen.\nFortfahren?",
-    "restart_with_extractions_only": "Sie haben unvollständige Extrahierungen.\nSie werden beim Schließen der Anwendung abgebrochen.\nFortfahren?",
+    "restart_with_tasks": "Sie haben unvollständige Downloads oder Extraktionen.\nSie werden beim Schließen des Programms abgebrochen.\nFortfahren?",
+    "restart_with_downloads_only": "Sie haben unvollständige Downloads.\nSie werden beim Schließen des Programms abgebrochen.\nFortfahren?",
+    "restart_with_extractions_only": "Sie haben unvollständige Extraktionen.\nSie werden beim Schließen des Programms abgebrochen.\nFortfahren?",
     "restart_title": "Neustart erforderlich",
     "restart_theme_message": "Das Design wird nach dem nächsten Start angewendet. Anwendung jetzt schließen?",
     "restart_debug_message": "Der Debug-Modus wird nach dem nächsten Start angewendet. Anwendung jetzt schließen?"
@@ -119,9 +113,8 @@
     "error": "Fehler",
     "warning": "Warnung",
     "exit": "Beenden",
-    "batch_download": "Stapel-Download",
+    "multi_download": "Mehrfach-Download",
     "about": "Über",
-    "dotnet_required": ".NET 9 Desktop Runtime erforderlich",
     "installation_started": "Installation gestartet"
   },
   "settings": {
@@ -139,39 +132,32 @@
     "fill_all_fields": "Bitte füllen Sie alle Felder aus.",
     "appearance": "Erscheinungsbild",
     "theme_description": "Wählen Sie das visuelle Design der Anwendung",
-    "language_description": "Oberflächensprache ändern",
+    "language_description": "Ändern Sie die Benutzeroberflächensprache",
     "behavior": "Verhalten",
-    "minimize_description": "Fenster nach dem Anwenden des Hintergrundbildes minimieren",
-    "preload_next_page": "Seiten vorladen (BETA)",
-    "preload_description": "Die nächste Workshop-Seite im Hintergrund vorladen für schnellere Navigation",
-    "save_window_state": "Fensterstatus speichern",
+    "minimize_description": "Fenster nach dem Anwenden des Hintergrundbilds minimieren",
+    "preload_next_page": "Nächste Seite vorladen (BETA)",
+    "preload_description": "Die nächste Workshop-Seite im Hintergrund für schnellere Navigation vorladen",
+    "save_window_state": "Fensterzustand speichern",
     "save_window_state_description": "Fenstergröße und -position beim Beenden speichern und beim Start wiederherstellen",
     "auto_check_updates": "Automatisch nach Updates suchen",
-    "auto_check_updates_description": "Automatisch GitHub-Releases beim Anwendungsstart überprüfen",
+    "auto_check_updates_description": "Automatisch GitHub-Releases beim Anwendungsstart prüfen",
     "tab_general": "Allgemein",
     "account_selection": "Kontoauswahl",
     "account_description": "Konto auswählen (zum Herunterladen)",
     "tab_account": "Konto",
     "tab_advanced": "Erweitert",
-    "login_description": "Geben Sie Ihre Steam-Anmeldedaten für die Werkstatt-Authentifizierung ein",
+    "login_description": "Geben Sie Ihre Steam-Anmeldedaten für die Authentifizierung im Workshop ein",
     "debug": "Debug",
     "debug_mode": "Debug-Modus",
     "debug_description": "Debug-Modus für Webview-Tests aktivieren",
-    "show_id_section": "ID-Abschnitt anzeigen",
-    "show_id_description": "ID-Abschnitt in der Detailanzeige ein- oder ausblenden"
+    "show_id_section": "ID-Bereich anzeigen",
+    "show_id_description": "ID-Bereich im Detailfenster anzeigen oder ausblenden"
   },
   "info": {
-    "description": "Mit dieser Anwendung können Sie Wallpaper Engine-Hintergründe einfach aus der Steam-Werkstatt herunterladen und verwalten.",
-    "developed": "Mit ❤️ kostenlos entwickelt."
-  },
-  "tooltips_extended": {
-    "incompatible_items": "Einige Elemente können nicht eingeschlossen werden. Sie können sie jedoch finden, indem Sie dieses Kontrollkästchen aktivieren."
+    "description": "Mit dieser Anwendung können Sie einfach Wallpaper Engine-Hintergründe aus dem Steam Workshop herunterladen und verwalten.",
+    "developed": "Mit ❤ kostenlos entwickelt."
   },
   "filters": {
-    "sort_order": {
-      "asc": "ASC",
-      "desc": "DESC"
-    },
     "local_sort": {
       "install_date": "Installationsdatum",
       "name": "Name",
@@ -193,29 +179,29 @@
       "90": "3 Monate",
       "180": "6 Monate",
       "365": "Dieses Jahr",
-      "-1": "Gesamte Zeit"
+      "-1": "Alle Zeiten"
     },
     "category": {
       "empty": "Alle",
-      "Wallpaper": "Hintergrund",
+      "Wallpaper": "Hintergrundbild",
       "Preset": "Voreinstellung",
       "Asset": "Asset"
     },
     "type": {
-      "empty": "Alle",
+      "empty": "Beliebig",
       "Scene": "Szene",
       "Video": "Video",
       "Application": "Anwendung",
       "Web": "Web"
     },
     "age_rating": {
-      "empty": "Alle",
-      "Everyone": "Jedes Alter",
-      "Questionable": "Fragewürdig",
-      "Mature": "Erwachsen"
+      "empty": "Beliebig",
+      "Everyone": "Alle",
+      "Questionable": "Fragwürdig",
+      "Mature": "Erwachsene"
     },
     "resolution": {
-      "empty": "Alle",
+      "empty": "Beliebig",
       "1920_x_1080": "1080p",
       "2560_x_1440": "1440p",
       "3840_x_2160": "4K",
@@ -229,27 +215,27 @@
     },
     "misc_tags": {
       "Approved": "Genehmigt",
-      "Audio responsive": "Audio-responsiv",
+      "Audio responsive": "Audio-reaktiv",
       "3D": "3D",
       "Customizable": "Anpassbar",
       "Puppet Warp": "Puppet Warp",
       "HDR": "HDR",
       "Media Integration": "Medienintegration",
-      "User Shortcut": "Benutzerverknüpfung",
-      "Video Texture": "Videotextur",
+      "User Shortcut": "Benutzer-Verknüpfung",
+      "Video Texture": "Video-Textur",
       "Asset Pack": "Asset-Paket"
     },
     "genre_tags": {
       "Abstract": "Abstrakt",
-      "Animal": "Tiere",
+      "Animal": "Tier",
       "Anime": "Anime",
-      "Cartoon": "Zeichentrick",
+      "Cartoon": "Cartoon",
       "CGI": "CGI",
       "Cyberpunk": "Cyberpunk",
       "Fantasy": "Fantasy",
       "Game": "Spiel",
       "Girls": "Mädchen",
-      "Guys": "Jungs",
+      "Guys": "Jungen",
       "Landscape": "Landschaft",
       "Medieval": "Mittelalter",
       "Memes": "Memes",
@@ -259,7 +245,7 @@
       "Pixel art": "Pixel-Art",
       "Relaxing": "Entspannend",
       "Retro": "Retro",
-      "Sci-Fi": "Science-Fiction",
+      "Sci-Fi": "Sci-Fi",
       "Sports": "Sport",
       "Technology": "Technologie",
       "Television": "Fernsehen",
@@ -267,7 +253,7 @@
       "Unspecified": "Nicht angegeben"
     },
     "asset_type": {
-      "empty": "Alle",
+      "empty": "Beliebig",
       "Particle": "Partikel",
       "Image": "Bild",
       "Sound": "Ton",
@@ -280,8 +266,8 @@
       "Effect": "Effekt"
     },
     "asset_genre": {
-      "empty": "Alle",
-      "Audio Visualizer": "Audio-Visualizer",
+      "empty": "Beliebig",
+      "Audio Visualizer": "Audio-Visualisierer",
       "Background": "Hintergrund",
       "Character": "Charakter",
       "Clock": "Uhr",
@@ -293,13 +279,13 @@
       "Space": "Weltraum"
     },
     "script_type": {
-      "empty": "Alle",
-      "Boolean": "Boolescher Wert",
+      "empty": "Beliebig",
+      "Boolean": "Boolean",
       "Number": "Zahl",
       "Vec2": "Vec2",
       "Vec3": "Vec3",
       "Vec4": "Vec4",
-      "String": "Zeichenkette",
+      "String": "String",
       "No Animation": "Keine Animation",
       "Oversized": "Überdimensioniert"
     }

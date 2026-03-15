@@ -98,7 +98,7 @@ class UnifiedActionsPanel(PopupPanel):
         )
         self.refresh_button = self._create_action_button(
             text=self.tr.t("tooltips.refresh"),
-            icon_name="ICON_REFRASH",
+            icon_name="ICON_REFRESH",
             callback=self._on_refresh,
         )
 

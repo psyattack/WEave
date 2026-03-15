@@ -111,7 +111,7 @@ class WallpapersTab(QWidget):
         main_layout.addWidget(self.left_panel, 1)
 
         self.details_container = AnimatedDetailsContainerLocal(self)
-        self.details_container.set_target_width(312)
+        self.details_container.set_target_width(322)
 
         details_outer_layout = QVBoxLayout(self.details_container)
         details_outer_layout.setContentsMargins(0, 0, 0, 0)

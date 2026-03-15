@@ -49,7 +49,7 @@ class DetailsPanel(QWidget):
 
     panel_collapse_requested = pyqtSignal()
 
-    CONTENT_WIDTH = 300
+    CONTENT_WIDTH = 310
 
     def __init__(
         self,
@@ -102,8 +102,8 @@ class DetailsPanel(QWidget):
         return self.preview_label
 
     def _setup_ui(self) -> None:
-        self.setMinimumWidth(310)
-        self.setMaximumWidth(310)
+        self.setMinimumWidth(320)
+        self.setMaximumWidth(320)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 8, 5, 8)
@@ -184,8 +184,8 @@ class DetailsPanel(QWidget):
         self.buttons_widget.setFixedWidth(self.CONTENT_WIDTH)
 
         self.buttons_layout = QHBoxLayout(self.buttons_widget)
-        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
-        self.buttons_layout.setSpacing(10)
+        self.buttons_layout.setContentsMargins(4, 0, 0, 0)
+        self.buttons_layout.setSpacing(5)
 
         self.buttons_widget.setStyleSheet("QWidget { background: transparent; border: none; }")
         layout.addWidget(self.buttons_widget, 0, Qt.AlignmentFlag.AlignHCenter)
@@ -348,7 +348,7 @@ class DetailsPanel(QWidget):
         )
 
         self.details_layout = QVBoxLayout(details_content)
-        self.details_layout.setContentsMargins(10, 10, 10, 10)
+        self.details_layout.setContentsMargins(8, 8, 8, 0)
         self.details_layout.setSpacing(8)
 
         self.details_scroll.setWidget(details_content)
@@ -708,7 +708,7 @@ class DetailsPanel(QWidget):
 
         button = QPushButton()
         install_tooltip(button, tooltip, "bottom", self.theme)
-        button.setFixedSize(41, 35)
+        button.setFixedSize(45, 35)
         button.setIcon(get_icon(icon_name))
         button.setIconSize(QSize(22, 22))
         button.setStyleSheet(
@@ -732,7 +732,7 @@ class DetailsPanel(QWidget):
         install_tooltip(button, tooltip, "bottom", self.theme)
         button.setIcon(get_icon(icon_name))
         button.setIconSize(QSize(24, 24))
-        button.setFixedSize(145, 35)
+        button.setFixedSize(148, 35)
         button.setText(text)
         button.setStyleSheet(
             f"""
@@ -758,6 +758,27 @@ class DetailsPanel(QWidget):
 
         self.buttons_layout.addWidget(
             self._create_icon_button(
+                "ICON_UPLOAD",
+                self.tr.t("tooltips.install_wallpaper"),
+                self._on_apply,
+            )
+        )
+        self.buttons_layout.addWidget(
+            self._create_icon_button(
+                "ICON_LINK",
+                self.tr.t("tooltips.install_open_we"),
+                self._on_install_and_open,
+            )
+        )
+        self.buttons_layout.addWidget(
+            self._create_icon_button(
+                "ICON_EXTRACT",
+                self.tr.t("tooltips.extract_wallpaper"),
+                self._on_extract,
+            )
+        )
+        self.buttons_layout.addWidget(
+            self._create_icon_button(
                 "ICON_FOLDER",
                 self.tr.t("tooltips.open_folder"),
                 self._on_open_folder,
@@ -777,27 +798,6 @@ class DetailsPanel(QWidget):
                 self._on_delete,
                 color=self.theme.get_color("accent_red"),
                 hover_color=self.theme.get_color("accent_red_hover"),
-            )
-        )
-        self.buttons_layout.addWidget(
-            self._create_icon_button(
-                "ICON_DOWNLOAD",
-                self.tr.t("tooltips.extract_wallpaper"),
-                self._on_extract,
-            )
-        )
-        self.buttons_layout.addWidget(
-            self._create_icon_button(
-                "ICON_UPLOAD",
-                self.tr.t("tooltips.install_wallpaper"),
-                self._on_apply,
-            )
-        )
-        self.buttons_layout.addWidget(
-            self._create_icon_button(
-                "ICON_LINK",
-                self.tr.t("tooltips.install_open_we"),
-                self._on_install_and_open,
             )
         )
 
@@ -1201,7 +1201,7 @@ class DetailsPanel(QWidget):
                 self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.posted", date=metadata.posted_date_str))
 
             if metadata.updated_date_str:
-                self._add_detail_row("ICON_REFRASH", self.tr.t("labels.updated", date=metadata.updated_date_str))
+                self._add_detail_row("ICON_REFRESH", self.tr.t("labels.updated", date=metadata.updated_date_str))
 
             mtime = get_folder_mtime(self.folder_path)
             self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.installed", date=format_timestamp(mtime)))
@@ -1243,7 +1243,7 @@ class DetailsPanel(QWidget):
             self._add_detail_row("ICON_CALENDAR", self.tr.t("labels.posted", date=item.posted_date))
 
         if item.updated_date:
-            self._add_detail_row("ICON_REFRASH", self.tr.t("labels.updated", date=item.updated_date))
+            self._add_detail_row("ICON_REFRESH", self.tr.t("labels.updated", date=item.updated_date))
 
         if item.author:
             self._add_detail_row("ICON_USER", self.tr.t("labels.author", author=item.author))

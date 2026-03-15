@@ -1,13 +1,12 @@
 {
   "tabs": {
-    "workshop": "Oficina",
+    "workshop": "Workshop",
     "wallpapers": "Papéis de parede"
   },
   "buttons": {
     "ok": "OK",
     "open_workshop": "Navegador",
     "install": "Instalar",
-    "download_all": "Baixar tudo",
     "yes": "Sim",
     "no": "Não",
     "open_data_folder": "Abrir pasta de dados",
@@ -15,15 +14,15 @@
   },
   "tooltips": {
     "open_folder": "Abrir pasta no Explorador",
-    "open_workshop": "Abrir na Steam Oficina",
+    "open_workshop": "Abrir no Steam Workshop",
     "delete_wallpaper": "Excluir papel de parede",
     "extract_wallpaper": "Extrair arquivo .pkg",
     "install_wallpaper": "Instalar papel de parede",
-    "install_open_we": "Instalar e abrir no Wallpaper Engine",
+    "install_open_we": "Instalar papel de parede e abrir no Wallpaper Engine",
     "tasks": "Downloads e extrações ativas",
     "settings": "Configurações",
-    "batch_download": "Download em lote",
-    "info": "Informação",
+    "multi_download": "Download múltiplo",
+    "info": "Informações",
     "search": "Pesquisar",
     "refresh": "Atualizar página",
     "translate_description": "Traduzir descrição",
@@ -37,12 +36,11 @@
     "size": "Tamanho: {size}",
     "installed": "Instalado: {date}",
     "description": "Descrição:",
-    "no_description": "Sem descrição disponível.",
+    "no_description": "Nenhuma descrição disponível.",
     "no_preview": "Sem visualização",
     "no_tasks": "Sem tarefas ativas",
     "download_prefix": "Download: {id}",
     "extract_prefix": "Extração: {id}",
-    "other": "Outro:",
     "minimize_on_apply": "Minimizar ao aplicar",
     "page": "Página",
     "of": "de {total}",
@@ -56,8 +54,8 @@
     "clear": "Limpar filtros",
     "more_filters": "▼ Mais filtros",
     "less_filters": "▲ Menos filtros",
-    "asset_type": "Tipo de asset:",
-    "asset_genre": "Gênero do asset:",
+    "asset_type": "Tipo de recurso:",
+    "asset_genre": "Gênero do recurso:",
     "script_type": "Tipo de script:",
     "miscellaneous": "Diversos:",
     "genre": "Gênero:",
@@ -75,43 +73,39 @@
     "id_url_placeholder": "ID, URL...",
     "account": "Conta",
     "translating": "Traduzindo...",
-    "action": "Ação"
+    "action": "Ação",
+    "content_descriptors": "Descritores de conteúdo:"
   },
   "messages": {
     "download_started": "Download iniciado!",
     "extraction_started": "Extração iniciada!",
     "wallpaper_deleted": "Papel de parede excluído!",
     "id_copied": "ID copiado para a área de transferência!",
-    "cannot_delete_active": "Estes papéis de parede estão ativos no momento.\nPor favor, altere seu papel de parede antes de excluir.",
+    "cannot_delete_active": "Estes papéis de parede estão ativos atualmente.\nPor favor, alterne seu papel de parede antes de excluí-lo.",
     "confirm_delete": "Tem certeza de que deseja excluir este papel de parede?",
     "no_wallpaper_selected": "Nenhum papel de parede selecionado.",
     "no_pkg_file": "Nenhum arquivo .pkg encontrado.",
-    "invalid_input": "Nenhum ID ou link válido da Oficina encontrado.",
+    "invalid_input": "Nenhum ID ou link de Workshop válido encontrado.",
     "select_we_folder": "Selecionar pasta do Wallpaper Engine",
     "exit_with_downloads": "Você tem downloads ou extrações incompletos.\nFechar a janela?",
     "exit_with_downloads_only": "Você tem downloads incompletos.\nFechar a janela?",
     "exit_with_extractions_only": "Você tem extrações incompletas.\nFechar a janela?",
-    "dotnet_required": "Este aplicativo requer .NET 9 Desktop Runtime para alguns plugins funcionarem corretamente.",
-    "dotnet_install_now": "Gostaria de instalar agora?",
-    "dotnet_installation_started": "A instalação do .NET 9 Desktop Runtime foi iniciada.\nPor favor, conclua a instalação e clique em OK.",
-    "dotnet_installation_failed": "O instalador do .NET 9 Desktop Runtime não foi encontrado.\nPor favor, baixe manualmente de:\nhttps://dotnet.microsoft.com/en-us/download/dotnet/9.0/runtime",
-    "dotnet_warning": ".NET 9 Desktop Runtime é necessário para o funcionamento correto do aplicativo.\nVolte quando estiver pronto para instalar.",
-    "batch_input_placeholder": "Insira IDs da Oficina e/ou URLs\n(separados por espaço ou nova linha):",
+    "batch_input_placeholder": "Insira IDs de Workshop e/ou URLs\n(separados por espaço ou nova linha):",
     "invalid_page_number": "Número de página inválido",
     "invalid_we_directory": "Diretório do Wallpaper Engine inválido.\nPor favor, selecione a pasta correta.",
     "failed_start_installer": "Falha ao iniciar o instalador: {error}",
     "select_output_directory": "Selecionar diretório de saída",
-    "load_failed": "Falha no carregamento",
+    "load_failed": "Falha ao carregar",
     "error": "Erro",
     "translation_error": "Falha na tradução",
     "language_changed": "Idioma alterado",
     "restart_now_question": "Fechar o aplicativo agora para aplicar as alterações?",
-    "restart_with_tasks": "Você tem downloads ou extrações incompletos.\nEles serão cancelados ao fechar o aplicativo.\nContinuar?",
-    "restart_with_downloads_only": "Você tem downloads incompletos.\nEles serão cancelados ao fechar o aplicativo.\nContinuar?",
-    "restart_with_extractions_only": "Você tem extrações incompletas.\nElas serão canceladas ao fechar o aplicativo.\nContinuar?",
-    "restart_title": "Reinicialização necessária",
-    "restart_theme_message": "O tema será aplicado após o próximo lançamento. Fechar o aplicativo agora?",
-    "restart_debug_message": "O modo de depuração será aplicado após o próximo lançamento. Fechar o aplicativo agora?"
+    "restart_with_tasks": "Você tem downloads ou extrações incompletos.\nEles serão cancelados ao fechar o programa.\nContinuar?",
+    "restart_with_downloads_only": "Você tem downloads incompletos.\nEles serão cancelados ao fechar o programa.\nContinuar?",
+    "restart_with_extractions_only": "Você tem extrações incompletas.\nElas serão canceladas ao fechar o programa.\nContinuar?",
+    "restart_title": "Reinício necessário",
+    "restart_theme_message": "O tema será aplicado após a próxima inicialização. Fechar o aplicativo agora?",
+    "restart_debug_message": "O modo de depuração será aplicado após a próxima inicialização. Fechar o aplicativo agora?"
   },
   "dialog": {
     "tasks": "Tarefas",
@@ -119,9 +113,8 @@
     "error": "Erro",
     "warning": "Aviso",
     "exit": "Sair",
-    "batch_download": "Download em lote",
+    "multi_download": "Download múltiplo",
     "about": "Sobre",
-    "dotnet_required": ".NET 9 Desktop Runtime necessário",
     "installation_started": "Instalação iniciada"
   },
   "settings": {
@@ -129,8 +122,8 @@
     "theme_dev": "Tema",
     "account": "Conta",
     "language": "Idioma",
-    "steam_login": "Login Steam",
-    "login_placeholder": "Login",
+    "steam_login": "Login da Steam",
+    "login_placeholder": "Usuário",
     "password_placeholder": "Senha",
     "login_button": "Entrar",
     "reset_button": "Redefinir",
@@ -142,36 +135,29 @@
     "language_description": "Alterar o idioma da interface",
     "behavior": "Comportamento",
     "minimize_description": "Minimizar a janela após aplicar o papel de parede",
-    "preload_next_page": "Precarregar páginas (BETA)",
-    "preload_description": "Precarregar a próxima página da oficina em segundo plano para uma navegação mais rápida",
+    "preload_next_page": "Pré-carregar próxima página (BETA)",
+    "preload_description": " próxima página do workshopPré-carregar a em segundo plano para navegação mais rápida",
     "save_window_state": "Salvar estado da janela",
     "save_window_state_description": "Salvar tamanho e posição da janela ao sair e restaurar ao iniciar",
     "auto_check_updates": "Verificar atualizações automaticamente",
-    "auto_check_updates_description": "Verificar automaticamente os lançamentos do GitHub ao iniciar o aplicativo",
+    "auto_check_updates_description": "Verificar automaticamente lançamentos do GitHub ao iniciar o aplicativo",
     "tab_general": "Geral",
     "account_selection": "Seleção de conta",
-    "account_description": "Selecione uma conta (para baixar)",
+    "account_description": "Selecionar uma conta (para download)",
     "tab_account": "Conta",
     "tab_advanced": "Avançado",
-    "login_description": "Digite suas credenciais da Steam para autenticação na Oficina",
+    "login_description": "Insira suas credenciais da Steam para autenticação no Workshop",
     "debug": "Depuração",
     "debug_mode": "Modo de depuração",
-    "debug_description": "Ativar o modo de depuração para testes de webview",
+    "debug_description": "Ativar modo de depuração para testes de webview",
     "show_id_section": "Mostrar seção de ID",
     "show_id_description": "Mostrar ou ocultar a seção de ID no painel de detalhes"
   },
   "info": {
-    "description": "Este aplicativo permite baixar e gerenciar facilmente papéis de parede do Wallpaper Engine na Steam Oficina.",
-    "developed": "Desenvolvido com ❤️ gratuitamente."
-  },
-  "tooltips_extended": {
-    "incompatible_items": "Alguns itens não podem ser incluídos. No entanto, você pode encontrá-los marcando esta caixa."
+    "description": "Este aplicativo permite baixar e gerenciar facilmente papéis de parede do Wallpaper Engine do Steam Workshop.",
+    "developed": "Desenvolvido com ❤ gratuitamente."
   },
   "filters": {
-    "sort_order": {
-      "asc": "ASC",
-      "desc": "DESC"
-    },
     "local_sort": {
       "install_date": "Data de instalação",
       "name": "Nome",
@@ -199,7 +185,7 @@
       "empty": "Todos",
       "Wallpaper": "Papel de parede",
       "Preset": "Predefinição",
-      "Asset": "Asset"
+      "Asset": "Recurso"
     },
     "type": {
       "empty": "Qualquer",
@@ -224,12 +210,12 @@
       "Ultrawide_2560_x_1080": "UW 1080p",
       "Ultrawide_3440_x_1440": "UW 1440p",
       "Portrait_1080_x_1920": "Retrato 1080p",
-      "Dynamic_resolution": "Dinâmico",
-      "Other_resolution": "Outro"
+      "Dynamic_resolution": "Dinâmica",
+      "Other_resolution": "Outra"
     },
     "misc_tags": {
       "Approved": "Aprovado",
-      "Audio responsive": "Resposta ao áudio",
+      "Audio responsive": "Áudio responsivo",
       "3D": "3D",
       "Customizable": "Personalizável",
       "Puppet Warp": "Puppet Warp",
@@ -237,19 +223,19 @@
       "Media Integration": "Integração de mídia",
       "User Shortcut": "Atalho do usuário",
       "Video Texture": "Textura de vídeo",
-      "Asset Pack": "Pacote de assets"
+      "Asset Pack": "Pacote de recursos"
     },
     "genre_tags": {
       "Abstract": "Abstrato",
       "Animal": "Animal",
       "Anime": "Anime",
-      "Cartoon": "Desenho animado",
+      "Cartoon": "Desenho",
       "CGI": "CGI",
       "Cyberpunk": "Cyberpunk",
       "Fantasy": "Fantasia",
       "Game": "Jogo",
       "Girls": "Meninas",
-      "Guys": "Rapazes",
+      "Guys": "Meninos",
       "Landscape": "Paisagem",
       "Medieval": "Medieval",
       "Memes": "Memes",
@@ -301,7 +287,7 @@
       "Vec4": "Vec4",
       "String": "String",
       "No Animation": "Sem animação",
-      "Oversized": "Super dimensionado"
+      "Oversized": "Grande demais"
     }
   }
 }
