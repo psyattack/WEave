@@ -1,7 +1,7 @@
 import os
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from infrastructure.resources.resource_manager import get_pixmap
 from shared.constants import APP_FULL_NAME
@@ -11,7 +11,7 @@ from ui.dialogs.base_dialog import BaseDialog
 
 class InfoDialog(BaseDialog):
     def __init__(self, translator, parent=None, theme_manager=None, main_window=None):
-        super().__init__(translator.t("dialog.about"), parent, theme_manager)
+        super().__init__(translator.t("dialog.about"), parent, theme_manager, icon="ICON_INFO")
         self.tr = translator
         self.main_window = main_window
 
@@ -24,29 +24,32 @@ class InfoDialog(BaseDialog):
         icon.setStyleSheet("border: none; background: none;")
         self.content_layout.addWidget(icon)
 
-        info_text = QLabel(
+        top_text = QLabel(
             f"{APP_FULL_NAME}\n\n"
-            f"{self.tr.t('info.description')}\n\n"
-            f"{self.tr.t('info.developed')}"
+            f"{self.tr.t('info.description')}"
         )
-        info_text.setStyleSheet(
+        top_text.setStyleSheet(
             f"""
             color: {self.c_text_primary};
             font-size: 13px;
             background: transparent;
+            border: none;
             """
         )
-        info_text.setWordWrap(True)
-        info_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.content_layout.addWidget(info_text)
+        top_text.setWordWrap(True)
+        top_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.content_layout.addWidget(top_text)
+
+        developed_text = self.tr.t('info.developed')
+        self._add_developed_label(developed_text)
 
         github_container = QHBoxLayout()
         github_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
         github_container.setSpacing(8)
 
         github_icon = QLabel()
-        github_icon.setPixmap(get_pixmap("ICON_GITHUB", size=34))
-        github_icon.setStyleSheet("border: none; margin-right: -5px;")
+        github_icon.setPixmap(get_pixmap("ICON_GITHUB", size=28))
+        github_icon.setStyleSheet("border: none; margin-right: -2px;")
 
         github_link = QLabel(
             f'<a href="https://github.com/psyattack/we-workshop-manager" '
@@ -74,6 +77,7 @@ class InfoDialog(BaseDialog):
                 border: 2px solid {self.c_border_light};
                 border-radius: 8px;
                 font-weight: 600;
+                padding: 0px;
             }}
             QPushButton:hover {{
                 border-color: {self.c_primary};
@@ -95,6 +99,7 @@ class InfoDialog(BaseDialog):
                 border: 2px solid {self.c_border_light};
                 border-radius: 8px;
                 font-weight: 600;
+                padding: 0px;
             }}
             QPushButton:hover {{
                 border-color: {self.c_primary};
@@ -125,6 +130,51 @@ class InfoDialog(BaseDialog):
         )
         ok_btn.clicked.connect(self.accept)
         self.content_layout.addWidget(ok_btn)
+
+    def _add_developed_label(self, text: str) -> None:
+        label_style = f"""
+            color: {self.c_text_primary};
+            font-size: 13px;
+            background: transparent;
+            border: none;
+        """
+
+        separator = None
+        for sep in ["❤"]:
+            if sep in text:
+                separator = sep
+                break
+
+        if separator is None:
+            fallback = QLabel(text)
+            fallback.setStyleSheet(label_style)
+            fallback.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.content_layout.addWidget(fallback)
+            return
+
+        parts = text.split(separator, 1)
+
+        row_layout = QHBoxLayout()
+        row_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(4)
+
+        before_label = QLabel(parts[0].rstrip())
+        before_label.setStyleSheet(label_style)
+        row_layout.addWidget(before_label)
+
+        heart_icon = QLabel()
+        heart_icon.setPixmap(get_pixmap("ICON_HEART", size=16))
+        heart_icon.setStyleSheet("border: none; background: transparent;")
+        heart_icon.setFixedSize(16, 16)
+        row_layout.addWidget(heart_icon)
+
+        if len(parts) > 1 and parts[1].strip():
+            after_label = QLabel(parts[1].lstrip())
+            after_label.setStyleSheet(label_style)
+            row_layout.addWidget(after_label)
+
+        self.content_layout.addLayout(row_layout)
 
     def _on_check_updates_clicked(self) -> None:
         if self.main_window and hasattr(self.main_window, "check_for_updates"):

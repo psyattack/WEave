@@ -1,22 +1,24 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QIcon, QPixmap
 from PyQt6.QtWidgets import QDialog, QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
-from infrastructure.resources.resource_manager import get_icon
+from infrastructure.resources.resource_manager import get_icon, get_pixmap
 from shared.formatting import hex_to_rgba
 
 
 class BaseDialog(QDialog):
-    def __init__(self, title: str = "Dialog", parent=None, theme_manager=None):
+    def __init__(self, title: str = "Dialog", parent=None, theme_manager=None, icon=None):
         super().__init__(parent)
 
         self.theme = theme_manager
+        self._title_icon = icon
         self._setup_colors()
 
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.container = QFrame(self)
+        self.container.setObjectName("dialogContainer")
         self._apply_container_style()
 
         shadow = QGraphicsDropShadowEffect()
@@ -68,10 +70,13 @@ class BaseDialog(QDialog):
         background_rgba = hex_to_rgba(self.c_bg_secondary, 240)
         self.container.setStyleSheet(
             f"""
-            QFrame {{
+            QFrame#dialogContainer {{
                 background-color: {background_rgba};
                 border-radius: 12px;
                 border: 2px solid {self.c_border_light};
+            }}
+            QFrame {{
+                border: none;
             }}
             """
         )
@@ -83,6 +88,25 @@ class BaseDialog(QDialog):
 
         title_layout = QHBoxLayout(title_bar)
         title_layout.setContentsMargins(0, 0, 0, 10)
+        title_layout.setSpacing(8)
+
+        if self._title_icon:
+            icon_label = QLabel()
+            icon_label.setStyleSheet("background: transparent; border: none;")
+            
+            if isinstance(self._title_icon, str):
+                pixmap = get_pixmap(self._title_icon, size=24)
+            elif isinstance(self._title_icon, QPixmap):
+                pixmap = self._title_icon.scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            elif isinstance(self._title_icon, QIcon):
+                pixmap = self._title_icon.pixmap(24, 24)
+            else:
+                pixmap = None
+            
+            if pixmap and not pixmap.isNull():
+                icon_label.setPixmap(pixmap)
+                icon_label.setFixedSize(24, 24)
+                title_layout.addWidget(icon_label)
 
         title_label = QLabel(title)
         title_label.setStyleSheet(

@@ -8,7 +8,7 @@ from ui.dialogs.base_dialog import BaseDialog
 
 class UpdateDialog(BaseDialog):
     def __init__(self, translator, theme_manager, result: UpdateCheckResult, config_service, parent=None):
-        super().__init__("Update Available", parent, theme_manager)
+        super().__init__("Update Available", parent, theme_manager, icon="ICON_REFRESH")
         self.tr = translator
         self.result = result
         self.config = config_service

@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 from infrastructure.resources.resource_manager import get_icon
 from shared.constants import APP_NAME
 from shared.filesystem import clear_cache_if_needed, get_app_data_dir
-from ui.dialogs.batch_download_dialog import BatchDownloadDialog
+from ui.dialogs.multi_download_dialog import BatchDownloadDialog
 from ui.dialogs.info_dialog import InfoDialog
 from ui.dialogs.settings_dialog import SettingsDialog
 from ui.notifications import MessageBox
@@ -166,20 +166,53 @@ class SideNavBar(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
         self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(0, 12, 0, 12)
+        self._layout.setContentsMargins(0, 0, 0, 12)
         self._layout.setSpacing(0)
         self._layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self._top_separator_wrap = QWidget()
+        self._top_separator_wrap.setFixedHeight(16)
+        self._top_separator_wrap.setStyleSheet("background: transparent;")
+        self._top_separator_layout = QHBoxLayout(self._top_separator_wrap)
+        self._top_separator_layout.setContentsMargins(0, 6, 0, 0)
+        self._top_separator_layout.setSpacing(0)
+        self._top_separator_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+
+        self._top_separator = QFrame()
+        self._top_separator.setFixedSize(40, 1)
+        self._top_separator.setStyleSheet(
+            f"background-color: {self.theme.get_color('border')}; border: none;"
+        )
+
+        self._top_separator_layout.addWidget(self._top_separator)
+
+        self._layout.addWidget(self._top_separator_wrap)
 
         self._nav_container = QVBoxLayout()
         self._nav_container.setSpacing(0)
         self._nav_container.setContentsMargins(0, 0, 0, 0)
         self._layout.addLayout(self._nav_container)
 
-        self._layout.addStretch(1)
+        self._bottom_separator_wrap = QWidget()
+        self._bottom_separator_wrap.setFixedHeight(20)
+        self._bottom_separator_wrap.setStyleSheet("background: transparent;")
+        self._bottom_separator_layout = QHBoxLayout(self._bottom_separator_wrap)
+        self._bottom_separator_layout.setContentsMargins(0, 0, 0, 10)
+        self._bottom_separator_layout.setSpacing(0)
+        self._bottom_separator_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom)
+
+        self._bottom_separator = QFrame()
+        self._bottom_separator.setFixedSize(40, 1)
+        self._bottom_separator.setStyleSheet(
+            f"background-color: {self.theme.get_color('border')}; border: none;"
+        )
+
+        self._bottom_separator_layout.addWidget(self._bottom_separator)
+        self._layout.addWidget(self._bottom_separator_wrap)
 
         self._actions_container = QVBoxLayout()
         self._actions_container.setSpacing(0)
-        self._actions_container.setContentsMargins(0, 4, 0, 4)
+        self._actions_container.setContentsMargins(0, 0, 0, 0)
         self._layout.addLayout(self._actions_container)
 
         self._apply_styles()
@@ -311,13 +344,13 @@ class SideNavBar(QWidget):
             button.setStyleSheet(
                 f"""
                 QPushButton {{
-                    background-color: transparent;
+                    background-color: {bg_tertiary};
                     border: none;
                     border-radius: 12px;
                     padding: 0px;
                 }}
                 QPushButton:hover {{
-                    background-color: {bg_tertiary};
+                    background-color: {primary};
                 }}
                 """
             )
@@ -498,7 +531,7 @@ class MainWindow(QMainWindow):
 
         content_container = QWidget()
         content_layout = QVBoxLayout(content_container)
-        content_layout.setContentsMargins(0, 0, 10, 10)
+        content_layout.setContentsMargins(0, 0, 15, 15)
         content_layout.setSpacing(0)
         content_layout.addWidget(self.stack, 1)
 
@@ -523,13 +556,54 @@ class MainWindow(QMainWindow):
         )
 
         layout = QHBoxLayout(title_bar)
-        layout.setContentsMargins(72, 0, 10, 0)
-        layout.setSpacing(6)
+        layout.setContentsMargins(12, 2, 10, 0)
+        layout.setSpacing(8)
+
+        left_container = QWidget()
+        left_container.setStyleSheet("background: transparent;")
+        left_layout = QHBoxLayout(left_container)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(5)
+
+        settings_block = QWidget()
+        settings_block.setFixedWidth(44)
+        settings_block.setStyleSheet("background: transparent;")
+        settings_block_layout = QVBoxLayout(settings_block)
+        settings_block_layout.setContentsMargins(0, 6, 0, 6)
+        settings_block_layout.setSpacing(0)
+        settings_block_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+
+        self.settings_btn = AnimatedIconButton(
+            "ICON_SETTINGS",
+            self.tr.t("tooltips.settings"),
+            self.theme,
+            self,
+        )
+        self.settings_btn.setFixedSize(42, 42)
+        self.settings_btn.setIconSize(QSize(22, 22))
+        self.settings_btn.clicked.connect(self._show_settings)
+        self._apply_action_button_style_like_sidenav(self.settings_btn)
+
+        settings_block_layout.addWidget(self.settings_btn, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        vertical_line = QFrame()
+        vertical_line.setFixedSize(1, 34)
+        vertical_line.setStyleSheet(
+            f"background-color: {self.theme.get_color('border')}; border: none;"
+        )
+
+        vertical_line_wrap = QWidget()
+        vertical_line_wrap.setFixedWidth(14)
+        vertical_line_wrap.setStyleSheet("background: transparent;")
+        vertical_line_wrap_layout = QVBoxLayout(vertical_line_wrap)
+        vertical_line_wrap_layout.setContentsMargins(8, 0, 0, 0)
+        vertical_line_wrap_layout.setSpacing(0)
+        vertical_line_wrap_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        vertical_line_wrap_layout.addWidget(vertical_line, 0, Qt.AlignmentFlag.AlignVCenter)
 
         app_icon = QLabel()
         app_icon.setPixmap(get_icon("ICON_APP").pixmap(22, 22))
         app_icon.setStyleSheet("background: transparent; border: none;")
-        layout.addWidget(app_icon)
 
         app_name = QLabel(APP_NAME)
         app_name.setStyleSheet(
@@ -542,8 +616,14 @@ class MainWindow(QMainWindow):
             border: none;
             """
         )
-        layout.addWidget(app_name)
 
+        left_layout.addWidget(settings_block, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        left_layout.addWidget(vertical_line_wrap, 0, Qt.AlignmentFlag.AlignVCenter)
+        left_layout.addSpacing(4)
+        left_layout.addWidget(app_icon, 0, Qt.AlignmentFlag.AlignVCenter)
+        left_layout.addWidget(app_name, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        layout.addWidget(left_container)
         layout.addStretch()
 
         window_buttons_layout = QHBoxLayout()
@@ -571,14 +651,9 @@ class MainWindow(QMainWindow):
             self._toggle_downloads_popup,
         )
         self.batch_btn = nav.addActionButton(
-            "ICON_UPLOAD",
-            self.tr.t("tooltips.batch_download"),
-            self._show_batch_download,
-        )
-        self.settings_btn = nav.addActionButton(
-            "ICON_USER_SETTINGS",
-            self.tr.t("tooltips.settings"),
-            self._show_settings,
+            "ICON_EXTRACT",
+            self.tr.t("tooltips.multi_download"),
+            self._show_multi_download,
         )
         self.info_btn = nav.addActionButton(
             "ICON_INFO",
@@ -586,6 +661,27 @@ class MainWindow(QMainWindow):
             self._show_info,
         )
         return nav
+    
+    def _apply_action_button_style_like_sidenav(self, button: AnimatedIconButton) -> None:
+        bg_tertiary = self.theme.get_color("bg_tertiary")
+        border = self.theme.get_color("border")
+
+        button.setStyleSheet(
+            f"""
+            QPushButton {{
+                background-color: transparent;
+                border: none;
+                border-radius: 10px;
+                padding: 0px;
+            }}
+            QPushButton:hover {{
+                background-color: {bg_tertiary};
+            }}
+            QPushButton:pressed {{
+                background-color: {border};
+            }}
+            """
+        )
 
     def _create_tabs(self) -> None:
         self.stack = ContentSwitcher()
@@ -908,7 +1004,7 @@ class MainWindow(QMainWindow):
         )
         self.settings_popup.exec()
 
-    def _show_batch_download(self) -> None:
+    def _show_multi_download(self) -> None:
         dialog = BatchDownloadDialog(self.tr, self, self.theme)
         if dialog.exec() == dialog.DialogCode.Accepted:
             pubfileids = dialog.get_pubfileids()

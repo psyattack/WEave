@@ -17,7 +17,7 @@ DEFAULT_CONFIG = {
             "appearance": {
                 "language": "en",
                 "theme": "dark",
-                "show_id_section": True,
+                "show_id_section": False,
             },
             "behavior": {
                 "minimize_on_apply": False,

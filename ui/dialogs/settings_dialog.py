@@ -337,7 +337,7 @@ class SettingsField(QWidget):
 
 class SettingsDialog(BaseDialog):
     def __init__(self, config, accounts, translator, theme_manager, main_window, parent=None):
-        super().__init__(translator.t("settings.title"), parent, theme_manager)
+        super().__init__(translator.t("settings.title"), parent, theme_manager, icon="ICON_SETTINGS")
         self.config = config
         self.accounts = accounts
         self.tr = translator
@@ -591,7 +591,7 @@ class SettingsDialog(BaseDialog):
         inner = QWidget()
         inner.setStyleSheet("background: transparent;")
         inner_layout = QVBoxLayout(inner)
-        inner_layout.setContentsMargins(4, 8, 4, 8)
+        inner_layout.setContentsMargins(2, 8, 2, 8)
         inner_layout.setSpacing(12)
 
         scroll.setWidget(inner)
@@ -1021,14 +1021,27 @@ class SettingsDialog(BaseDialog):
 
     def _tab_widget_style(self) -> str:
         return f"""
-        QTabBar {{
-            background-color: {self.c_bg_secondary};
+        QTabWidget {{
+            border: none;
         }}
         QTabWidget::pane {{
             background-color: transparent;
-            border: 1px solid {self.c_border_light};
-            border-radius: 8px;
+            border: none;
             margin-top: 15px;
+        }}
+        QTabWidget > QWidget {{
+            border: none;
+        }}
+        QTabWidget QFrame {{
+            background-color: transparent;
+            border: none;
+        }}
+        QTabWidget QScrollArea {{
+            border: none;
+        }}
+        QTabBar {{
+            background-color: {self.c_bg_secondary};
+            border: none;
         }}
         QTabBar::tab {{
             background-color: {self.c_bg_tertiary};

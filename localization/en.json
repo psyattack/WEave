@@ -7,10 +7,9 @@
     "ok": "OK",
     "open_workshop": "Browser",
     "install": "Install",
-    "download_all": "Download All",
     "yes": "Yes",
     "no": "No",
-    "open_data_folder": "Open Data Folder",
+    "open_data_folder": "Open Data folder",
     "check_updates": "Check for updates"
   },
   "tooltips": {
@@ -22,7 +21,7 @@
     "install_open_we": "Install wallpaper and open in Wallpaper Engine",
     "tasks": "Active downloads and extractions",
     "settings": "Settings",
-    "batch_download": "Batch download",
+    "multi_download": "Multi-Download",
     "info": "Information",
     "search": "Search",
     "refresh": "Refresh Page",
@@ -42,7 +41,6 @@
     "no_tasks": "No active tasks",
     "download_prefix": "Download: {id}",
     "extract_prefix": "Extract: {id}",
-    "other": "Other:",
     "minimize_on_apply": "Minimize on Apply",
     "page": "Page",
     "of": "of {total}",
@@ -75,7 +73,8 @@
     "id_url_placeholder": "ID, URL...",
     "account": "Account",
     "translating": "Translating...",
-    "action": "Action"
+    "action": "Action",
+    "content_descriptors": "Content Descriptors:"
   },
   "messages": {
     "download_started": "Download started!",
@@ -91,11 +90,6 @@
     "exit_with_downloads": "You have incomplete downloads or extractions.\nClose the window?",
     "exit_with_downloads_only": "You have incomplete downloads.\nClose the window?",
     "exit_with_extractions_only": "You have incomplete extractions.\nClose the window?",
-    "dotnet_required": "This application requires .NET 9 Desktop Runtime for some plugins to work properly.",
-    "dotnet_install_now": "Would you like to install it now?",
-    "dotnet_installation_started": ".NET 9 Desktop Runtime installation has started.\nPlease complete the installation and click OK.",
-    "dotnet_installation_failed": ".NET 9 Desktop Runtime couldn't find the installer.\nPlease download it manually from:\nhttps://dotnet.microsoft.com/en-us/download/dotnet/9.0/runtime",
-    "dotnet_warning": ".NET 9 Desktop Runtime is necessary for the correct operation of the application.\nPlease come back when you are ready to install it.",
     "batch_input_placeholder": "Enter Workshop IDs and/or URLs\n(space or newline separated):",
     "invalid_page_number": "Invalid page number",
     "invalid_we_directory": "Invalid Wallpaper Engine directory.\nPlease select the correct folder.",
@@ -119,9 +113,8 @@
     "error": "Error",
     "warning": "Warning",
     "exit": "Exit",
-    "batch_download": "Batch Download",
+    "multi_download": "Multi-Download",
     "about": "About",
-    "dotnet_required": ".NET 9 Desktop Runtime Required",
     "installation_started": "Installation Started"
   },
   "settings": {
@@ -162,16 +155,9 @@
   },
   "info": {
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
-    "developed": "Developed with ❤️ free."
-  },
-  "tooltips_extended": {
-    "incompatible_items": "Some items cannot be included. However, you can find them by checking the box here."
+    "developed": "Developed with ❤ free."
   },
   "filters": {
-    "sort_order": {
-      "asc": "ASC",
-      "desc": "DESC"
-    },
     "local_sort": {
       "install_date": "Install Date",
       "name": "Name", 

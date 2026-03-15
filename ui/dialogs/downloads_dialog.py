@@ -13,7 +13,7 @@ class DownloadsDialog(BaseDialog):
     download_cancelled = pyqtSignal(str)
 
     def __init__(self, translator, theme_manager, download_service, parser, parent=None):
-        super().__init__(translator.t("dialog.tasks"), parent, theme_manager)
+        super().__init__(translator.t("dialog.tasks"), parent, theme_manager, icon="ICON_TASK")
 
         self.tr = translator
         self.dm = download_service
