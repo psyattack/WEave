@@ -321,7 +321,7 @@ class ToolTipFilter(QWidget):
     def eventFilter(self, obj, event):
         if obj == self.target_widget:
             if event.type() == QEvent.Type.Enter:
-                self._hover_timer.start(250)
+                self._hover_timer.start(750)
             elif event.type() == QEvent.Type.Leave:
                 self._hover_timer.stop()
                 self.tooltip.hide()
