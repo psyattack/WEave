@@ -5,14 +5,8 @@ from typing import Any
 
 class TranslationService:
     SUPPORTED_LANGUAGES = {
-        "de": "Deutsch",
         "en": "English",
-        "es": "Español",
-        "fr": "Français",
-        "ja": "日本語",
-        "pt": "Português",
         "ru": "Русский",
-        "zh": "中文",
     }
 
     def __init__(self, language: str = "en"):

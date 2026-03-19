@@ -200,7 +200,7 @@ class WorkshopTab(QWidget):
         )
 
         layout = QVBoxLayout(self.content_card)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(10, 10, 10, 7)
         layout.setSpacing(10)
 
         self.filter_bar = UnifiedFilterBar(self.theme, self.tr, UnifiedFilterBar.MODE_WORKSHOP, self)
