@@ -19,7 +19,7 @@ class InfoDialog(BaseDialog):
         self.adjustSize()
 
         icon = QLabel()
-        icon.setPixmap(get_pixmap("ICON_APP", size=96))
+        icon.setPixmap(get_pixmap("ICON_APP128", size=100))
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon.setStyleSheet("border: none; background: none;")
         self.content_layout.addWidget(icon)
@@ -61,6 +61,16 @@ class InfoDialog(BaseDialog):
         github_container.addWidget(github_icon)
         github_container.addWidget(github_link)
         self.content_layout.addLayout(github_container)
+
+        self._add_links_block(
+            author=("psyattack", "https://github.com/psyattack"),
+            tools=[
+                ("PyQt6", "https://www.riverbankcomputing.com/software/pyqt/"),
+                ("DepotDownloaderMod", "https://github.com/SteamAutoCracks/DepotDownloaderMod"),
+                ("RePKG", "https://github.com/notscuffed/repkg"),
+                ("icons8", "https://icons8.com/")
+            ]
+        )
 
         buttons_layout = QHBoxLayout()
         buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -130,6 +140,60 @@ class InfoDialog(BaseDialog):
         )
         ok_btn.clicked.connect(self.accept)
         self.content_layout.addWidget(ok_btn)
+
+    def _add_links_block(self, author: tuple[str, str], tools: list[tuple[str, str]]) -> None:
+        container = QWidget()
+        container.setStyleSheet(
+            """
+            QWidget {
+                background-color: transparent;
+                border: none;
+            }
+            """
+        )
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 4)
+        layout.setSpacing(4)
+
+        muted_color = self.c_text_secondary if hasattr(self, "c_text_secondary") else "#8a8f98"
+
+        author_name, author_url = author
+        author_label = QLabel(
+            f'Author: <a href="{author_url}" '
+            f'style="color: {muted_color}; text-decoration: underline;">{author_name}</a>'
+        )
+        author_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author_label.setOpenExternalLinks(True)
+        author_label.setWordWrap(True)
+        author_label.setStyleSheet(
+            """
+            background: transparent;
+            border: none;
+            font-size: 12px;
+            """
+        )
+        layout.addWidget(author_label)
+
+        tools_links = ", ".join(
+            f'<a href="{url}" style="color: {muted_color}; text-decoration: underline;">{name}</a>'
+            for name, url in tools
+        )
+
+        tools_label = QLabel(f"Powered by: {tools_links}")
+        tools_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tools_label.setOpenExternalLinks(True)
+        tools_label.setWordWrap(True)
+        tools_label.setStyleSheet(
+            """
+            background: transparent;
+            border: none;
+            font-size: 12px;
+            """
+        )
+        layout.addWidget(tools_label)
+
+        self.content_layout.addWidget(container)
 
     def _add_developed_label(self, text: str) -> None:
         label_style = f"""
