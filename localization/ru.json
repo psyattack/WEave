@@ -1,7 +1,7 @@
 {
   "tabs": {
-    "workshop": "Online",
-    "wallpapers": "Offline"
+    "workshop": "Workshop",
+    "wallpapers": "Installed"
   },
   "buttons": {
     "ok": "ОК",

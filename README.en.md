@@ -1,4 +1,18 @@
-# WEave
+<h1 align="center">
+  <img src="public/icon_128.png" alt="WEave icon" width="100" height="100"><br>
+  WEave
+  <p align="center">
+    <a href="LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT">
+    </a>
+    <a href="#installation">
+      <img src="https://img.shields.io/badge/platform-Windows_10%2F11-0078D6.svg" alt="Platform: Windows">
+    </a>
+    <a href="#installation">
+      <img src="https://img.shields.io/badge/python-3.10%2B-3776AB.svg" alt="Python 3.10+">
+    </a>
+  </p>
+</h1>
 
 <p align="center">
   <strong><a href="README.en.md">🇬🇧 English</a></strong> |
@@ -6,23 +20,11 @@
 </p>
 
 <p align="center">
-  <img src="screenshots/screen_main.png" alt="WEave (formerly WE Workshop Manager)" width="700">
+  <img src="public/screen_main.png" alt="Main interface demonstration" width="700">
 </p>
 
 <p align="center">
   <strong>Main interface demonstration</strong>
-</p>
-
-<p align="center">
-  <a href="../LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT">
-  </a>
-  <a href="#installation">
-    <img src="https://img.shields.io/badge/platform-Windows_10%2F11-0078D6.svg" alt="Platform: Windows">
-  </a>
-  <a href="#installation">
-    <img src="https://img.shields.io/badge/python-3.10%2B-3776AB.svg" alt="Python 3.10+">
-  </a>
 </p>
 
 ---

@@ -1,18 +1,15 @@
-from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, pyqtProperty
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtProperty
 from PyQt6.QtGui import QTransform
 from PyQt6.QtWidgets import QLabel, QWidget
-
 from infrastructure.resources.resource_manager import get_pixmap
 
 
 class AnimatedIconLabel(QWidget):
     def __init__(self, icon_name: str, size: int = 48, parent=None):
         super().__init__(parent)
-
         self._icon_name = icon_name
         self._size = size
         self._rotation = 0.0
-        self._direction = 1
 
         self.setFixedSize(size, size)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -27,11 +24,13 @@ class AnimatedIconLabel(QWidget):
         self._update_pixmap()
 
         self._animation = QPropertyAnimation(self, b"rotation")
-        self._animation.setDuration(1000)
-        self._animation.setStartValue(0.0)
-        self._animation.setEndValue(30.0)
-        self._animation.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._animation.setDuration(600)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self._animation.finished.connect(self._on_animation_finished)
+
+        self._pause_timer = QTimer(self)
+        self._pause_timer.setSingleShot(True)
+        self._pause_timer.timeout.connect(self._do_flip)
 
     def get_rotation(self) -> float:
         return self._rotation
@@ -43,30 +42,31 @@ class AnimatedIconLabel(QWidget):
     rotation = pyqtProperty(float, get_rotation, set_rotation)
 
     def start_animation(self) -> None:
-        self._animation.start()
+        self._do_flip()
 
     def stop_animation(self) -> None:
         self._animation.stop()
+        self._pause_timer.stop()
         self._rotation = 0.0
         self._update_pixmap()
 
-    def _on_animation_finished(self) -> None:
-        self._direction *= -1
+    def _do_flip(self) -> None:
+        target = self._rotation + 180.0
         self._animation.setStartValue(self._rotation)
-        self._animation.setEndValue(30.0 * self._direction)
+        self._animation.setEndValue(target)
         self._animation.start()
+
+    def _on_animation_finished(self) -> None:
+        self._pause_timer.start(500)
 
     def _update_pixmap(self) -> None:
         if self._base_pixmap.isNull():
             return
-
         transform = QTransform()
         transform.rotate(self._rotation)
         rotated = self._base_pixmap.transformed(
-            transform,
-            Qt.TransformationMode.SmoothTransformation,
+            transform, Qt.TransformationMode.SmoothTransformation,
         )
-
         x = max(0, (rotated.width() - self._size) // 2)
         y = max(0, (rotated.height() - self._size) // 2)
         cropped = rotated.copy(x, y, self._size, self._size)
