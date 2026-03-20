@@ -1,3 +1,5 @@
+from PyQt6.QtGui import QColor
+
 def human_readable_size(size_bytes: int) -> str:
     value = float(size_bytes)
     for unit in ["B", "KB", "MB", "GB", "TB"]:
@@ -32,3 +34,8 @@ def hex_to_rgba(hex_color: str, alpha: int = 255) -> str:
     green = int(normalized[2:4], 16)
     blue = int(normalized[4:6], 16)
     return f"rgba({red}, {green}, {blue}, {alpha})"
+
+
+def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    c = QColor(hex_color)
+    return c.red(), c.green(), c.blue()

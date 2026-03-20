@@ -2,7 +2,7 @@ import json
 import weakref
 from pathlib import Path
 
-from PyQt6.QtCore import QByteArray, QBuffer, QEasingCurve, QPropertyAnimation, QSize, Qt, pyqtProperty, pyqtSignal, QRectF
+from PyQt6.QtCore import QByteArray, QBuffer, QEasingCurve, QPropertyAnimation, QSize, Qt, pyqtProperty, pyqtSignal, QRectF, QEvent
 from PyQt6.QtGui import QColor, QFont, QFontMetrics, QMovie, QPainter, QPen, QPixmap, QPixmapCache, QTransform
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
@@ -52,6 +52,8 @@ class BaseGridItem(QWidget):
 
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._setup_ui()
+
+        self.preview_label.installEventFilter(self)
 
     def _get_background_color(self) -> str:
         if self.theme:
@@ -145,6 +147,23 @@ class BaseGridItem(QWidget):
         except RuntimeError:
             pass
 
+    def eventFilter(self, obj, event):
+        if obj is self.preview_label and event.type() == QEvent.Type.Resize:
+            self._update_loading_icon_position()
+        return super().eventFilter(obj, event)
+
+    def _update_loading_icon_position(self) -> None:
+        if self._loading_icon is None or self._is_destroyed:
+            return
+        
+        try:
+            icon_size = self._loading_icon.width()
+            x = (self.preview_label.width() - icon_size) // 2
+            y = (self.preview_label.height() - icon_size) // 2
+            self._loading_icon.move(x, y)
+        except RuntimeError:
+            pass
+
     def _stop_loading_animation(self) -> None:
         if self._loading_icon is not None:
             try:
@@ -167,8 +186,9 @@ class BaseGridItem(QWidget):
             icon_size = max(24, int(self.item_size * 0.17))
             self._loading_icon = AnimatedIconLabel("ICON_HOURGLASS", icon_size, self.preview_label)
 
-            x = (self.item_size - icon_size) // 2
-            y = (self.item_size - icon_size) // 2
+            # Позиционируем относительно текущего размера preview_label
+            x = (self.preview_label.width() - icon_size) // 2
+            y = (self.preview_label.height() - icon_size) // 2
             self._loading_icon.move(x, y)
             self._loading_icon.show()
             self._loading_icon.start_animation()

@@ -15,6 +15,8 @@ from infrastructure.steam.workshop_scripts import (
     build_preload_poll_script,
     login_form_fill_script,
     login_state_check_script,
+    build_bg_item_details_fetch_script,
+    build_bg_item_details_poll_script
 )
 from infrastructure.steam.workshop_url_builder import WorkshopUrlBuilder
 from shared.filesystem import get_app_data_dir
@@ -122,6 +124,8 @@ class WorkshopParser(QObject):
         self._details_request_id = 0
         self._preload_request_id = 0
         self._preload_poll_count = 0
+        self._bg_request_id = 0
+        self._bg_callbacks: dict[int, tuple[str, object, int]] = {}
 
         self._page_cache = WorkshopPageCache()
         self._item_cache = WorkshopItemCache()
@@ -617,6 +621,90 @@ class WorkshopParser(QObject):
 
         self._item_cache.set(pubfileid, item)
         self.item_details_loaded.emit(item)
+
+    def fetch_item_details_background(
+        self, pubfileid: str, callback=None
+    ) -> None:
+        self._bg_request_id += 1
+        request_id = self._bg_request_id
+        self._bg_callbacks[request_id] = (pubfileid, callback, 0)
+
+        script = build_bg_item_details_fetch_script(pubfileid, request_id)
+        self._page.runJavaScript(script)
+        self._poll_bg_details(request_id)
+
+    def _poll_bg_details(self, request_id: int) -> None:
+        if request_id not in self._bg_callbacks:
+            return
+
+        pubfileid, callback, poll_count = self._bg_callbacks[request_id]
+        poll_count += 1
+        self._bg_callbacks[request_id] = (pubfileid, callback, poll_count)
+
+        if poll_count > self._max_polls:
+            self._bg_callbacks.pop(request_id, None)
+            if callback:
+                callback(None)
+            return
+
+        script = build_bg_item_details_poll_script(request_id)
+        self._page.runJavaScript(
+            script,
+            lambda result, rid=request_id: self._check_bg_details(
+                result, rid
+            ),
+        )
+
+    def _check_bg_details(self, result, request_id: int) -> None:
+        if request_id not in self._bg_callbacks:
+            return
+
+        if result is None:
+            QTimer.singleShot(
+                self.POLL_INTERVAL_MS,
+                lambda rid=request_id: self._poll_bg_details(rid),
+            )
+            return
+
+        pubfileid, callback, _ = self._bg_callbacks.pop(request_id, ("", None, 0))
+
+        if isinstance(result, dict) and (
+            result.get("cancelled") or "error" in result
+        ):
+            if callback:
+                callback(None)
+            return
+
+        item = self._parse_bg_result(result, pubfileid)
+        if callback:
+            callback(item)
+
+    def _parse_bg_result(self, result, pubfileid: str):
+        if not result:
+            return None
+
+        pid = result.get("pubfileid", pubfileid)
+        existing = self._item_cache.get(pid)
+
+        item = WorkshopItem(
+            pubfileid=pid,
+            title=result.get("title", "") or (existing.title if existing else ""),
+            preview_url=result.get("preview_url", "")
+            or (existing.preview_url if existing else ""),
+            description=result.get("description", ""),
+            file_size=result.get("file_size", ""),
+            posted_date=result.get("posted_date", ""),
+            updated_date=result.get("updated_date", ""),
+            tags=result.get("tags", {}),
+            rating_star_file=result.get("rating_star_file", ""),
+            num_ratings=result.get("num_ratings", ""),
+            author=result.get("author", "")
+            or (existing.author if existing else ""),
+            author_url=result.get("author_url", "")
+            or (existing.author_url if existing else ""),
+        )
+        self._item_cache.set(pid, item)
+        return item
 
     def cleanup(self) -> None:
         try:

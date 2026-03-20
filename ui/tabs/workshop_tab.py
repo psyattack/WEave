@@ -422,7 +422,7 @@ class WorkshopTab(QWidget):
             self.page_input.clear()
         except ValueError:
             self.page_input.clear()
-            NotificationLabel.show_notification(self, self.tr.t("messages.invalid_page_number"))
+            NotificationLabel.show_notification(self.parent(), self.tr.t("messages.invalid_page_number"))
 
     def _go_to_page(self, page: int) -> None:
         if self._is_loading_page:
@@ -535,7 +535,7 @@ class WorkshopTab(QWidget):
         if self._loading_overlay:
             self._loading_overlay.hide()
 
-        NotificationLabel.show_notification(self, f"Error: {error_msg}")
+        NotificationLabel.show_notification(self.parent(), f"Error: {error_msg}")
         self._clear_skeleton_grid()
         self._update_pagination_buttons()
 
@@ -668,6 +668,12 @@ class WorkshopTab(QWidget):
             except RuntimeError:
                 pass
 
+        if hasattr(self, "details_panel") and self.details_panel:
+            try:
+                self.details_panel.update_download_state()
+            except Exception:
+                pass
+
     def _update_info_text(self) -> None:
         if self._current_page_data:
             total_items = self._current_page_data.total_items
@@ -726,11 +732,7 @@ class WorkshopTab(QWidget):
         self.dm.start_download(pubfileid, self.config.get_account_number())
         self._update_item_statuses()
 
-        NotificationLabel.show_notification(
-            self.details_panel,
-            self.tr.t("messages.download_started"),
-            55,
-            15,
+        NotificationLabel.show_notification(self.parent(), self.tr.t("messages.download_started")
         )
 
     def show_downloads_popup(self, button_pos: QPoint) -> None:
