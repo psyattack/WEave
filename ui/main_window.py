@@ -41,6 +41,7 @@ from ui.tabs.workshop_tab import WorkshopTab
 from ui.dialogs.update_dialog import UpdateDialog
 from ui.widgets.update_checker import UpdateCheckWorker
 from ui.widgets.custom_tooltip import install_tooltip
+from services.metadata_service import MetadataBatchInitializer
 
 
 class AnimatedIconButton(QPushButton):
@@ -152,6 +153,18 @@ class AnimatedIconButton(QPushButton):
         self._scale_anim.setEasingCurve(QEasingCurve.Type.OutBack)
         self._scale_anim.start()
         super().mouseReleaseEvent(event)
+
+    def paintEvent(self, event):
+        if self._bg_opacity > 0.005 and not self._is_active:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            alpha = int(self._bg_opacity * 255 * 0.12)
+            color = QColor(255, 255, 255, alpha)
+            painter.setBrush(color)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
+            painter.end()
+        super().paintEvent(event)
 
 
 class SideNavBar(QWidget):
@@ -326,9 +339,6 @@ class SideNavBar(QWidget):
                     border-radius: 12px;
                     padding: 0px;
                 }}
-                QPushButton:hover {{
-                    background-color: rgba(255, 255, 255, 0.08);
-                }}
                 QPushButton:pressed {{
                     background-color: rgba(255, 255, 255, 0.12);
                 }}
@@ -342,9 +352,6 @@ class SideNavBar(QWidget):
                 border: none;
                 border-radius: 10px;
                 padding: 0px;
-            }}
-            QPushButton:hover {{
-                background-color: rgba(255, 255, 255, 0.08);
             }}
             QPushButton:pressed {{
                 background-color: rgba(255, 255, 255, 0.12);
@@ -621,9 +628,80 @@ class ContentSwitcher(QStackedWidget):
         fade_out.start()
 
 
+class _FadeHoverButton(QPushButton):
+
+    def __init__(self, button_type: str, parent=None):
+        super().__init__(parent)
+        self._button_type = button_type
+        self._hover_opacity = 0.0
+        self.setFixedSize(38, 38)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        icon_map = {
+            "minimize": "ICON_MINIMIZE",
+            "maximize": "ICON_MAXIMIZE",
+            "restore": "ICON_RESTORE",
+            "close": "ICON_CLOSE",
+        }
+        self.setIcon(get_icon(icon_map.get(button_type, "ICON_CLOSE")))
+        self.setIconSize(QSize(16, 16))
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                border-radius: 8px;
+            }
+        """)
+
+        self._hover_anim = QPropertyAnimation(self, b"hover_opacity")
+        self._hover_anim.setDuration(220)
+        self._hover_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+    def get_hover_opacity(self):
+        return self._hover_opacity
+
+    def set_hover_opacity(self, v):
+        self._hover_opacity = v
+        self.update()
+
+    hover_opacity = pyqtProperty(float, get_hover_opacity, set_hover_opacity)
+
+    def enterEvent(self, event):
+        self._hover_anim.stop()
+        self._hover_anim.setStartValue(self._hover_opacity)
+        self._hover_anim.setEndValue(1.0)
+        self._hover_anim.setDuration(120)
+        self._hover_anim.start()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self._hover_anim.stop()
+        self._hover_anim.setStartValue(self._hover_opacity)
+        self._hover_anim.setEndValue(0.0)
+        self._hover_anim.setDuration(280)
+        self._hover_anim.start()
+        super().leaveEvent(event)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._hover_opacity > 0.005:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            if self._button_type == "close":
+                color = QColor(239, 91, 91, int(self._hover_opacity * 65))
+            else:
+                color = QColor(255, 255, 255, int(self._hover_opacity * 22))
+            painter.setBrush(color)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(self.rect(), 8, 8)
+            painter.end()
+
+
 class MainWindow(QMainWindow):
     download_completed = pyqtSignal(str)
-    RESIZE_MARGIN = 8
+    RESIZE_MARGIN = 6
+    CORNER_MARGIN = 16
 
     def __init__(
         self,
@@ -672,6 +750,9 @@ class MainWindow(QMainWindow):
         self._update_worker = None
         QTimer.singleShot(1800, self._auto_check_updates)
 
+        self._metadata_initializer = None
+        QTimer.singleShot(3000, self._auto_init_metadata)
+
     def _apply_theme(self) -> None:
         theme_name = self.config.get_theme()
         self.theme.apply_theme(theme_name, QApplication.instance())
@@ -703,6 +784,9 @@ class MainWindow(QMainWindow):
 
         self.title_bar = self._create_title_bar()
         self.title_bar.installEventFilter(self)
+
+        QApplication.instance().installEventFilter(self)
+
         root_layout.addWidget(self.title_bar)
 
         body_layout = QHBoxLayout()
@@ -863,9 +947,6 @@ class MainWindow(QMainWindow):
                 border-radius: 10px;
                 padding: 0px;
             }}
-            QPushButton:hover {{
-                background-color: rgba(255, 255, 255, 0.08);
-            }}
             QPushButton:pressed {{
                 background-color: rgba(255, 255, 255, 0.12);
             }}
@@ -956,6 +1037,54 @@ class MainWindow(QMainWindow):
         if not self.config.get_auto_check_updates():
             return
         self.check_for_updates(silent=True)
+
+    def _auto_init_metadata(self) -> None:
+        if not self.config.get_auto_init_metadata():
+            return
+        if not self.metadata_service:
+            return
+        self._start_metadata_init()
+
+    def _get_parser_for_init(self):
+        if hasattr(self, "workshop_tab") and hasattr(self.workshop_tab, "parser"):
+            return self.workshop_tab.parser
+        return None
+
+    def _start_metadata_init(self) -> None:
+        if self._metadata_initializer is not None and self._metadata_initializer.is_running:
+            return
+        parser = self._get_parser_for_init()
+        if not parser:
+            QTimer.singleShot(2000, self._start_metadata_init)
+            return
+        if not parser.is_logged_in():
+            QTimer.singleShot(2000, self._start_metadata_init)
+            return
+
+        installed = self.we.get_installed_wallpapers()
+        uninitialized = self.metadata_service.get_uninitialized_pubfileids(installed)
+        if not uninitialized:
+            return
+
+        self._metadata_initializer = MetadataBatchInitializer(
+            uninitialized, parser, self.metadata_service, self
+        )
+        self._metadata_initializer.finished.connect(self._on_metadata_init_finished)
+        self._metadata_initializer.start()
+
+    def _on_metadata_init_finished(self) -> None:
+        self._metadata_initializer = None
+        if hasattr(self, "wallpapers_tab"):
+            self.wallpapers_tab.refresh()
+
+    def is_metadata_init_running(self) -> bool:
+        return (
+            self._metadata_initializer is not None
+            and self._metadata_initializer.is_running
+        )
+
+    def get_metadata_initializer(self):
+        return self._metadata_initializer
 
     def check_for_updates(self, silent: bool = False) -> None:
         if self._update_worker is not None and self._update_worker.isRunning():
@@ -1163,49 +1292,7 @@ class MainWindow(QMainWindow):
         self._minimize_pos_anim.start()
 
     def _create_window_button(self, button_type: str, callback):
-        button = QPushButton()
-        button.setFixedSize(38, 38)
-        button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        button.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        icon_map = {
-            "minimize": "ICON_MINIMIZE",
-            "maximize": "ICON_MAXIMIZE",
-            "restore": "ICON_RESTORE",
-            "close": "ICON_CLOSE",
-        }
-        button.setIcon(get_icon(icon_map.get(button_type, "ICON_CLOSE")))
-        button.setIconSize(QSize(16, 16))
-
-        if button_type == "close":
-            button.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: transparent;
-                    border: none;
-                    border-radius: 8px;
-                }}
-                QPushButton:hover {{
-                    background-color: rgba(239, 91, 91, 0.25);
-                }}
-                QPushButton:pressed {{
-                    background-color: rgba(239, 91, 91, 0.4);
-                }}
-            """)
-        else:
-            button.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: transparent;
-                    border: none;
-                    border-radius: 8px;
-                }}
-                QPushButton:hover {{
-                    background-color: rgba(255, 255, 255, 0.08);
-                }}
-                QPushButton:pressed {{
-                    background-color: rgba(255, 255, 255, 0.12);
-                }}
-            """)
-
+        button = _FadeHoverButton(button_type)
         button.clicked.connect(callback)
         return button
 
@@ -1278,6 +1365,12 @@ class MainWindow(QMainWindow):
 
         clear_cache_if_needed(get_app_data_dir() / "cookies" / "Cache", 200)
         self._save_window_geometry()
+
+        try:
+            QApplication.instance().removeEventFilter(self)
+        except Exception:
+            pass
+
         self.close()
 
     def _load_window_geometry(self) -> None:
@@ -1387,12 +1480,59 @@ class MainWindow(QMainWindow):
         self._drag_cursor_offset = global_pos - self.frameGeometry().topLeft()
 
     def eventFilter(self, obj, event):
+        if (
+            event.type() == QEvent.Type.MouseMove
+            and not self._resize_edge
+            and not self._pseudo_fullscreen
+        ):
+            if isinstance(obj, QWidget):
+                try:
+                    win = obj.window()
+                except RuntimeError:
+                    win = None
+                if win is self:
+                    try:
+                        gp = event.globalPosition().toPoint()
+                        lp = self.mapFromGlobal(gp)
+                        edge = self._get_resize_edge(lp)
+                        if edge:
+                            self._update_cursor_for_edge(edge)
+                        elif not self.old_pos:
+                            self.setCursor(Qt.CursorShape.ArrowCursor)
+                    except Exception:
+                        pass
+
+        if (
+            event.type() == QEvent.Type.MouseButtonPress
+            and not self._pseudo_fullscreen
+            and not self._resize_edge
+        ):
+            if isinstance(obj, QWidget) and hasattr(event, "button"):
+                if event.button() == Qt.MouseButton.LeftButton:
+                    try:
+                        win = obj.window()
+                    except RuntimeError:
+                        win = None
+                    if win is self:
+                        try:
+                            gp = event.globalPosition().toPoint()
+                            lp = self.mapFromGlobal(gp)
+                            edge = self._get_resize_edge(lp)
+                            if edge:
+                                self._resize_edge = edge
+                                self._resize_start_pos = gp
+                                self._resize_start_geometry = self.geometry()
+                                return True
+                        except Exception:
+                            pass
+
         if obj == self.title_bar and event.type() == QEvent.Type.MouseButtonDblClick:
             if event.button() == Qt.MouseButton.LeftButton:
                 pos = event.position().toPoint()
                 if self._is_in_title_bar_drag_zone(pos):
                     self._toggle_maximize()
                     return True
+
         return super().eventFilter(obj, event)
 
     def changeEvent(self, event):
@@ -1407,24 +1547,30 @@ class MainWindow(QMainWindow):
     def _get_resize_edge(self, pos: QPoint) -> str:
         if self._pseudo_fullscreen:
             return ""
-
         rect = self.rect()
-        x = pos.x()
-        y = pos.y()
-        margin = self.RESIZE_MARGIN
-        edges = ""
+        x, y = pos.x(), pos.y()
+        w, h = rect.width(), rect.height()
+        cm = self.CORNER_MARGIN
 
-        if y <= margin:
-            edges += "top"
-        elif y >= rect.height() - margin:
-            edges += "bottom"
+        if x <= cm and y <= cm:
+            return "topleft"
+        if x >= w - cm and y <= cm:
+            return "topright"
+        if x <= cm and y >= h - cm:
+            return "bottomleft"
+        if x >= w - cm and y >= h - cm:
+            return "bottomright"
 
-        if x <= margin:
-            edges += "left"
-        elif x >= rect.width() - margin:
-            edges += "right"
-
-        return edges
+        m = self.RESIZE_MARGIN
+        if y <= m:
+            return "top"
+        if y >= h - m:
+            return "bottom"
+        if x <= m:
+            return "left"
+        if x >= w - m:
+            return "right"
+        return ""
 
     def _update_cursor_for_edge(self, edge: str) -> None:
         cursor_map = {

@@ -29,6 +29,7 @@ DEFAULT_CONFIG = {
                 "minimize_on_apply": False,
                 "preload_next_page": True,
                 "auto_check_updates": True,
+                "auto_init_metadata": True,
                 "skip_version": "",
                 "window_geometry": {
                     "x": -1,

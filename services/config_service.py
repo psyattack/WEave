@@ -192,3 +192,9 @@ class ConfigService:
 
     def set_background_extend_titlebar(self, v: bool) -> None:
         self.set("settings.backgrounds.extend_to_titlebar", v)
+
+    def get_auto_init_metadata(self) -> bool:
+        return self.get("settings.general.behavior.auto_init_metadata", False)
+
+    def set_auto_init_metadata(self, value: bool) -> None:
+        self.set("settings.general.behavior.auto_init_metadata", value)

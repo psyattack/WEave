@@ -6,7 +6,7 @@ import weakref
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QBuffer, QByteArray, QIODevice, QThread, QTimer, Qt, QSize, pyqtSignal, QRectF
+from PyQt6.QtCore import QBuffer, QByteArray, QIODevice, QThread, QTimer, Qt, QSize, pyqtSignal, QRectF, QEvent
 from PyQt6.QtGui import QMovie, QPainter, QPainterPath, QPixmap
 from PyQt6.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
@@ -92,10 +92,13 @@ class DetailsPanel(QWidget):
         self._is_parser_connected = False
         self._retry_timer: Optional[QTimer] = None
         self._loading_icon: Optional[AnimatedIconLabel] = None
+        self._download_btn = None
         self._external_lock = False
 
         self._setup_ui()
         self.setVisible(False)
+        
+        self.preview_label.installEventFilter(self)
 
     @property
     def large_preview(self):
@@ -598,6 +601,7 @@ class DetailsPanel(QWidget):
         self._is_translated = False
         self._description_label = None
         self._translate_button = None
+        self._download_btn = None
 
     def _stop_movie(self) -> None:
         if self.movie is not None:
@@ -620,6 +624,23 @@ class DetailsPanel(QWidget):
             except Exception:
                 pass
             self._gif_buffer = None
+
+    def eventFilter(self, obj, event):
+        if obj is self.preview_label and event.type() == QEvent.Type.Resize:
+            self._update_loading_icon_position()
+        return super().eventFilter(obj, event)
+
+    def _update_loading_icon_position(self) -> None:
+        if self._loading_icon is None:
+            return
+        
+        try:
+            icon_size = self._loading_icon.width()
+            x = (self.preview_label.width() - icon_size) // 2
+            y = (self.preview_label.height() - icon_size) // 2
+            self._loading_icon.move(x - 5, y)
+        except RuntimeError:
+            pass
 
     def _stop_loading_animation(self) -> None:
         if self._loading_icon is not None:
@@ -801,14 +822,20 @@ class DetailsPanel(QWidget):
     def _setup_workshop_buttons(self) -> None:
         self._clear_buttons()
 
-        self.buttons_layout.addWidget(
-            self._create_text_button(
+        is_downloading = self.dm.is_downloading(self.current_pubfileid)
+
+        if is_downloading:
+            self._download_btn = self._create_downloading_button()
+            self.buttons_layout.addWidget(self._download_btn)
+        else:
+            self._download_btn = self._create_text_button(
                 "ICON_UPLOAD",
                 self.tr.t("buttons.install"),
                 self.tr.t("buttons.install"),
                 self._on_download,
             )
-        )
+            self.buttons_layout.addWidget(self._download_btn)
+
         self.buttons_layout.addWidget(
             self._create_text_button(
                 "ICON_WORLD",
@@ -818,6 +845,69 @@ class DetailsPanel(QWidget):
             )
         )
         self.buttons_layout.addStretch()
+
+    def _create_downloading_button(self):
+        button = QPushButton()
+        button.setFixedSize(148, 35)
+        button.setEnabled(False)
+        button.setStyleSheet(
+            f"""
+            QPushButton {{
+                background-color: {self.theme.get_color('bg_tertiary')};
+                color: {self.theme.get_color('text_secondary')};
+                border-radius: 10px;
+                font-weight: bold;
+                font-size: 13px;
+                border: 1px solid {self.theme.get_color('border')};
+            }}
+            """
+        )
+
+        btn_layout = QHBoxLayout(button)
+        btn_layout.setContentsMargins(8, 0, 8, 0)
+        btn_layout.setSpacing(6)
+
+        spinner = AnimatedIconLabel("ICON_REFRESH", 18, button)
+        spinner.start_animation()
+        spinner.setStyleSheet("background: transparent; border: none;")
+        btn_layout.addWidget(spinner)
+
+        text_lbl = QLabel("Downloading...")
+        text_lbl.setStyleSheet(
+            f"""
+            color: {self.theme.get_color('text_secondary')};
+            font-size: 13px; font-weight: bold;
+            background: transparent; border: none;
+            """
+        )
+        btn_layout.addWidget(text_lbl)
+        btn_layout.addStretch()
+
+        button._spinner = spinner
+        return button
+
+    def update_download_state(self) -> None:
+        if self._mode != self.MODE_WORKSHOP:
+            return
+        if not self.current_pubfileid:
+            return
+
+        is_downloading = self.dm.is_downloading(self.current_pubfileid)
+        has_btn = hasattr(self, "_download_btn") and self._download_btn is not None
+
+        if not has_btn:
+            return
+
+        btn_is_disabled = not self._download_btn.isEnabled()
+
+        if is_downloading and not btn_is_disabled:
+            self._setup_workshop_buttons()
+        elif not is_downloading and btn_is_disabled:
+            if self.we.is_installed(self.current_pubfileid):
+                folder_path = self.we.projects_path / self.current_pubfileid
+                self.set_installed_folder(str(folder_path))
+            else:
+                self._setup_workshop_buttons()
 
     def _create_icon_label(self, icon_name: str, size: int = 16) -> QLabel:
         label = QLabel()
@@ -1605,4 +1695,4 @@ class DetailsPanel(QWidget):
             return {}
 
     def _show_notification(self, message: str) -> None:
-        NotificationLabel.show_notification(self.parent(), message, 55, 15)
+        NotificationLabel.show_notification(self.parent(), message)

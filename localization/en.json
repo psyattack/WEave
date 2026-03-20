@@ -161,7 +161,14 @@
     "bg_blur": "Blur",
     "bg_opacity": "Opacity",
     "bg_extend_titlebar": "Extend to Title Bar",
-    "bg_extend_titlebar_desc": "Main background covers the title bar area"
+    "bg_extend_titlebar_desc": "Main background covers the title bar area",
+    "metadata_init": "Metadata Initialization",
+    "auto_init_metadata": "Auto-initialize on startup",
+    "auto_init_metadata_description": "Automatically fetch metadata for all wallpapers when the app starts",
+    "initialize_now": "Initialize Now",
+    "all_initialized": "✓ All {total} wallpapers initialized",
+    "initialized_count": "{initialized} / {total} initialized",
+    "initializing_progress": "Initializing... {current} / {total}"
   },
   "info": {
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",

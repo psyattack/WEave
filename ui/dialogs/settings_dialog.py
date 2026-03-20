@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt, pyqtProperty, pyqtSignal
-from PyQt6.QtGui import QColor, QBrush, QPainter, QPen
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt, pyqtProperty, pyqtSignal, QTimer as _QTimer
+from PyQt6.QtGui import QColor, QBrush, QPainter, QPen, QTransform
 from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from ui.widgets.background_widget import encode_image_to_base64, decode_base64_to_pixmap
+from infrastructure.resources.resource_manager import get_pixmap
 from shared.helpers import request_restart_or_exit
 from ui.dialogs.base_dialog import BaseDialog
 from ui.notifications import MessageBox
@@ -338,6 +339,41 @@ class SettingsField(QWidget):
             self.c_text_disabled = "#6B6E7C"
 
 
+class SpinningIconLabel(QLabel):
+    def __init__(self, icon_name: str, size: int = 14, parent=None):
+        super().__init__(parent)
+        self._base_pixmap = get_pixmap(icon_name, size)
+        self._angle = 0
+        self._size = size
+        self.setFixedSize(size, size)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setStyleSheet("background: transparent; border: none;")
+        self._timer = _QTimer(self)
+        self._timer.timeout.connect(self._rotate)
+        self._timer.setInterval(30)
+
+    def start(self):
+        self._timer.start()
+
+    def stop(self):
+        self._timer.stop()
+        self._angle = 0
+        if not self._base_pixmap.isNull():
+            self.setPixmap(self._base_pixmap)
+
+    def _rotate(self):
+        self._angle = (self._angle + 5) % 360
+        transform = QTransform()
+        transform.rotate(self._angle)
+        rotated = self._base_pixmap.transformed(
+            transform, Qt.TransformationMode.SmoothTransformation
+        )
+        x = max(0, (rotated.width() - self._size) // 2)
+        y = max(0, (rotated.height() - self._size) // 2)
+        cropped = rotated.copy(x, y, self._size, self._size)
+        self.setPixmap(cropped)
+
+
 class SettingsDialog(BaseDialog):
     def __init__(self, config, accounts, translator, theme_manager, main_window, parent=None):
         super().__init__(translator.t("settings.title"), parent, theme_manager, icon="ICON_SETTINGS")
@@ -471,8 +507,6 @@ class SettingsDialog(BaseDialog):
 
         layout.addWidget(behavior_section)
 
-        bg_section = self._create_background_section()
-        layout.addWidget(bg_section)
         layout.addStretch()
 
         self.tab_widget.addTab(
@@ -530,9 +564,15 @@ class SettingsDialog(BaseDialog):
         tab = self._create_scrollable_tab()
         layout = tab._inner_layout
 
+        metadata_section = self._create_metadata_init_section()
+        layout.addWidget(metadata_section)
+
+        bg_section = self._create_background_section()
+        layout.addWidget(bg_section)
+
         debug_section = CollapsibleSection(
             self.tr.t("settings.debug") if self.tr.t("settings.debug") != "settings.debug" else "Debug",
-            expanded=True,
+            expanded=False,
             theme_manager=self.theme,
         )
 
@@ -553,6 +593,7 @@ class SettingsDialog(BaseDialog):
         )
 
         layout.addWidget(debug_section)
+
         layout.addStretch()
 
         self.tab_widget.addTab(
@@ -690,28 +731,13 @@ class SettingsDialog(BaseDialog):
         button_layout.setSpacing(10)
 
         login_btn = QPushButton(self.tr.t("settings.login_button"))
-        login_btn.setFixedHeight(36)
-        login_btn.setStyleSheet(self._button_style())
+        login_btn.setFixedHeight(32)
+        login_btn.setStyleSheet(self._compact_btn_style(primary=True))
         login_btn.clicked.connect(self._on_login_clicked)
 
         reset_btn = QPushButton(self.tr.t("settings.reset_button"))
-        reset_btn.setFixedHeight(36)
-        reset_btn.setStyleSheet(
-            f"""
-            QPushButton {{
-                background-color: {self.c_bg_tertiary};
-                color: {self.c_text_primary};
-                border: 2px solid {self.c_border_light};
-                border-radius: 8px;
-                font-weight: 600;
-                font-size: 13px;
-            }}
-            QPushButton:hover {{
-                border-color: {self.c_primary};
-                background-color: {self.c_bg_secondary};
-            }}
-            """
-        )
+        reset_btn.setFixedHeight(32)
+        reset_btn.setStyleSheet(self._compact_btn_style(primary=False))
         reset_btn.clicked.connect(self._on_reset_clicked)
 
         button_layout.addWidget(login_btn)
@@ -1104,61 +1130,236 @@ class SettingsDialog(BaseDialog):
 
         return section
 
+    def _create_metadata_init_section(self) -> CollapsibleSection:
+        section = CollapsibleSection(
+            self.tr.t("settings.metadata_init")
+            if self.tr.t("settings.metadata_init") != "settings.metadata_init"
+            else "Metadata Initialization",
+            expanded=True,
+            theme_manager=self.theme,
+        )
+
+        auto_toggle = AnimatedToggle(theme_manager=self.theme)
+        auto_toggle.setChecked(self.config.get_auto_init_metadata())
+        auto_toggle.toggled.connect(
+            lambda checked: self.config.set_auto_init_metadata(checked)
+        )
+        section.add_widget(
+            SettingsField(
+                self.tr.t("settings.auto_init_metadata")
+                if self.tr.t("settings.auto_init_metadata") != "settings.auto_init_metadata"
+                else "Auto-initialize on startup",
+                auto_toggle,
+                description=self.tr.t("settings.auto_init_metadata_description")
+                if self.tr.t("settings.auto_init_metadata_description") != "settings.auto_init_metadata_description"
+                else "Automatically fetch metadata for all wallpapers when the app starts",
+                theme_manager=self.theme,
+            )
+        )
+
+        status_container = QWidget()
+        status_container.setStyleSheet("background: transparent; border: none;")
+        status_layout = QHBoxLayout(status_container)
+        status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setSpacing(8)
+
+        self._init_status_label = QLabel()
+        self._init_status_label.setStyleSheet(
+            f"font-size: 11px; color: {self.c_text_secondary}; background: transparent; border: none;"
+        )
+
+        self._init_spinner = SpinningIconLabel("ICON_REFRESH", 14)
+        self._init_spinner.hide()
+
+        init_btn = QPushButton(
+            self.tr.t("settings.initialize_now")
+            if self.tr.t("settings.initialize_now") != "settings.initialize_now"
+            else "Initialize Now"
+        )
+        init_btn.setFixedHeight(28)
+        init_btn.setStyleSheet(self._compact_btn_style(primary=True))
+        init_btn.clicked.connect(self._on_manual_init_clicked)
+        self._init_btn = init_btn
+
+        status_layout.addWidget(self._init_status_label, 1)
+        status_layout.addWidget(self._init_spinner)
+        status_layout.addWidget(init_btn)
+
+        section.add_widget(status_container)
+
+        self._update_init_status()
+        self._init_status_timer = _QTimer(self)
+        self._init_status_timer.timeout.connect(self._update_init_status)
+        self._init_status_timer.start(1000)
+
+        return section
+
+    def _update_init_status(self) -> None:
+        if not hasattr(self, "_init_status_label"):
+            return
+
+        initializer = None
+        if self.main_window and hasattr(self.main_window, "get_metadata_initializer"):
+            initializer = self.main_window.get_metadata_initializer()
+
+        is_running = initializer is not None and initializer.is_running
+
+        if is_running:
+            self._init_spinner.show()
+            self._init_spinner.start()
+            self._init_btn.setEnabled(False)
+
+            if not hasattr(self, "_init_progress_connected") or not self._init_progress_connected:
+                try:
+                    initializer.progress_updated.connect(self._on_init_progress)
+                    self._init_progress_connected = True
+                except Exception:
+                    pass
+        else:
+            self._init_spinner.stop()
+            self._init_spinner.hide()
+            self._init_btn.setEnabled(True)
+            self._worker_connected = False
+
+            if self.main_window and hasattr(self.main_window, "we") and hasattr(self.main_window, "metadata_service"):
+                installed = self.main_window.we.get_installed_wallpapers()
+                total = len(installed)
+                uninit = self.main_window.metadata_service.get_uninitialized_pubfileids(installed)
+                initialized = total - len(uninit)
+
+                if len(uninit) == 0:
+                    self._init_status_label.setText(
+                        self.tr.t("settings.all_initialized").format(total=total)
+                        if self.tr.t("settings.all_initialized") != "settings.all_initialized"
+                        else f"✓ All {total} wallpapers initialized"
+                    )
+                    self._init_status_label.setStyleSheet(
+                        f"font-size: 11px; color: #5BEF9D; background: transparent; border: none;"
+                    )
+                else:
+                    self._init_status_label.setText(
+                        self.tr.t("settings.initialized_count").format(initialized=initialized, total=total)
+                        if self.tr.t("settings.initialized_count") != "settings.initialized_count"
+                        else f"{initialized} / {total} initialized"
+                    )
+                    self._init_status_label.setStyleSheet(
+                        f"font-size: 11px; color: {self.c_text_secondary}; background: transparent; border: none;"
+                    )
+            else:
+                self._init_status_label.setText("—")
+
+    def _on_init_progress(self, current: int, total: int) -> None:
+        if hasattr(self, "_init_status_label"):
+            self._init_status_label.setText(
+                self.tr.t("settings.initializing_progress").format(current=current, total=total)
+                if self.tr.t("settings.initializing_progress") != "settings.initializing_progress"
+                else f"Initializing... {current} / {total}"
+            )
+            self._init_status_label.setStyleSheet(
+                f"font-size: 11px; color: {self.c_text_primary}; background: transparent; border: none;"
+            )
+
+    def _on_manual_init_clicked(self) -> None:
+        if not self.main_window:
+            return
+        if hasattr(self.main_window, "is_metadata_init_running") and self.main_window.is_metadata_init_running():
+            return
+        if hasattr(self.main_window, "_start_metadata_init"):
+            self.main_window._start_metadata_init()
+            initializer = self.main_window.get_metadata_initializer()
+            if initializer:
+                try:
+                    initializer.progress_updated.connect(self._on_init_progress)
+                    self._init_progress_connected = True
+                except Exception:
+                    pass
+            self._update_init_status()
+
+    def _compact_btn_style(self, primary: bool = False) -> str:
+        if primary:
+            return f"""
+                QPushButton {{
+                    background-color: {self.c_primary};
+                    color: {self.c_text_primary};
+                    border: none;
+                    border-radius: 6px;
+                    padding: 6px 16px;
+                    font-weight: 600;
+                    font-size: 12px;
+                }}
+                QPushButton:hover {{
+                    background-color: {self.c_primary_hover};
+                }}
+            """
+        return f"""
+            QPushButton {{
+                background-color: {self.c_bg_tertiary};
+                color: {self.c_text_primary};
+                border: 1px solid {self.c_border};
+                border-radius: 6px;
+                padding: 6px 16px;
+                font-weight: 600;
+                font-size: 12px;
+            }}
+            QPushButton:hover {{
+                border-color: {self.c_primary};
+                background-color: {self.c_bg_secondary};
+            }}
+        """
+
     def _build_bg_area_row(self, area: str, label: str) -> QWidget:
         container = QWidget()
         container.setStyleSheet("background:transparent;border:none;")
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 4, 0, 4)
-        layout.setSpacing(4)
-
-        hdr = QLabel(f"  {label}")
-        hdr.setStyleSheet(f"font-size:12px;font-weight:700;color:{self.c_text_primary};background:transparent;border:none;")
-        layout.addWidget(hdr)
-
-        img_row = QHBoxLayout()
-        img_row.setContentsMargins(0, 0, 0, 0)
-        img_row.setSpacing(6)
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(0, 2, 0, 2)
+        layout.setSpacing(8)
 
         preview = QLabel()
         preview.setFixedSize(36, 36)
-        preview.setStyleSheet(f"background:{self.c_bg_tertiary};border-radius:6px;border:1px solid {self.c_border};")
+        preview.setStyleSheet(f"background:{self.c_bg_tertiary};border-radius:4px;border:1px solid {self.c_border};")
         preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._update_bg_preview(preview, area)
+        layout.addWidget(preview)
+
+        mid = QVBoxLayout()
+        mid.setContentsMargins(0, 0, 0, 0)
+        mid.setSpacing(1)
+
+        hdr = QLabel(label)
+        hdr.setStyleSheet(f"font-size:11px;font-weight:700;color:{self.c_text_primary};background:transparent;border:none;")
+        mid.addWidget(hdr)
+
+        blur_label = self.tr.t("settings.bg_blur") if self.tr.t("settings.bg_blur") != "settings.bg_blur" else "Blur"
+        mid.addLayout(self._make_slider_row(
+            blur_label, self.config.get_background_blur(area),
+            lambda v, a=area: self._on_bg_blur(a, v),
+        ))
+
+        opacity_label = self.tr.t("settings.bg_opacity") if self.tr.t("settings.bg_opacity") != "settings.bg_opacity" else "Opacity"
+        mid.addLayout(self._make_slider_row(
+            opacity_label, self.config.get_background_opacity(area),
+            lambda v, a=area: self._on_bg_opacity(a, v),
+        ))
+
+        layout.addLayout(mid, 1)
+
+        btn_col = QVBoxLayout()
+        btn_col.setContentsMargins(0, 0, 0, 0)
+        btn_col.setSpacing(2)
 
         sel_btn = QPushButton(self.tr.t("settings.bg_select") if self.tr.t("settings.bg_select") != "settings.bg_select" else "Select")
-        sel_btn.setFixedHeight(28)
+        sel_btn.setFixedSize(52, 20)
         sel_btn.setStyleSheet(self._small_btn_style())
         sel_btn.clicked.connect(lambda _, a=area, p=preview: self._on_bg_select(a, p))
+        btn_col.addWidget(sel_btn)
 
         clr_btn = QPushButton(self.tr.t("settings.bg_clear") if self.tr.t("settings.bg_clear") != "settings.bg_clear" else "Clear")
-        clr_btn.setFixedHeight(28)
+        clr_btn.setFixedSize(52, 20)
         clr_btn.setStyleSheet(self._small_btn_style())
         clr_btn.clicked.connect(lambda _, a=area, p=preview: self._on_bg_clear(a, p))
+        btn_col.addWidget(clr_btn)
 
-        img_row.addWidget(preview)
-        img_row.addWidget(sel_btn)
-        img_row.addWidget(clr_btn)
-        img_row.addStretch()
-        layout.addLayout(img_row)
-
-        blur_row = self._make_slider_row(
-            self.tr.t("settings.bg_blur") if self.tr.t("settings.bg_blur") != "settings.bg_blur" else "Blur",
-            self.config.get_background_blur(area),
-            lambda v, a=area: self._on_bg_blur(a, v),
-        )
-        layout.addLayout(blur_row)
-
-        opacity_row = self._make_slider_row(
-            self.tr.t("settings.bg_opacity") if self.tr.t("settings.bg_opacity") != "settings.bg_opacity" else "Opacity",
-            self.config.get_background_opacity(area),
-            lambda v, a=area: self._on_bg_opacity(a, v),
-        )
-        layout.addLayout(opacity_row)
-
-        sep = QFrame()
-        sep.setFixedHeight(1)
-        sep.setStyleSheet(f"background:{self.c_border};border:none;")
-        layout.addWidget(sep)
+        layout.addLayout(btn_col)
 
         return container
 

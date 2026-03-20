@@ -161,7 +161,14 @@
     "bg_blur": "Блюр",
     "bg_opacity": "Прозрачность",
     "bg_extend_titlebar": "Расширить на заголовок",
-    "bg_extend_titlebar_desc": "Основной фон покрывает область заголовка окна"
+    "bg_extend_titlebar_desc": "Основной фон покрывает область заголовка окна",
+    "metadata_init": "Инициализация метаданных",
+    "auto_init_metadata": "Автоматическая инициализация при запуске",
+    "auto_init_metadata_description": "Автоматически получать метаданные для всех обоев при запуске приложения",
+    "initialize_now": "Инициализировать сейчас",
+    "all_initialized": "✓ Все {total} обоев инициализированы",
+    "initialized_count": "{initialized} / {total} инициализировано",
+    "initializing_progress": "Инициализация... {current} / {total}"
   },
   "info": {
     "description": "Это приложение позволяет легко загружать и управлять обоями Wallpaper Engine из Steam Мастерской.",
