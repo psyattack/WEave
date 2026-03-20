@@ -300,11 +300,9 @@ class SideNavBar(QWidget):
 
     def _apply_nav_button_style(self, button: AnimatedIconButton, is_active: bool) -> None:
         primary = self.theme.get_color("primary")
-        bg_tertiary = self.theme.get_color("bg_tertiary")
 
         if is_active:
-            button.setStyleSheet(
-                f"""
+            button.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {primary};
                     border: none;
@@ -314,34 +312,31 @@ class SideNavBar(QWidget):
                 QPushButton:hover {{
                     background-color: {self._lighten_color(primary)};
                 }}
-                """
-            )
+            """)
             shadow = QGraphicsDropShadowEffect()
             shadow.setBlurRadius(18)
             shadow.setColor(QColor(primary))
             shadow.setOffset(0, 0)
             button.setGraphicsEffect(shadow)
         else:
-            button.setStyleSheet(
-                f"""
+            button.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {bg_tertiary};
+                    background-color: transparent;
                     border: none;
                     border-radius: 12px;
                     padding: 0px;
                 }}
                 QPushButton:hover {{
-                    background-color: {primary};
+                    background-color: rgba(255, 255, 255, 0.08);
                 }}
-                """
-            )
+                QPushButton:pressed {{
+                    background-color: rgba(255, 255, 255, 0.12);
+                }}
+            """)
             button.setGraphicsEffect(None)
 
     def _apply_action_button_style(self, button: AnimatedIconButton) -> None:
-        bg_tertiary = self.theme.get_color("bg_tertiary")
-        border = self.theme.get_color("border")
-        button.setStyleSheet(
-            f"""
+        button.setStyleSheet(f"""
             QPushButton {{
                 background-color: transparent;
                 border: none;
@@ -349,13 +344,12 @@ class SideNavBar(QWidget):
                 padding: 0px;
             }}
             QPushButton:hover {{
-                background-color: {bg_tertiary};
+                background-color: rgba(255, 255, 255, 0.08);
             }}
             QPushButton:pressed {{
-                background-color: {border};
+                background-color: rgba(255, 255, 255, 0.12);
             }}
-            """
-        )
+        """)
 
     def _lighten_color(self, hex_color: str) -> str:
         color = QColor(hex_color)
@@ -414,29 +408,35 @@ class AnimatedSegmentedTabs(QWidget):
         self._buttons: list[SegmentedTabButton] = []
         self._current_index = 0
 
-        self._indicator_pos = 0.0
+        self._indicator_x = 0.0
+        self._indicator_width = 0.0
         self._indicator_stretch = 0.0
 
-        self._pos_anim = QVariantAnimation(self)
-        self._pos_anim.setDuration(260)
-        self._pos_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
-        self._pos_anim.valueChanged.connect(self._on_pos_changed)
+        self._x_anim = QVariantAnimation(self)
+        self._x_anim.setDuration(260)
+        self._x_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._x_anim.valueChanged.connect(self._on_x_changed)
+
+        self._w_anim = QVariantAnimation(self)
+        self._w_anim.setDuration(260)
+        self._w_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._w_anim.valueChanged.connect(self._on_w_changed)
 
         self._stretch_anim = QVariantAnimation(self)
         self._stretch_anim.setDuration(260)
         self._stretch_anim.setKeyValueAt(0.0, 0.0)
-        self._stretch_anim.setKeyValueAt(0.35, 10.0)
-        self._stretch_anim.setKeyValueAt(0.7, 6.0)
+        self._stretch_anim.setKeyValueAt(0.35, 8.0)
+        self._stretch_anim.setKeyValueAt(0.7, 4.0)
         self._stretch_anim.setKeyValueAt(1.0, 0.0)
         self._stretch_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
         self._stretch_anim.valueChanged.connect(self._on_stretch_changed)
 
         self._anim_group = QParallelAnimationGroup(self)
-        self._anim_group.addAnimation(self._pos_anim)
+        self._anim_group.addAnimation(self._x_anim)
+        self._anim_group.addAnimation(self._w_anim)
         self._anim_group.addAnimation(self._stretch_anim)
 
         self.setFixedHeight(28)
-        self.setMinimumWidth(146)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
         self._layout = QHBoxLayout(self)
@@ -445,14 +445,26 @@ class AnimatedSegmentedTabs(QWidget):
 
         for index, text in enumerate(labels):
             button = SegmentedTabButton(text, self.theme, self)
-            button.clicked.connect(lambda checked=False, i=index: self.setCurrentIndex(i))
+            button.clicked.connect(
+                lambda checked=False, i=index: self.setCurrentIndex(i)
+            )
             self._buttons.append(button)
             self._layout.addWidget(button)
 
         self._apply_button_states()
 
-    def _on_pos_changed(self, value):
-        self._indicator_pos = float(value)
+    def _get_button_rect(self, index: int) -> QRectF:
+        if 0 <= index < len(self._buttons):
+            geo = self._buttons[index].geometry()
+            return QRectF(geo)
+        return QRectF()
+
+    def _on_x_changed(self, value):
+        self._indicator_x = float(value)
+        self.update()
+
+    def _on_w_changed(self, value):
+        self._indicator_width = float(value)
         self.update()
 
     def _on_stretch_changed(self, value):
@@ -468,16 +480,18 @@ class AnimatedSegmentedTabs(QWidget):
         if index == self._current_index:
             return
 
-        start_index = self._current_index
         self._current_index = index
         self._apply_button_states()
 
-        self._pos_anim.stop()
-        self._stretch_anim.stop()
+        target = self._get_button_rect(index)
+
         self._anim_group.stop()
 
-        self._pos_anim.setStartValue(float(start_index))
-        self._pos_anim.setEndValue(float(index))
+        self._x_anim.setStartValue(self._indicator_x)
+        self._x_anim.setEndValue(target.x())
+
+        self._w_anim.setStartValue(self._indicator_width)
+        self._w_anim.setEndValue(target.width())
 
         self._stretch_anim.setStartValue(0.0)
         self._stretch_anim.setEndValue(0.0)
@@ -490,6 +504,13 @@ class AnimatedSegmentedTabs(QWidget):
         for i, button in enumerate(self._buttons):
             if i < len(labels):
                 button.setText(labels[i])
+        QTimer.singleShot(0, self._snap_indicator_to_current)
+
+    def _snap_indicator_to_current(self) -> None:
+        rect = self._get_button_rect(self._current_index)
+        self._indicator_x = rect.x()
+        self._indicator_width = rect.width()
+        self._indicator_stretch = 0.0
         self.update()
 
     def _apply_button_states(self) -> None:
@@ -498,7 +519,11 @@ class AnimatedSegmentedTabs(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.update()
+        self._snap_indicator_to_current()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        QTimer.singleShot(0, self._snap_indicator_to_current)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -508,7 +533,6 @@ class AnimatedSegmentedTabs(QWidget):
         border_color = QColor(self.theme.get_color("border_light"))
         bg_color = QColor(self.theme.get_color("bg_secondary"))
         bg_color.setAlpha(40)
-
         painter.setPen(QPen(border_color, 1))
         painter.setBrush(bg_color)
         radius = outer_rect.height() / 2.0
@@ -517,18 +541,11 @@ class AnimatedSegmentedTabs(QWidget):
         if not self._buttons:
             return
 
-        first_geo = self._buttons[0].geometry()
-        segment_width = first_geo.width()
-        if len(self._buttons) > 1:
-            segment_width = self._buttons[1].geometry().x() - first_geo.x()
-
-        base_x = first_geo.x() + (segment_width * self._indicator_pos)
-
         extra = self._indicator_stretch
         indicator_rect = QRectF(
-            base_x + 1.5 - (extra / 2.0),
+            self._indicator_x + 1.5 - (extra / 2.0),
             4.0,
-            segment_width - 3.0 + extra,
+            self._indicator_width - 3.0 + extra,
             self.height() - 8.0,
         )
 
@@ -538,6 +555,8 @@ class AnimatedSegmentedTabs(QWidget):
             indicator_rect.setLeft(left_limit)
         if indicator_rect.right() > right_limit:
             indicator_rect.setRight(right_limit)
+        if indicator_rect.width() < 10:
+            return
 
         accent = QColor(self.theme.get_color("primary"))
         painter.setPen(Qt.PenStyle.NoPen)
@@ -705,23 +724,20 @@ class MainWindow(QMainWindow):
 
         root_layout.addLayout(body_layout, 1)
 
-        self._create_corner_covers()
-
         self.apply_backgrounds()
 
     def _create_title_bar(self) -> QFrame:
         title_bar = QFrame()
         title_bar.setFixedHeight(52)
-        title_bar.setStyleSheet(
-            f"""
+        title_bar.setStyleSheet(f"""
             QFrame {{
                 background: {self.theme.get_color('bg_primary')};
                 border-top-left-radius: 16px;
                 border-top-right-radius: 16px;
-                border-bottom: none;
+                border-bottom-left-radius: 16px;
+                border-bottom-right-radius: 16px;
             }}
-            """
-        )
+        """)
 
         layout = QHBoxLayout(title_bar)
         layout.setContentsMargins(12, 2, 10, 0)
@@ -737,7 +753,7 @@ class MainWindow(QMainWindow):
         settings_block.setFixedWidth(44)
         settings_block.setStyleSheet("background: transparent;")
         settings_block_layout = QVBoxLayout(settings_block)
-        settings_block_layout.setContentsMargins(0, 6, 0, 6)
+        settings_block_layout.setContentsMargins(0, 4, 0, 4)
         settings_block_layout.setSpacing(0)
         settings_block_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
 
@@ -840,10 +856,7 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(index)
 
     def _apply_action_button_style_like_sidenav(self, button: AnimatedIconButton) -> None:
-        bg_tertiary = self.theme.get_color("bg_tertiary")
-        border = self.theme.get_color("border")
-        button.setStyleSheet(
-            f"""
+        button.setStyleSheet(f"""
             QPushButton {{
                 background-color: transparent;
                 border: none;
@@ -851,13 +864,12 @@ class MainWindow(QMainWindow):
                 padding: 0px;
             }}
             QPushButton:hover {{
-                background-color: {bg_tertiary};
+                background-color: rgba(255, 255, 255, 0.08);
             }}
             QPushButton:pressed {{
-                background-color: {border};
+                background-color: rgba(255, 255, 255, 0.12);
             }}
-            """
-        )
+        """)
 
     def _create_tabs(self) -> None:
         self.stack = ContentSwitcher()
@@ -886,18 +898,6 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.workshop_tab)
         self.stack.addWidget(self.wallpapers_tab)
 
-    def _create_corner_covers(self) -> None:
-        self._corner_covers = []
-        bg_color = self.theme.get_color("bg_primary")
-        colors = [bg_color, bg_color, bg_color, bg_color]
-        for i in range(4):
-            cover = QWidget(self.centralWidget())
-            cover.setFixedSize(16, 16)
-            cover.setStyleSheet(f"background-color: {colors[i]}; border: none;")
-            cover.hide()
-            cover.lower()
-            self._corner_covers.append(cover)
-
     def apply_backgrounds(self) -> None:
         self._main_bg.set_image_from_base64(self.config.get_background_image("main"))
         self._main_bg.set_blur_percent(self.config.get_background_blur("main"))
@@ -905,46 +905,52 @@ class MainWindow(QMainWindow):
         self._main_bg.set_base_color(self.theme.get_color("bg_primary"))
         self._main_bg.lower()
 
-        extend = self.config.get_background_extend_titlebar()
-        if extend:
-            self.title_bar.setStyleSheet("""
-                QFrame {
-                    background: transparent;
-                    border-top-left-radius: 16px;
-                    border-top-right-radius: 16px;
-                    border-bottom: none;
-                }
-            """)
-        else:
-            self.title_bar.setStyleSheet(f"""
-                QFrame {{
-                    background: {self.theme.get_color('bg_primary')};
-                    border-top-left-radius: 16px;
-                    border-top-right-radius: 16px;
-                    border-bottom: none;
-                }}
-            """)
+        self._apply_title_bar_style()
 
         for tab in [self.workshop_tab, self.wallpapers_tab]:
             if hasattr(tab, "apply_backgrounds"):
                 tab.apply_backgrounds(self.config, self.theme)
 
-    def _update_corner_covers(self) -> None:
-        if not hasattr(self, "_corner_covers"):
-            return
+    def _get_current_border_radius(self) -> int:
+        return 0 if self._pseudo_fullscreen else 16
 
-        width = self.centralWidget().width()
-        height = self.centralWidget().height()
-        size = 16
-        positions = [
-            (0, 0),
-            (width - size, 0),
-            (0, height - size),
-            (width - size, height - size),
-        ]
-        for cover, pos in zip(self._corner_covers, positions):
-            cover.move(pos[0], pos[1])
-            cover.setVisible(self._pseudo_fullscreen)
+    def _update_border_radius(self) -> None:
+        radius = self._get_current_border_radius()
+
+        self.centralWidget().setStyleSheet(f"""
+            #mainCentralWidget {{
+                background-color: transparent;
+                border-radius: {radius}px;
+            }}
+        """)
+
+        self._main_bg.set_border_radius(radius)
+
+        self._apply_title_bar_style()
+
+    def _apply_title_bar_style(self) -> None:
+        radius = self._get_current_border_radius()
+        extend = self.config.get_background_extend_titlebar()
+        if extend:
+            self.title_bar.setStyleSheet(f"""
+                QFrame {{
+                    background: transparent;
+                    border-top-left-radius: {radius}px;
+                    border-top-right-radius: {radius}px;
+                    border-bottom-left-radius: 16px;
+                    border-bottom-right-radius: 16px;
+                }}
+            """)
+        else:
+            self.title_bar.setStyleSheet(f"""
+                QFrame {{
+                    background: {self.theme.get_color('bg_primary')};
+                    border-top-left-radius: {radius}px;
+                    border-top-right-radius: {radius}px;
+                    border-bottom-left-radius: 16px;
+                    border-bottom-right-radius: 16px;
+                }}
+            """)
 
     def _auto_check_updates(self) -> None:
         if not self.config.get_auto_check_updates():
@@ -994,7 +1000,7 @@ class MainWindow(QMainWindow):
         self._is_maximized = self._pseudo_fullscreen
         if hasattr(self, "max_btn"):
             self.max_btn.setIcon(get_icon("ICON_RESTORE" if self._pseudo_fullscreen else "ICON_MAXIMIZE"))
-        self._update_corner_covers()
+        self._update_border_radius()
 
     def _animate_geometry_to(self, target_rect: QRect, on_finished=None, duration: int = 260) -> None:
         if self._geometry_anim is not None:
@@ -1171,19 +1177,35 @@ class MainWindow(QMainWindow):
         button.setIcon(get_icon(icon_map.get(button_type, "ICON_CLOSE")))
         button.setIconSize(QSize(16, 16))
 
-        hover_color = self.theme.get_color("overlay_light")
-        button.setStyleSheet(
-            f"""
-            QPushButton {{
-                background-color: transparent;
-                border: none;
-                border-radius: 8px;
-            }}
-            QPushButton:hover {{
-                background-color: {hover_color};
-            }}
-            """
-        )
+        if button_type == "close":
+            button.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    border: none;
+                    border-radius: 8px;
+                }}
+                QPushButton:hover {{
+                    background-color: rgba(239, 91, 91, 0.25);
+                }}
+                QPushButton:pressed {{
+                    background-color: rgba(239, 91, 91, 0.4);
+                }}
+            """)
+        else:
+            button.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    border: none;
+                    border-radius: 8px;
+                }}
+                QPushButton:hover {{
+                    background-color: rgba(255, 255, 255, 0.08);
+                }}
+                QPushButton:pressed {{
+                    background-color: rgba(255, 255, 255, 0.12);
+                }}
+            """)
+
         button.clicked.connect(callback)
         return button
 
@@ -1381,7 +1403,6 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._update_corner_covers()
 
     def _get_resize_edge(self, pos: QPoint) -> str:
         if self._pseudo_fullscreen:
