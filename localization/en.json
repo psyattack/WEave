@@ -168,7 +168,8 @@
     "initialize_now": "Initialize Now",
     "all_initialized": "✓ All {total} wallpapers initialized",
     "initialized_count": "{initialized} / {total} initialized",
-    "initializing_progress": "Initializing... {current} / {total}"
+    "initializing_progress": "Initializing... {current} / {total}",
+    "search_placeholder": "Search settings…"
   },
   "info": {
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
