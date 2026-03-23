@@ -631,6 +631,12 @@ class DetailsPanel(QWidget):
 
     def _reset_state(self) -> None:
         self._reset_preview()
+
+        if self._description_label is not None:
+            self._description_label.hide()
+        if self._expand_description_button is not None:
+            self._expand_description_button.hide()
+
         self._clear_details()
         self._clear_buttons()
 
@@ -1172,7 +1178,9 @@ class DetailsPanel(QWidget):
         probe.setFixedWidth(width)
         probe.adjustSize()
 
-        return probe.sizeHint().height() > self._max_description_height()
+        result = probe.sizeHint().height() > self._max_description_height()
+        probe.deleteLater()
+        return result
 
     def _truncate_description_to_height(self, text: str) -> str:
         if not text or not self._description_label:
@@ -1217,6 +1225,7 @@ class DetailsPanel(QWidget):
             else:
                 right = mid - 1
 
+        probe.deleteLater()
         return best if best else clean[:50].rstrip() + "…"
 
     def _expand_description(self) -> None:
