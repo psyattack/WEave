@@ -198,3 +198,9 @@ class ConfigService:
 
     def set_auto_init_metadata(self, value: bool) -> None:
         self.set("settings.general.behavior.auto_init_metadata", value)
+
+    def get_auto_apply_last_downloaded(self) -> bool:
+        return self.get("settings.general.behavior.auto_apply_last_downloaded", False)
+
+    def set_auto_apply_last_downloaded(self, value: bool) -> None:
+        self.set("settings.general.behavior.auto_apply_last_downloaded", value)

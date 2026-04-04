@@ -434,7 +434,7 @@ class SettingsDialog(BaseDialog):
         self.accounts = accounts
         self.tr = translator
         self.main_window = main_window
-        self.setFixedSize(675, 525)
+        self.setFixedSize(675, 555)
         self._apply_container_style()
         self._section_fields: dict[CollapsibleSection, list] = {}
         self._category_groups: dict[CategoryDivider, list] = {}
@@ -629,10 +629,11 @@ class SettingsDialog(BaseDialog):
             self._t("settings.behavior", "Behavior"), expanded=True, theme_manager=self.theme
         )
         for label_key, desc_key, factory in [
-            ("labels.minimize_on_apply", "settings.minimize_description", self._create_minimize_toggle),
             ("settings.preload_next_page", "settings.preload_description", self._create_preload_toggle),
-            ("settings.auto_check_updates", "settings.auto_check_updates_description", self._create_auto_updates_toggle),
             ("settings.save_window_state", "settings.save_window_state_description", self._create_save_window_state_toggle),
+            ("settings.auto_check_updates", "settings.auto_check_updates_description", self._create_auto_updates_toggle),
+            ("settings.auto_apply_last_downloaded", "settings.auto_apply_last_downloaded_description", self._create_auto_apply_last_downloaded_toggle),
+            ("labels.minimize_on_apply", "settings.minimize_description", self._create_minimize_toggle)
         ]:
             f = SettingsField(
                 self._t(label_key), factory(),
@@ -871,6 +872,12 @@ class SettingsDialog(BaseDialog):
         t.toggled.connect(self._on_save_window_state_changed)
         return t
 
+    def _create_auto_apply_last_downloaded_toggle(self):
+        t = AnimatedToggle(theme_manager=self.theme)
+        t.setChecked(self.config.get_auto_apply_last_downloaded())
+        t.toggled.connect(self._on_auto_apply_last_downloaded_changed)
+        return t
+
     def _create_minimize_toggle(self):
         t = AnimatedToggle(theme_manager=self.theme)
         t.setChecked(self.config.get_minimize_on_apply())
@@ -1099,6 +1106,9 @@ class SettingsDialog(BaseDialog):
 
     def _on_save_window_state_changed(self, c):
         self.config.set_save_window_state(c)
+
+    def _on_auto_apply_last_downloaded_changed(self, c):
+        self.config.set_auto_apply_last_downloaded(c)
 
     def _on_minimize_changed(self, c):
         self.config.set_minimize_on_apply(c)

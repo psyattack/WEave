@@ -149,6 +149,8 @@
     "preload_description": "Preload the next workshop page in background for faster navigation",
     "save_window_state": "Save Window State",
     "save_window_state_description": "Save window size and position on exit and restore on startup",
+    "auto_apply_last_downloaded": "Auto Apply Last Downloaded",
+    "auto_apply_last_downloaded_description": "Automatically apply the last wallpaper that finishes downloading",
     "auto_check_updates": "Auto Check Updates",
     "auto_check_updates_description": "Automatically check GitHub releases on application startup",
     "tab_general": "General",

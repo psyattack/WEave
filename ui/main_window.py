@@ -753,6 +753,8 @@ class MainWindow(QMainWindow):
         self._metadata_initializer = None
         QTimer.singleShot(3000, self._auto_init_metadata)
 
+        self._last_completed_pubfileid: str | None = None
+
     def _apply_theme(self) -> None:
         theme_name = self.config.get_theme()
         self.theme.apply_theme(theme_name, QApplication.instance())
@@ -1336,7 +1338,22 @@ class MainWindow(QMainWindow):
 
     def _on_download_completed_signal(self, pubfileid: str, success: bool) -> None:
         if success:
+            self._last_completed_pubfileid = pubfileid
             QTimer.singleShot(300, self.refresh_wallpapers)
+            if self._should_auto_apply_last_downloaded():
+                pending = len(self.dm.downloading)
+                if pending == 0 and self._last_completed_pubfileid:
+                    QTimer.singleShot(500, self._apply_last_downloaded_wallpaper)
+
+    def _should_auto_apply_last_downloaded(self) -> bool:
+        return self.config.get_auto_apply_last_downloaded() and self.we is not None
+
+    def _apply_last_downloaded_wallpaper(self) -> None:
+        if not self._last_completed_pubfileid:
+            return
+        project_path = self.we.projects_path / self._last_completed_pubfileid
+        if project_path.exists() and self.we.apply_wallpaper(project_path):
+            self._last_completed_pubfileid = None
 
     def refresh_wallpapers(self) -> None:
         if hasattr(self, "wallpapers_tab"):
