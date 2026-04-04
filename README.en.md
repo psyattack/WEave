@@ -71,7 +71,7 @@ WEave (formerly WE Workshop Manager) is a Python/PyQt6 desktop application that 
 
 ### 📦 Option 1: Packaged PyInstaller version
 
-Download the latest version from the **[Releases](https://github.com/psyattack/we-workshop-manager/releases)** section  
+Download the latest version from the **[Releases](https://github.com/psyattack/WEave/releases)** section  
 > All dependencies are already built in, just unzip the archive to a convenient location and run `WEave.exe`
 
 ---
@@ -81,8 +81,8 @@ Download the latest version from the **[Releases](https://github.com/psyattack/w
 #### 1. Clone the repository
 
 ```bash
-git clone https://github.com/psyattack/we-workshop-manager.git
-cd we-workshop-manager
+git clone https://github.com/psyattack/WEave.git
+cd WEave
 ```
 
 #### 2. Install Python dependencies
@@ -109,7 +109,7 @@ python main.py
 ## 📁 Project Structure
 
 ```
-we-workshop-manager/
+WEave/
 ├── bootstrap/              # Application initialization
 ├── domain/                 # Models and data structures
 ├── services/               # Application services
@@ -159,6 +159,6 @@ This project is licensed under the **[MIT](LICENSE)** license.
 - [ ] Automatic updates
 - [x] <strike>Interface optimization for different screen sizes and formats + window resize capability</strike>
 
-> If you have any problems or suggestions for improvement — create an [Issue](https://github.com/psyattack/we-workshop-manager/issues) in the repository.
+> If you have any problems or suggestions for improvement — create an [Issue](https://github.com/psyattack/WEave/issues) in the repository.
 
 ---

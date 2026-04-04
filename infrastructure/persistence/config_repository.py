@@ -30,6 +30,7 @@ DEFAULT_CONFIG = {
                 "preload_next_page": True,
                 "auto_check_updates": True,
                 "auto_init_metadata": True,
+                "auto_apply_last_downloaded": False,
                 "skip_version": "",
                 "window_geometry": {
                     "x": -1,
