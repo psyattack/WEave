@@ -75,7 +75,7 @@ WEave (formerly WE Workshop Manager) is a Python/PyQt6 desktop application that 
 > - Install [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0/runtime) Desktop Runtime
 >
 > **For packaged version (Option 1):**
-> - Only the .NET 8 Runtime mentioned above
+> - Only the .NET 8 Desktop Runtime mentioned above
 
 ### 📦 Option 1: Packaged PyInstaller version
 
@@ -111,6 +111,9 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+
+> **Running without console window:**  
+> Use `run_without_console.bat` to launch the application without displaying a console window
 
 ---
 
