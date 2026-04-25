@@ -126,7 +126,9 @@
     "exit": "Выход",
     "multi_download": "Мульти-загрузка",
     "about": "О программе",
-    "installation_started": "Установка началась"
+    "installation_started": "Установка началась",
+    "confirm": "Подтверждение",
+    "success": "Успешно"
   },
   "settings": {
     "title": "НАСТРОЙКИ",
@@ -184,7 +186,16 @@
     "all_initialized": "✓ Все {total} обоев инициализированы",
     "initialized_count": "{initialized} / {total} инициализировано",
     "initializing_progress": "Инициализация... {current} / {total}",
-    "search_placeholder": "Искать настройки…"
+    "search_placeholder": "Искать настройки…",
+    "custom_accounts": "Пользовательские аккаунты для загрузки",
+    "custom_accounts_description": "Добавьте свои аккаунты Steam для загрузки",
+    "add_account_button": "Добавить аккаунт",
+    "no_custom_accounts": "Нет добавленных аккаунтов",
+    "account_added": "Аккаунт успешно добавлен",
+    "account_exists": "Аккаунт уже существует",
+    "confirm_remove_account": "Удалить аккаунт '{username}'?",
+    "no_results": "Настройки не найдены",
+    "no_results_hint": "Попробуйте другой поисковый запрос"
   },
   "info": {
     "description": "Это приложение позволяет легко загружать и управлять обоями Wallpaper Engine из Steam Мастерской.",

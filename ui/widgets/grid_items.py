@@ -186,7 +186,6 @@ class BaseGridItem(QWidget):
             icon_size = max(24, int(self.item_size * 0.17))
             self._loading_icon = AnimatedIconLabel("ICON_HOURGLASS", icon_size, self.preview_label)
 
-            # Позиционируем относительно текущего размера preview_label
             x = (self.preview_label.width() - icon_size) // 2
             y = (self.preview_label.height() - icon_size) // 2
             self._loading_icon.move(x, y)

@@ -674,15 +674,26 @@ class SettingsDialog(BaseDialog):
         self._category_groups.setdefault(div, []).append(sec)
 
         sec2 = CollapsibleSection(
+            self._t("settings.custom_accounts", "Custom Upload Accounts"),
+            expanded=False, theme_manager=self.theme,
+        )
+        custom_w = self._create_custom_accounts_section()
+        self._mk_searchable(custom_w, "custom upload accounts add remove manage user")
+        sec2.add_widget(custom_w)
+        self._reg(sec2, custom_w)
+        self._inner.addWidget(sec2)
+        self._category_groups[div].append(sec2)
+
+        sec3 = CollapsibleSection(
             self._t("settings.steam_login", "Steam Login"),
             expanded=False, theme_manager=self.theme,
         )
         login_w = self._create_steam_login_section()
         self._mk_searchable(login_w, "steam login password credentials account authentication")
-        sec2.add_widget(login_w)
-        self._reg(sec2, login_w)
-        self._inner.addWidget(sec2)
-        self._category_groups[div].append(sec2)
+        sec3.add_widget(login_w)
+        self._reg(sec3, login_w)
+        self._inner.addWidget(sec3)
+        self._category_groups[div].append(sec3)
 
     def _build_advanced(self):
         div = CategoryDivider(self._t("settings.tab_advanced", "Advanced"), self.theme)
@@ -824,8 +835,8 @@ class SettingsDialog(BaseDialog):
 
     def _create_account_combo(self) -> QComboBox:
         c = QComboBox(self)
-        last = 1
-        for i in range(len(self.accounts.get_accounts()) - last):
+        upload_accounts = self.accounts.get_upload_accounts()
+        for i in range(len(upload_accounts)):
             c.addItem(f"{self.tr.t('labels.account')} {i + 1}")
         c.setCurrentIndex(self.config.get_account_number())
         c.currentIndexChanged.connect(lambda idx: self.config.set_account_number(idx))
@@ -903,6 +914,173 @@ class SettingsDialog(BaseDialog):
         t.setChecked(self.config.get_debug_mode())
         t.toggled.connect(self._on_debug_mode_changed)
         return t
+
+    def _create_custom_accounts_section(self) -> QWidget:
+        w = QWidget(self)
+        w.setStyleSheet("background:transparent;border:none;")
+        vl = QVBoxLayout(w)
+        vl.setContentsMargins(0, 0, 0, 0)
+        vl.setSpacing(6)
+
+        desc = QLabel(self._t("settings.custom_accounts_description", "Add your own Steam accounts for uploading"), w)
+        desc.setWordWrap(True)
+        desc.setStyleSheet(
+            f"font-size:10px;color:{self.c_text_disabled};background:transparent;border:none;"
+        )
+        vl.addWidget(desc)
+
+        self.custom_login_input = QLineEdit(w)
+        self.custom_login_input.setPlaceholderText(self.tr.t("settings.login_placeholder"))
+        self.custom_login_input.setFixedHeight(28)
+        self.custom_login_input.setStyleSheet(self._input_style())
+        vl.addWidget(self.custom_login_input)
+
+        self.custom_password_input = QLineEdit(w)
+        self.custom_password_input.setPlaceholderText(self.tr.t("settings.password_placeholder"))
+        self.custom_password_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.custom_password_input.setFixedHeight(28)
+        self.custom_password_input.setStyleSheet(self._input_style())
+        vl.addWidget(self.custom_password_input)
+
+        add_btn_text = self.tr.t("settings.add_account_button")
+        if add_btn_text == "settings.add_account_button":
+            add_btn_text = "Add Account"
+        add_btn = QPushButton(add_btn_text)
+        add_btn.setFixedHeight(26)
+        add_btn.setStyleSheet(self._compact_btn(True))
+        add_btn.clicked.connect(self._on_add_custom_account)
+        vl.addWidget(add_btn)
+
+        self._custom_accounts_list = QWidget(w)
+        self._custom_accounts_list.setStyleSheet("background:transparent;border:none;")
+        self._custom_accounts_layout = QVBoxLayout(self._custom_accounts_list)
+        self._custom_accounts_layout.setContentsMargins(0, 4, 0, 0)
+        self._custom_accounts_layout.setSpacing(3)
+        vl.addWidget(self._custom_accounts_list)
+
+        self._refresh_custom_accounts_list()
+        return w
+
+    def _refresh_custom_accounts_list(self) -> None:
+        while self._custom_accounts_layout.count():
+            item = self._custom_accounts_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        user_service = self.accounts.get_user_accounts_service()
+        if not user_service:
+            return
+
+        usernames = user_service.get_account_usernames()
+        if not usernames:
+            no_acc_text = self.tr.t("settings.no_custom_accounts")
+            if no_acc_text == "settings.no_custom_accounts":
+                no_acc_text = "No custom accounts added"
+            no_acc = QLabel(no_acc_text, self._custom_accounts_list)
+            no_acc.setStyleSheet(
+                f"font-size:10px;color:{self.c_text_disabled};background:transparent;border:none;padding:4px 0;"
+            )
+            self._custom_accounts_layout.addWidget(no_acc)
+            return
+
+        for username in usernames:
+            row = self._create_custom_account_row(username)
+            self._custom_accounts_layout.addWidget(row)
+
+    def _create_custom_account_row(self, username: str) -> QWidget:
+        row = QWidget(self._custom_accounts_list)
+        row.setFixedHeight(26)
+        row.setStyleSheet(
+            f"background:{self.c_bg_tertiary};border:1px solid {self.c_border};border-radius:4px;"
+        )
+        hl = QHBoxLayout(row)
+        hl.setContentsMargins(8, 2, 4, 2)
+        hl.setSpacing(6)
+
+        lbl = QLabel(username, row)
+        lbl.setStyleSheet(
+            f"font-size:11px;color:{self.c_text_primary};background:transparent;border:none;"
+        )
+        hl.addWidget(lbl, 1)
+
+        del_btn = QPushButton(row)
+        del_btn.setFixedSize(18, 18)
+        del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        close_icon = get_pixmap("ICON_CLOSE", 12)
+        if not close_icon.isNull():
+            del_btn.setIcon(QIcon(close_icon))
+            del_btn.setIconSize(QSize(12, 12))
+        else:
+            del_btn.setText("✕")
+        
+        del_btn.setStyleSheet(
+            f"QPushButton{{background:transparent;border:none;border-radius:9px;}}"
+            f"QPushButton:hover{{background:{self.c_bg_secondary};}}"
+        )
+        del_btn.clicked.connect(lambda _, u=username: self._on_remove_custom_account(u))
+        hl.addWidget(del_btn)
+
+        return row
+
+    def _on_add_custom_account(self) -> None:
+        username = self.custom_login_input.text().strip()
+        password = self.custom_password_input.text()
+
+        if not username or not password:
+            MessageBox(
+                self.theme, self.tr.t("dialog.warning"),
+                self.tr.t("settings.fill_all_fields"),
+                MessageBox.Icon.Warning, self,
+            ).exec()
+            return
+
+        user_service = self.accounts.get_user_accounts_service()
+        if not user_service:
+            return
+
+        if user_service.add_account(username, password):
+            self.custom_login_input.clear()
+            self.custom_password_input.clear()
+            self._refresh_custom_accounts_list()
+            success_msg = self.tr.t("settings.account_added")
+            if success_msg == "settings.account_added":
+                success_msg = "Account added successfully"
+            MessageBox(
+                self.theme, self.tr.t("dialog.success"),
+                success_msg,
+                MessageBox.Icon.Information, self,
+            ).exec()
+        else:
+            exists_msg = self.tr.t("settings.account_exists")
+            if exists_msg == "settings.account_exists":
+                exists_msg = "Account already exists"
+            MessageBox(
+                self.theme, self.tr.t("dialog.error"),
+                exists_msg,
+                MessageBox.Icon.Warning, self,
+            ).exec()
+
+    def _on_remove_custom_account(self, username: str) -> None:
+        confirm_msg = self.tr.t("settings.confirm_remove_account")
+        if confirm_msg == "settings.confirm_remove_account":
+            confirm_msg = f"Remove account '{username}'?"
+        else:
+            confirm_msg = confirm_msg.replace("{username}", username)
+        
+        mb = MessageBox(
+            self.theme, self.tr.t("dialog.confirm"),
+            confirm_msg,
+            MessageBox.Icon.Question, self,
+        )
+        y = mb.addButton(self.tr.t("buttons.yes"), MessageBox.ButtonRole.YesRole)
+        mb.addButton(self.tr.t("buttons.no"), MessageBox.ButtonRole.NoRole)
+        mb.exec()
+
+        if mb.clickedButton() == y:
+            user_service = self.accounts.get_user_accounts_service()
+            if user_service and user_service.remove_account(username):
+                self._refresh_custom_accounts_list()
 
     def _create_steam_login_section(self) -> QWidget:
         w = QWidget(self)

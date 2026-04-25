@@ -39,7 +39,7 @@ class SearchPanel(QWidget):
         )
         self.browse_toggle.setFixedHeight(36)
         self.browse_toggle.currentChanged.connect(self.browse_mode_changed.emit)
-        self.browse_toggle.hide()  # Hidden by default, controlled by workshop tab
+        self.browse_toggle.hide()
 
         self.info_primary_frame = self._create_info_box()
         self.info_secondary_frame = self._create_info_box()

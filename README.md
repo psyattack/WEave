@@ -164,11 +164,12 @@ This project is licensed under the **[MIT](LICENSE)** license.
 
 - [x] <strike>Themes</strike>
 - [x] <strike>Login via personal Steam account (For use with Steam failed 50 and similar)</strike>
+- [x] <strike>Interface optimization for different screen sizes and formats + window resize capability</strike>
 - [ ] Autostart
 - [ ] Tray + silent mode
 - [ ] Original WE functions (Preset editor, creating playlists, profiles, etc.)
 - [ ] Automatic updates
-- [x] <strike>Interface optimization for different screen sizes and formats + window resize capability</strike>
+- [ ] The ability to use Steam accounts with Steam Guard
 
 > If you have any problems or suggestions for improvement — create an [Issue](https://github.com/psyattack/WEave/issues) in the repository.
 
