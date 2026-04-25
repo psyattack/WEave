@@ -36,7 +36,7 @@ class DownloadService(QObject):
         if pubfileid in self.downloading:
             return False
 
-        username, password = self.account_service.get_credentials(account_index)
+        username, password = self.account_service.get_upload_credentials(account_index)
         output_dir = self.we_directory / "projects" / "myprojects" / pubfileid
 
         command = [

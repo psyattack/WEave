@@ -227,3 +227,33 @@ class FilterTagsFlowWidget(QWidget):
         for chip in self._chips.values():
             chip.reset()
         self.changed.emit()
+
+    def update_tags(self, tags: list[str], translated_map: dict[str, str]) -> None:
+        self._tags = tags
+        self._translated_map = translated_map
+        
+        for chip in self._chips.values():
+            chip.deleteLater()
+        self._chips.clear()
+        
+        while self._main_layout.count():
+            item = self._main_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        flow = CompactFlowLayout()
+        flow.set_max_width(self._max_width)
+
+        container = QWidget(self)
+        container.setStyleSheet("background: transparent; border: none;")
+        container.setLayout(flow)
+        container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        for tag in self._tags:
+            chip = FilterTagChip(self._translated_map.get(tag, tag), self.theme, self)
+            chip.state_changed.connect(self.changed.emit)
+            self._chips[tag] = chip
+            flow.add_widget_flow(chip)
+
+        flow.finish()
+        self._main_layout.addWidget(container)

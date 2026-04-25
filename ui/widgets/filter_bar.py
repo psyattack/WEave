@@ -472,6 +472,8 @@ class LocalFiltersPanel(PopupPanel):
         super().__init__(theme_manager, title=translator.t("labels.filters"), parent=parent)
         self.tr = translator
         self._sort_order = "desc"
+        self._available_misc_tags = []
+        self._available_genre_tags = []
         self._setup_ui()
         self.hide()
 
@@ -560,7 +562,7 @@ class LocalFiltersPanel(PopupPanel):
 
         misc_translations = WorkshopFilterConfig.get_translated_misc_tags(self.tr.t)
         self.misc_tags_widget = FilterTagsFlowWidget(
-            tags=WorkshopFilterConfig.MISC_TAG_KEYS,
+            tags=self._available_misc_tags,
             translated_map=misc_translations,
             theme_manager=self.theme,
             max_width=255,
@@ -579,7 +581,7 @@ class LocalFiltersPanel(PopupPanel):
 
         genre_translations = WorkshopFilterConfig.get_translated_genre_tags(self.tr.t)
         self.genre_tags_widget = FilterTagsFlowWidget(
-            tags=WorkshopFilterConfig.GENRE_TAG_KEYS,
+            tags=self._available_genre_tags,
             translated_map=genre_translations,
             theme_manager=self.theme,
             max_width=255,
@@ -747,6 +749,16 @@ class LocalFiltersPanel(PopupPanel):
         self.misc_tags_widget.reset_all()
         self.genre_tags_widget.reset_all()
 
+    def update_available_tags(self, misc_tags: list[str], genre_tags: list[str]) -> None:
+        self._available_misc_tags = misc_tags
+        self._available_genre_tags = genre_tags
+        
+        misc_translations = WorkshopFilterConfig.get_translated_misc_tags(self.tr.t)
+        self.misc_tags_widget.update_tags(misc_tags, misc_translations)
+        
+        genre_translations = WorkshopFilterConfig.get_translated_genre_tags(self.tr.t)
+        self.genre_tags_widget.update_tags(genre_tags, genre_translations)
+
 
 class UnifiedFilterBar(QWidget):
     MODE_WORKSHOP = "workshop"
@@ -877,3 +889,7 @@ class UnifiedFilterBar(QWidget):
         if self.mode == self.MODE_WORKSHOP:
             return self.filters_popup.get_filters(self.search_panel.text(), self._current_page)
         return self.filters_popup.get_filters(self.search_panel.text())
+
+    def update_available_tags(self, misc_tags: list[str], genre_tags: list[str]) -> None:
+        if self.mode == self.MODE_LOCAL:
+            self.filters_popup.update_available_tags(misc_tags, genre_tags)

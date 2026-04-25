@@ -1,11 +1,13 @@
 import webbrowser
+import weakref
 
-from PyQt6.QtCore import QEvent, QPoint, QTimer, Qt, QSize, pyqtSignal
+from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, pyqtSignal, QByteArray, QBuffer, QIODevice
+from PyQt6.QtGui import QMovie, QPainter, QPainterPath, QPixmap
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget, QPushButton
 
+from infrastructure.cache.image_cache import ImageCache
 from infrastructure.resources.resource_manager import get_icon
 from ui.dialogs.base_dialog import BaseDialog
-from ui.widgets.preview_popup import PreviewPopup
 from ui.widgets.progress import SmallCircularProgress
 
 
@@ -25,7 +27,6 @@ class DownloadsDialog(BaseDialog):
         self.setFixedSize(400, 400)
 
         self._setup_content()
-        self._setup_preview_popup()
         self._setup_update_timer()
 
     def set_caches(self, preview_cache: dict, size_cache: dict) -> None:
@@ -43,22 +44,7 @@ class DownloadsDialog(BaseDialog):
 
     def hideEvent(self, event):
         self.update_timer.stop()
-        self.preview_popup.hide_preview()
-        self.preview_popup.force_cancel()
         super().hideEvent(event)
-
-    def eventFilter(self, obj, event):
-        if isinstance(obj, QLabel):
-            pubfileid = obj.property("pubfileid")
-            if pubfileid:
-                if event.type() == QEvent.Type.Enter:
-                    self._show_item_preview(pubfileid, obj)
-                    return False
-                if event.type() == QEvent.Type.Leave:
-                    self.preview_popup.hide_preview()
-                    return False
-
-        return super().eventFilter(obj, event)
 
     def _setup_content(self) -> None:
         scroll = QScrollArea(self)
@@ -103,9 +89,6 @@ class DownloadsDialog(BaseDialog):
 
         scroll.setWidget(self.scroll_container)
         self.content_layout.addWidget(scroll)
-
-    def _setup_preview_popup(self) -> None:
-        self.preview_popup = PreviewPopup(self.theme, self.tr, self)
 
     def _setup_update_timer(self) -> None:
         self.update_timer = QTimer()
@@ -168,6 +151,25 @@ class DownloadsDialog(BaseDialog):
         item_layout.setContentsMargins(8, 8, 10, 8)
         item_layout.setSpacing(10)
 
+        preview_url = self._preview_url_cache.get(pubfileid)
+        if not preview_url and self.parser:
+            cached_item = self.parser.get_cached_item(pubfileid)
+            if cached_item and cached_item.preview_url:
+                preview_url = cached_item.preview_url
+                self._preview_url_cache[pubfileid] = preview_url
+
+        preview_label = QLabel(item_widget)
+        preview_label.setFixedSize(52, 52)
+        preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        preview_label.setStyleSheet("background: transparent; border: none;")
+        
+        if preview_url:
+            self._load_preview_for_label(preview_label, preview_url)
+        else:
+            preview_label.setText("")
+        
+        item_layout.addWidget(preview_label)
+
         progress = SmallCircularProgress(
             size=52,
             line_width=3,
@@ -207,10 +209,8 @@ class DownloadsDialog(BaseDialog):
             border: none;
             """
         )
+        title_label.setWordWrap(True)
         title_label.setCursor(Qt.CursorShape.PointingHandCursor)
-        title_label.setProperty("pubfileid", pubfileid)
-        title_label.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
-        title_label.installEventFilter(self)
         title_label.mousePressEvent = lambda e, pid=pubfileid: self._on_open_browser(pid)
         text_layout.addWidget(title_label)
 
@@ -227,6 +227,7 @@ class DownloadsDialog(BaseDialog):
             border: none;
             """
         )
+        status_label.setWordWrap(True)
         text_layout.addWidget(status_label)
 
         item_layout.addWidget(text_container, 1)
@@ -242,17 +243,107 @@ class DownloadsDialog(BaseDialog):
 
         self.scroll_layout.addWidget(item_widget)
 
-    def _show_item_preview(self, pubfileid: str, widget: QWidget) -> None:
-        preview_url = self._preview_url_cache.get(pubfileid)
+    def _load_preview_for_label(self, label: QLabel, preview_url: str) -> None:
+        cache = ImageCache.instance()
 
-        if not preview_url and self.parser:
-            cached_item = self.parser.get_cached_item(pubfileid)
-            if cached_item and cached_item.preview_url:
-                preview_url = cached_item.preview_url
-                self._preview_url_cache[pubfileid] = preview_url
+        gif_data = cache.get_gif(preview_url)
+        if gif_data:
+            self._play_gif_in_label(label, gif_data)
+            return
 
-        global_pos = widget.mapToGlobal(QPoint(-65, widget.height() // 2 + 12))
-        self.preview_popup.show_preview(preview_url or "", global_pos)
+        pixmap = cache.get_pixmap(preview_url)
+        if pixmap:
+            self._set_pixmap_in_label(
+                label,
+                pixmap.scaled(
+                    52,
+                    52,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+            return
+
+        label.setText("")
+
+        weak_label = weakref.ref(label)
+        expected_url = preview_url
+
+        def on_loaded(url: str, data, is_gif: bool):
+            label_ref = weak_label()
+            if label_ref is None:
+                return
+
+            if data is None:
+                return
+
+            if is_gif:
+                self._play_gif_in_label(label_ref, data)
+            else:
+                self._set_pixmap_in_label(
+                    label_ref,
+                    data.scaled(
+                        52,
+                        52,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                )
+
+        cache.load_image(preview_url, callback=on_loaded)
+
+    def _play_gif_in_label(self, label: QLabel, data: QByteArray) -> None:
+        buffer = QBuffer(label)
+        buffer.setData(data)
+        buffer.open(QIODevice.OpenModeFlag.ReadOnly)
+
+        movie = QMovie(label)
+        movie.setDevice(buffer)
+        
+        movie.jumpToFrame(0)
+        original_size = movie.currentImage().size()
+        if not original_size.isEmpty():
+            scaled_size = original_size.scaled(52, 52, Qt.AspectRatioMode.KeepAspectRatio)
+            movie.setScaledSize(scaled_size)
+
+        label.setStyleSheet("background: transparent; border: none;")
+        label.setText("")
+        label.setMovie(movie)
+        
+        movie.frameChanged.connect(lambda frame_num: self._on_label_gif_frame_changed(label, movie))
+        movie.start()
+
+    def _on_label_gif_frame_changed(self, label: QLabel, movie: QMovie) -> None:
+        if movie is None:
+            return
+
+        current_pixmap = movie.currentPixmap()
+        if not current_pixmap.isNull():
+            label.setPixmap(self._create_rounded_pixmap(current_pixmap, radius=6))
+
+    def _set_pixmap_in_label(self, label: QLabel, pixmap: QPixmap) -> None:
+        label.setStyleSheet("background: transparent; border: none;")
+        label.setText("")
+        label.setPixmap(self._create_rounded_pixmap(pixmap, radius=6))
+
+    def _create_rounded_pixmap(self, pixmap: QPixmap, radius: int = 6) -> QPixmap:
+        if pixmap.isNull():
+            return pixmap
+
+        rounded = QPixmap(pixmap.size())
+        rounded.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(rounded)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+
+        path = QPainterPath()
+        path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, pixmap)
+        painter.end()
+
+        return rounded
 
     def _on_open_browser(self, pubfileid: str) -> None:
         webbrowser.open(f"https://steamcommunity.com/sharedfiles/filedetails/?id={pubfileid}")
