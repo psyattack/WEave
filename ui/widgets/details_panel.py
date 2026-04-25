@@ -311,13 +311,14 @@ class DetailsPanel(QWidget):
         self.id_widget.setVisible(show_id)
 
     def _update_tags_display(self) -> None:
-        if self._mode == self.MODE_NONE:
+        if not self.isVisible():
             return
         
         if self._mode == self.MODE_INSTALLED:
             self._setup_installed_details()
         elif self._mode == self.MODE_WORKSHOP:
-            self._setup_workshop_details()
+            if self._current_item:
+                self._setup_workshop_details(self._current_item)
 
     def _create_details_section(self, layout) -> None:
         self.details_container = QWidget(self)
