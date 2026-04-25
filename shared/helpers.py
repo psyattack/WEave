@@ -10,6 +10,7 @@ from services.config_service import ConfigService
 
 
 def is_frozen_build() -> bool:
+    """Check if running as frozen executable (PyInstaller/cx_Freeze)."""
     return bool(getattr(sys, "frozen", False))
 
 
@@ -19,6 +20,15 @@ def restart_application(
     password: Optional[str] = None,
     **kwargs,
 ) -> None:
+    """
+    Restart the application with optional credentials.
+    
+    Args:
+        quit_app: Whether to quit current instance
+        login: Optional login to pass to new instance
+        password: Optional password to pass to new instance
+        **kwargs: Additional command-line arguments
+    """
     args = ["--restart"]
 
     if login is not None:
@@ -26,6 +36,7 @@ def restart_application(
     if password is not None:
         args.extend(["-password", password])
 
+    # Convert kwargs to command-line arguments
     for key, value in kwargs.items():
         arg_key = f"-{key}" if len(key) == 1 else f"--{key}"
         if value is True:
@@ -33,6 +44,7 @@ def restart_application(
         elif isinstance(value, str):
             args.extend([arg_key, value])
 
+    # Filter out existing credentials and restart flag
     executable = sys.executable
     filtered_args = []
     skip_next = False
@@ -44,6 +56,7 @@ def restart_application(
             skip_next = True
             continue
         filtered_args.append(arg)
+    
     restart_args = filtered_args + args
     subprocess.Popen([executable] + restart_args)
 
@@ -57,7 +70,14 @@ def request_restart_or_exit(
     password: Optional[str] = None,
     **kwargs,
 ) -> None:
+    """
+    Request application restart or exit for frozen builds.
+    
+    For frozen builds, stores credentials temporarily and exits.
+    For development builds, performs full restart.
+    """
     if is_frozen_build():
+        # Store credentials temporarily for frozen builds
         if login is not None and password is not None:
             try:
                 config_service = ConfigService()
@@ -78,11 +98,23 @@ def request_restart_or_exit(
 
 
 def extract_pubfileid(url_or_text: str) -> str:
+    """
+    Extract Steam Workshop file ID from URL or text.
+    
+    Searches for 8-10 digit numbers.
+    Returns empty string if not found.
+    """
     match = re.search(r"\b\d{8,10}\b", url_or_text)
     return match.group(0) if match else ""
 
 
 def parse_file_size_to_bytes(size_str: str) -> int:
+    """
+    Parse human-readable file size to bytes.
+    
+    Supports: B, KB, MB, GB, TB
+    Examples: "1.5 MB", "500KB", "2.3 GB"
+    """
     if not size_str or not isinstance(size_str, str):
         return 0
 
@@ -110,6 +142,14 @@ def parse_file_size_to_bytes(size_str: str) -> int:
 
 
 def parse_depot_status(status_text: str) -> dict:
+    """
+    Parse DepotDownloader status text to extract progress information.
+    
+    Extracts downloaded/total bytes and percentage from status strings.
+    
+    Returns:
+        Dictionary with keys: downloaded_bytes, total_bytes, percent
+    """
     result = {
         "downloaded_bytes": 0,
         "total_bytes": 0,
@@ -118,6 +158,7 @@ def parse_depot_status(status_text: str) -> dict:
     if not status_text:
         return result
 
+    # Extract "X MB / Y MB" pattern
     progress_match = re.search(
         r"([\d.,]+)\s*(TB|GB|MB|KB|B)\s*/\s*([\d.,]+)\s*(TB|GB|MB|KB|B)",
         status_text,
@@ -129,6 +170,7 @@ def parse_depot_status(status_text: str) -> dict:
         result["downloaded_bytes"] = parse_file_size_to_bytes(downloaded)
         result["total_bytes"] = parse_file_size_to_bytes(total)
 
+    # Extract percentage
     percent_match = re.search(r"([\d.,]+)\s*%", status_text)
     if percent_match:
         try:
@@ -140,4 +182,5 @@ def parse_depot_status(status_text: str) -> dict:
 
 
 def project_root() -> Path:
+    """Get project root directory path."""
     return Path(__file__).resolve().parent.parent

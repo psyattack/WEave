@@ -8,6 +8,15 @@ from shared.filesystem import get_app_data_dir
 
 
 class ConfigService:
+    """
+    Central configuration service for application settings, metadata, and backgrounds.
+    
+    Manages three separate repositories:
+    - App settings (user preferences, system config)
+    - Wallpaper metadata (cached workshop data)
+    - Background images (UI customization)
+    """
+    
     def __init__(self, base_path: Path | None = None):
         if base_path is None:
             base_path = get_app_data_dir()
@@ -20,14 +29,21 @@ class ConfigService:
         self.backgrounds = self.backgrounds_repo.load()
 
     def reload(self) -> None:
+        """Reload all settings from disk."""
         self.app_settings = self.app_settings_repo.load()
         self.backgrounds = self.backgrounds_repo.load()
 
     def save(self) -> bool:
+        """Save all settings to disk."""
         return self.app_settings_repo.save(self.app_settings) and \
                self.backgrounds_repo.save(self.backgrounds)
 
     def get(self, key: str, default: Any = None) -> Any:
+        """
+        Get setting value by dot-notation key.
+        
+        Example: get("settings.general.appearance.theme")
+        """
         value = self.app_settings
         for part in key.split("."):
             if not isinstance(value, dict):
@@ -38,6 +54,11 @@ class ConfigService:
         return value
 
     def set(self, key: str, value: Any) -> None:
+        """
+        Set setting value by dot-notation key.
+        
+        Creates nested dictionaries as needed.
+        """
         parts = key.split(".")
         current = self.app_settings
         for part in parts[:-1]:
@@ -49,6 +70,7 @@ class ConfigService:
         self.save()
 
     def remove(self, key: str) -> None:
+        """Remove setting by dot-notation key."""
         parts = key.split(".")
         current = self.app_settings
         for part in parts[:-1]:
@@ -61,18 +83,21 @@ class ConfigService:
             del current[parts[-1]]
             self.save()
 
+    # Wallpaper Engine directory
     def get_directory(self) -> str:
         return self.get("settings.system.directory", "")
 
     def set_directory(self, path: str) -> None:
         self.set("settings.system.directory", path)
 
+    # Account settings
     def get_account_number(self) -> int:
         return self.get("settings.account.account.account_number", 3)
 
     def set_account_number(self, number: int) -> None:
         self.set("settings.account.account.account_number", number)
 
+    # Appearance settings
     def get_language(self) -> str:
         return self.get("settings.general.appearance.language", "en")
 
@@ -91,6 +116,13 @@ class ConfigService:
     def set_show_id_section(self, value: bool) -> None:
         self.set("settings.general.appearance.show_id_section", value)
 
+    def get_alternative_tag_display(self) -> bool:
+        return self.get("settings.general.appearance.alternative_tag_display", False)
+
+    def set_alternative_tag_display(self, value: bool) -> None:
+        self.set("settings.general.appearance.alternative_tag_display", value)
+
+    # Behavior settings
     def get_minimize_on_apply(self) -> bool:
         return self.get("settings.general.behavior.minimize_on_apply", False)
 
@@ -145,12 +177,26 @@ class ConfigService:
             },
         )
 
+    def get_auto_init_metadata(self) -> bool:
+        return self.get("settings.general.behavior.auto_init_metadata", False)
+
+    def set_auto_init_metadata(self, value: bool) -> None:
+        self.set("settings.general.behavior.auto_init_metadata", value)
+
+    def get_auto_apply_last_downloaded(self) -> bool:
+        return self.get("settings.general.behavior.auto_apply_last_downloaded", False)
+
+    def set_auto_apply_last_downloaded(self, value: bool) -> None:
+        self.set("settings.general.behavior.auto_apply_last_downloaded", value)
+
+    # Debug settings
     def get_debug_mode(self) -> bool:
         return self.get("settings.advanced.debug.debug_mode", False)
 
     def set_debug_mode(self, value: bool) -> None:
         self.set("settings.advanced.debug.debug_mode", value)
 
+    # Wallpaper metadata management
     def get_wallpaper_metadata(self, pubfileid: str) -> Optional[dict]:
         return self.metadata_repo.get(pubfileid)
 
@@ -163,6 +209,7 @@ class ConfigService:
     def remove_wallpaper_metadata(self, pubfileid: str) -> None:
         self.metadata_repo.remove(pubfileid)
 
+    # Background image settings
     def get_background_image(self, area: str) -> str:
         return self.backgrounds.get(area, {}).get("image", "")
 
@@ -196,21 +243,3 @@ class ConfigService:
     def set_background_extend_titlebar(self, v: bool) -> None:
         self.backgrounds["extend_to_titlebar"] = v
         self.backgrounds_repo.save(self.backgrounds)
-
-    def get_auto_init_metadata(self) -> bool:
-        return self.get("settings.general.behavior.auto_init_metadata", False)
-
-    def set_auto_init_metadata(self, value: bool) -> None:
-        self.set("settings.general.behavior.auto_init_metadata", value)
-
-    def get_auto_apply_last_downloaded(self) -> bool:
-        return self.get("settings.general.behavior.auto_apply_last_downloaded", False)
-
-    def set_auto_apply_last_downloaded(self, value: bool) -> None:
-        self.set("settings.general.behavior.auto_apply_last_downloaded", value)
-
-    def get_alternative_tag_display(self) -> bool:
-        return self.get("settings.general.appearance.alternative_tag_display", False)
-
-    def set_alternative_tag_display(self, value: bool) -> None:
-        self.set("settings.general.appearance.alternative_tag_display", value)

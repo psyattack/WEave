@@ -7,11 +7,23 @@ from services.user_accounts_service import UserAccountsService
 
 
 class AccountService:
+    """
+    Manages Steam account credentials for workshop parsing and downloading.
+    
+    Provides access to:
+    - Default upload accounts (hardcoded, base64-encoded)
+    - Parsing account (for browsing workshop)
+    - User-added custom accounts
+    - Runtime credentials from command-line arguments
+    """
+    
+    # Account used for parsing workshop pages (read-only browsing)
     _PARSING_ACCOUNT = {
         "username": "weworkshopmanager2",
         "password": "a2Fpem9rdV9vX2h5b3U=",
     }
     
+    # Default accounts for downloading workshop items
     _DEFAULT_UPLOAD_ACCOUNTS = {
         "ruiiixx": "UzY3R0JUQjgzRDNZ",
         "premexilmenledgconis": "M3BYYkhaSmxEYg==",
@@ -33,9 +45,16 @@ class AccountService:
 
     @classmethod
     def from_runtime_arguments(cls) -> "AccountService":
+        """
+        Create AccountService from command-line arguments and config.
+        
+        Checks for -login and -password arguments, or temporary credentials
+        stored in config (used after restart).
+        """
         custom_login = None
         custom_password = None
 
+        # Check command-line arguments
         if "-login" in sys.argv:
             try:
                 index = sys.argv.index("-login")
@@ -52,6 +71,7 @@ class AccountService:
             except Exception:
                 custom_password = None
 
+        # Check temporary credentials from config (after restart)
         if not custom_login or not custom_password:
             try:
                 config_service = ConfigService()
@@ -67,6 +87,7 @@ class AccountService:
             except Exception:
                 pass
 
+        # Build account list: defaults + user-added + custom
         upload_accounts = cls._build_default_upload_accounts()
         
         user_accounts_service = UserAccountsService()
@@ -88,6 +109,7 @@ class AccountService:
 
     @classmethod
     def _build_default_upload_accounts(cls) -> list[AccountCredentials]:
+        """Decode and build default upload account list."""
         result: list[AccountCredentials] = []
         for username, encoded_password in cls._DEFAULT_UPLOAD_ACCOUNTS.items():
             decoded_password = base64.b64decode(encoded_password).decode("utf-8")
@@ -102,6 +124,7 @@ class AccountService:
     
     @classmethod
     def _build_parsing_account(cls) -> AccountCredentials:
+        """Decode and build parsing account."""
         decoded_password = base64.b64decode(cls._PARSING_ACCOUNT["password"]).decode("utf-8")
         return AccountCredentials(
             username=cls._PARSING_ACCOUNT["username"],
@@ -110,9 +133,11 @@ class AccountService:
         )
 
     def get_upload_accounts(self) -> list[str]:
+        """Get list of upload account usernames."""
         return [account.username for account in self._upload_accounts]
 
     def get_upload_account(self, index: int) -> str:
+        """Get upload account username by index."""
         if not self._upload_accounts:
             return ""
 
@@ -122,6 +147,7 @@ class AccountService:
         return self._upload_accounts[0].username
 
     def get_password(self, account_name: str) -> str:
+        """Get password for any account (upload or parsing)."""
         for account in self._upload_accounts:
             if account.username == account_name:
                 return account.password
@@ -132,6 +158,7 @@ class AccountService:
         return ""
 
     def get_upload_credentials(self, index: int) -> tuple[str, str]:
+        """Get upload account credentials as tuple (username, password)."""
         if not self._upload_accounts:
             return "", ""
 
@@ -143,6 +170,7 @@ class AccountService:
         return account.username, account.password
 
     def get_upload_credentials_model(self, index: int) -> AccountCredentials:
+        """Get upload account credentials as model object."""
         if not self._upload_accounts:
             return AccountCredentials(username="", password="")
 
@@ -152,10 +180,13 @@ class AccountService:
         return self._upload_accounts[0]
     
     def get_parsing_credentials(self) -> tuple[str, str]:
+        """Get parsing account credentials as tuple."""
         return self._parsing_account.username, self._parsing_account.password
     
     def get_parsing_credentials_model(self) -> AccountCredentials:
+        """Get parsing account credentials as model object."""
         return self._parsing_account
     
     def get_user_accounts_service(self) -> UserAccountsService | None:
+        """Get user accounts service for managing custom accounts."""
         return self._user_accounts_service

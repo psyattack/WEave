@@ -7,17 +7,32 @@ from shared.constants import APP_NAME
 
 
 def ensure_directory(path: Union[str, Path]) -> Path:
+    """
+    Create directory if it doesn't exist.
+    
+    Creates parent directories as needed.
+    """
     target = Path(path)
     target.mkdir(parents=True, exist_ok=True)
     return target
 
 
 def get_app_data_dir() -> Path:
+    """
+    Get application data directory path.
+    
+    Returns path to %LOCALAPPDATA%/WEave on Windows.
+    """
     app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
     return app_data / APP_NAME
 
 
 def get_directory_size(path: Union[str, Path]) -> int:
+    """
+    Calculate total size of directory in bytes.
+    
+    Recursively sums all file sizes, ignoring errors.
+    """
     total = 0
     target = Path(path)
 
@@ -35,6 +50,11 @@ def get_directory_size(path: Union[str, Path]) -> int:
 
 
 def get_folder_mtime(path: Union[str, Path]) -> float:
+    """
+    Get folder modification time.
+    
+    Returns Unix timestamp or 0.0 on error.
+    """
     try:
         return Path(path).stat().st_mtime
     except Exception:
@@ -42,6 +62,16 @@ def get_folder_mtime(path: Union[str, Path]) -> float:
 
 
 def clear_cache_if_needed(path: Union[str, Path], max_size_mb: int = 200) -> bool:
+    """
+    Clear cache directory if it exceeds size limit.
+    
+    Args:
+        path: Cache directory path
+        max_size_mb: Maximum size in megabytes
+        
+    Returns:
+        True if cache was cleared, False otherwise
+    """
     cache_path = Path(path)
     if not cache_path.exists():
         return False

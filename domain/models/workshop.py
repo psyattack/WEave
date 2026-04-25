@@ -4,6 +4,12 @@ from typing import Optional
 
 @dataclass
 class WorkshopItem:
+    """
+    Represents a Steam Workshop item (wallpaper or asset).
+    
+    Contains all information displayed in workshop browse results,
+    including download status and collection membership.
+    """
     pubfileid: str
     title: str = ""
     preview_url: str = ""
@@ -24,9 +30,15 @@ class WorkshopItem:
 
 @dataclass
 class WorkshopFilters:
+    """
+    Filter criteria for workshop search and browse.
+    
+    Supports all Steam Workshop filtering options including
+    search text, sorting, tags, and content ratings.
+    """
     search: str = ""
-    sort: str = "trend"
-    days: str = "7"
+    sort: str = "trend"  # trend, popular, recent, etc.
+    days: str = "7"  # Time range for trending
     category: str = ""
     type_tag: str = ""
     age_rating: str = ""
@@ -44,6 +56,11 @@ class WorkshopFilters:
 
 @dataclass
 class WorkshopPage:
+    """
+    Represents a page of workshop browse results.
+    
+    Contains items, pagination info, and the filters used to fetch the page.
+    """
     items: list[WorkshopItem] = field(default_factory=list)
     current_page: int = 1
     total_pages: int = 1
@@ -53,6 +70,11 @@ class WorkshopPage:
 
 @dataclass
 class WorkshopCollection:
+    """
+    Represents a Steam Workshop collection (curated list of items).
+    
+    Lightweight representation for collection browse results.
+    """
     pubfileid: str
     title: str = ""
     preview_url: str = ""
@@ -64,6 +86,12 @@ class WorkshopCollection:
 
 @dataclass
 class CollectionContents:
+    """
+    Full contents of a workshop collection.
+    
+    Includes all items in the collection, related collections,
+    and collection metadata.
+    """
     collection_id: str
     title: str = ""
     description: str = ""

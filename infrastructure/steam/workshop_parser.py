@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from typing import Callable, Optional
 
 from PyQt6.QtCore import QObject, QTimer, QUrl, pyqtSignal
@@ -19,53 +18,8 @@ from infrastructure.steam.workshop_scripts import (
     build_bg_item_details_poll_script
 )
 from infrastructure.steam.workshop_url_builder import WorkshopUrlBuilder
+from shared.cache_utils import LRUCache
 from shared.filesystem import get_app_data_dir
-
-
-class WorkshopPageCache:
-    def __init__(self, max_pages: int = 20):
-        self.max_pages = max_pages
-        self._pages: OrderedDict[str, WorkshopPage] = OrderedDict()
-
-    def get(self, url: str) -> Optional[WorkshopPage]:
-        if url not in self._pages:
-            return None
-        self._pages.move_to_end(url)
-        return self._pages[url]
-
-    def set(self, url: str, page: WorkshopPage) -> None:
-        if url in self._pages:
-            self._pages.move_to_end(url)
-        self._pages[url] = page
-
-        while len(self._pages) > self.max_pages:
-            self._pages.popitem(last=False)
-
-    def clear(self) -> None:
-        self._pages.clear()
-
-
-class WorkshopItemCache:
-    def __init__(self, max_items: int = 600):
-        self.max_items = max_items
-        self._items: OrderedDict[str, WorkshopItem] = OrderedDict()
-
-    def get(self, pubfileid: str) -> Optional[WorkshopItem]:
-        if pubfileid not in self._items:
-            return None
-        self._items.move_to_end(pubfileid)
-        return self._items[pubfileid]
-
-    def set(self, pubfileid: str, item: WorkshopItem) -> None:
-        if pubfileid in self._items:
-            self._items.move_to_end(pubfileid)
-        self._items[pubfileid] = item
-
-        while len(self._items) > self.max_items:
-            self._items.popitem(last=False)
-
-    def clear(self) -> None:
-        self._items.clear()
 
 
 class WorkshopParser(QObject):
@@ -135,8 +89,9 @@ class WorkshopParser(QObject):
         self._author_request_id = 0
         self._current_page_filters = None
 
-        self._page_cache = WorkshopPageCache()
-        self._item_cache = WorkshopItemCache()
+        # LRU caches for workshop pages and items
+        self._page_cache = LRUCache[WorkshopPage](max_size=20)
+        self._item_cache = LRUCache[WorkshopItem](max_size=600)
 
         self._setup_webview()
 

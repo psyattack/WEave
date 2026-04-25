@@ -2,6 +2,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from infrastructure.persistence.json_storage import JsonStorage
+from shared.dict_utils import deep_merge
 
 DEFAULT_APP_SETTINGS = {
     "system": {
@@ -45,22 +46,16 @@ DEFAULT_APP_SETTINGS = {
 
 
 class AppSettingsRepository:
+    """Repository for application settings with default value merging."""
 
     def __init__(self, settings_path: str | Path = "app_settings.json"):
         self.storage = JsonStorage(settings_path)
 
     def load(self) -> dict:
+        """Load settings from storage, merging with defaults."""
         loaded = self.storage.load(default=deepcopy(DEFAULT_APP_SETTINGS))
-        return self._deep_merge(deepcopy(DEFAULT_APP_SETTINGS), loaded)
+        return deep_merge(deepcopy(DEFAULT_APP_SETTINGS), loaded)
 
     def save(self, data: dict) -> bool:
+        """Save settings to storage."""
         return self.storage.save(data)
-
-    def _deep_merge(self, base: dict, override: dict) -> dict:
-        result = deepcopy(base)
-        for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = self._deep_merge(result[key], value)
-            else:
-                result[key] = value
-        return result
