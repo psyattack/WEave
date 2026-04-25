@@ -887,7 +887,7 @@ class MainWindow(QMainWindow):
         )
 
         self.top_tabs = AnimatedSegmentedTabs(
-            [self.tr.t("tabs.workshop"), self.tr.t("tabs.wallpapers")],
+            [self.tr.t("tabs.workshop"), self.tr.t("tabs.collections"), self.tr.t("tabs.wallpapers")],
             self.theme,
             self,
         )
@@ -939,7 +939,20 @@ class MainWindow(QMainWindow):
         return nav
 
     def _on_top_tab_changed(self, index: int) -> None:
-        self.stack.setCurrentIndex(index)
+        # Index 0: Workshop (Wallpapers), Index 1: Collections, Index 2: Installed
+        if index == 0:
+            # Workshop tab - show wallpapers
+            self.stack.setCurrentIndex(0)
+            if hasattr(self.workshop_tab, '_switch_to_wallpapers_mode'):
+                self.workshop_tab._switch_to_wallpapers_mode()
+        elif index == 1:
+            # Collections tab
+            self.stack.setCurrentIndex(0)
+            if hasattr(self.workshop_tab, '_switch_to_collections_mode'):
+                self.workshop_tab._switch_to_collections_mode()
+        elif index == 2:
+            # Installed tab
+            self.stack.setCurrentIndex(1)
 
     def _apply_action_button_style_like_sidenav(self, button: AnimatedIconButton) -> None:
         button.setStyleSheet(f"""

@@ -31,7 +31,6 @@ class WorkshopNavigationState:
     author_name: str = ""
     author_url: str = ""
     selected_pubfileid: str | None = None
-    browse_toggle_index: int = 0
     collection_stack: list[str] = field(default_factory=list)
     current_collection_id: str | None = None
 
@@ -159,9 +158,6 @@ class WorkshopTab(QWidget):
         self.details_panel.author_clicked.connect(self._on_author_clicked)
         self.parser.collection_contents_loaded.connect(self._on_collection_contents_loaded)
         self.filter_bar.search_panel.author_close_requested.connect(self._exit_author_mode)
-        self.filter_bar.search_panel.browse_mode_changed.connect(
-            self._on_browse_mode_changed
-        )
 
         self.dm.download_completed.connect(self._on_download_completed)
 
@@ -490,8 +486,6 @@ class WorkshopTab(QWidget):
             author_name=self._author_name,
             author_url=self._author_url,
             selected_pubfileid=self.selected_pubfileid,
-            browse_toggle_index=self.filter_bar.search_panel.browse_toggle.currentIndex()
-            if hasattr(self.filter_bar.search_panel, "browse_toggle") else 0,
             collection_stack=list(self._collection_stack),
             current_collection_id=current_collection_id,
         )
@@ -507,9 +501,6 @@ class WorkshopTab(QWidget):
         self._author_url = state.author_url
         self.selected_pubfileid = state.selected_pubfileid
         self._collection_stack = list(state.collection_stack)
-
-        if hasattr(self.filter_bar.search_panel, "browse_toggle"):
-            self.filter_bar.search_panel.browse_toggle.setCurrentIndex(state.browse_toggle_index)
 
         if self._author_url:
             self.filter_bar.search_panel.show_author_close()
@@ -550,8 +541,6 @@ class WorkshopTab(QWidget):
     def _initial_load(self) -> None:
         self._initial_load_done = True
         self._nav_mode = self.NAV_NORMAL
-        if hasattr(self, '_browse_toggle'):
-            self.filter_bar.search_panel.browse_toggle.setCurrentIndex(0)
         self.parser.load_page(self.filter_bar.get_current_filters())
 
     def _on_refresh_requested(self, filters) -> None:
@@ -656,25 +645,36 @@ class WorkshopTab(QWidget):
 
         self.details_panel.set_collection_info(contents)
 
-    def _on_browse_mode_changed(self, index: int) -> None:
-        self.current_page = 1
-        self.selected_pubfileid = None
-        self._collection_stack.clear()
-        filters = self.filter_bar.get_current_filters()
-        filters.page = 1
-        self.filter_bar.set_page(1)
-
-        if self._author_url:
-            if index == 1:
-                self._nav_mode = self.NAV_AUTHOR_COLLECTIONS
-            else:
+    def _switch_to_wallpapers_mode(self) -> None:
+        """Switch to wallpapers mode (called from main window tab switch)"""
+        if self._nav_mode == self.NAV_GLOBAL_COLLECTIONS or self._nav_mode == self.NAV_AUTHOR_COLLECTIONS:
+            self.current_page = 1
+            self.selected_pubfileid = None
+            self._collection_stack.clear()
+            filters = self.filter_bar.get_current_filters()
+            filters.page = 1
+            self.filter_bar.set_page(1)
+            
+            if self._author_url:
                 self._nav_mode = self.NAV_AUTHOR_ITEMS
-            self._load_current_mode_page()
-        else:
-            if index == 1:
-                self._nav_mode = self.NAV_GLOBAL_COLLECTIONS
             else:
                 self._nav_mode = self.NAV_NORMAL
+            self._load_current_mode_page()
+
+    def _switch_to_collections_mode(self) -> None:
+        """Switch to collections mode (called from main window tab switch)"""
+        if self._nav_mode == self.NAV_NORMAL or self._nav_mode == self.NAV_AUTHOR_ITEMS:
+            self.current_page = 1
+            self.selected_pubfileid = None
+            self._collection_stack.clear()
+            filters = self.filter_bar.get_current_filters()
+            filters.page = 1
+            self.filter_bar.set_page(1)
+            
+            if self._author_url:
+                self._nav_mode = self.NAV_AUTHOR_COLLECTIONS
+            else:
+                self._nav_mode = self.NAV_GLOBAL_COLLECTIONS
             self._load_current_mode_page()
 
     def _load_current_mode_page(self) -> None:
@@ -707,9 +707,11 @@ class WorkshopTab(QWidget):
         self.selected_pubfileid = None
 
         self.filter_bar.search_panel.show_author_close()
-        self.filter_bar.search_panel.browse_toggle.setCurrentIndex(0)
         self._set_sort_period_enabled(False)
         self._load_current_mode_page()
+        
+        # Reset scroll position
+        self.scroll_area.verticalScrollBar().setValue(0)
 
     def _exit_author_mode(self) -> None:
         self._author_name = ""
@@ -726,7 +728,6 @@ class WorkshopTab(QWidget):
 
         self.current_page = 1
         self._nav_mode = self.NAV_NORMAL
-        self.filter_bar.search_panel.browse_toggle.setCurrentIndex(0)
         filters = self.filter_bar.get_current_filters()
         filters.page = 1
         self.filter_bar.set_page(1)
@@ -750,6 +751,9 @@ class WorkshopTab(QWidget):
         self.total_pages = 1
         self._current_collection_contents = None
         self.parser.load_collection_contents(pubfileid)
+        
+        # Reset scroll position
+        self.scroll_area.verticalScrollBar().setValue(0)
 
     def _on_collection_back(self) -> None:
         self._current_collection_contents = None
