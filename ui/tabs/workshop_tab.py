@@ -17,7 +17,6 @@ from ui.widgets.flow_layout import AdaptiveGridWidget
 from ui.widgets.grid_items import SkeletonGridItem, WorkshopGridItem
 from ui.widgets.grid_items import CollectionGridItem
 from ui.widgets.loading_overlay import LoadingOverlay
-from ui.widgets.preview_popup import PreviewPopup
 from infrastructure.steam.workshop_parser import WorkshopParser
 from infrastructure.steam.workshop_url_builder import WorkshopUrlBuilder
 
@@ -223,8 +222,6 @@ class WorkshopTab(QWidget):
 
         self._details_bg = BackgroundImageWidget(self.details_card, border_radius=15, border_inset=1)
         self._details_bg.set_base_color(self.theme.get_color("bg_secondary"))
-
-        self.preview_popup = PreviewPopup(self.theme, self.tr, self)
 
     def apply_backgrounds(self, config, theme) -> None:
         self._content_bg.set_image_from_base64(config.get_background_image("tabs"))

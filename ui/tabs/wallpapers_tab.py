@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtProperty
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from ui.widgets.background_widget import BackgroundImageWidget
 from shared.filesystem import get_directory_size, get_folder_mtime
@@ -98,6 +98,12 @@ class WallpapersTab(QWidget):
         self._all_wallpapers_data: list[dict[str, Any]] = []
         self._details_panel_margin = 15
         self._empty_state_container = None
+        self._fade_out_animation = None
+        self._fade_in_animation = None
+        self._fade_effect = None
+        self._details_fade_out_animation = None
+        self._details_fade_in_animation = None
+        self._details_fade_effect = None
 
         self._setup_ui()
 
@@ -338,6 +344,17 @@ class WallpapersTab(QWidget):
 
         return result
 
+    def _collect_available_tags(self) -> tuple[list[str], list[str]]:
+        misc_tags = set()
+        genre_tags = set()
+
+        for wallpaper_data in self._all_wallpapers_data:
+            tags = self._extract_tags_from_metadata(wallpaper_data.get("tags", {}))
+            misc_tags.update(tags["misc"])
+            genre_tags.update(tags["genre"])
+
+        return sorted(misc_tags), sorted(genre_tags)
+
     def _matches_filters(self, wallpaper_data: dict[str, Any], filters: LocalFilters) -> bool:
         if filters.search:
             search_lower = filters.search.lower()
@@ -404,6 +421,9 @@ class WallpapersTab(QWidget):
         ]
 
         self._all_wallpapers_data = [self._load_wallpaper_data(path) for path in wallpaper_paths]
+
+        misc_tags, genre_tags = self._collect_available_tags()
+        self.filter_bar.update_available_tags(misc_tags, genre_tags)
 
         filters = self.filter_bar.get_current_filters()
         filtered = [item for item in self._all_wallpapers_data if self._matches_filters(item, filters)]
@@ -532,3 +552,58 @@ class WallpapersTab(QWidget):
 
         if self.selected_folder == folder_path:
             self.selected_folder = None
+
+    def refresh_with_fade(self) -> None:
+        if self._fade_out_animation and self._fade_out_animation.state() == QPropertyAnimation.State.Running:
+            return
+
+        self._fade_effect = QGraphicsOpacityEffect(self.grid_widget)
+        self.grid_widget.setGraphicsEffect(self._fade_effect)
+
+        self._fade_out_animation = QPropertyAnimation(self._fade_effect, b"opacity")
+        self._fade_out_animation.setDuration(200)
+        self._fade_out_animation.setStartValue(1.0)
+        self._fade_out_animation.setEndValue(0.0)
+        self._fade_out_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+        self._details_fade_effect = QGraphicsOpacityEffect(self.details_scroll)
+        self.details_scroll.setGraphicsEffect(self._details_fade_effect)
+
+        self._details_fade_out_animation = QPropertyAnimation(self._details_fade_effect, b"opacity")
+        self._details_fade_out_animation.setDuration(200)
+        self._details_fade_out_animation.setStartValue(1.0)
+        self._details_fade_out_animation.setEndValue(0.0)
+        self._details_fade_out_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+        def on_fade_out_finished():
+            self.refresh()
+            
+            self._fade_in_animation = QPropertyAnimation(self._fade_effect, b"opacity")
+            self._fade_in_animation.setDuration(200)
+            self._fade_in_animation.setStartValue(0.0)
+            self._fade_in_animation.setEndValue(1.0)
+            self._fade_in_animation.setEasingCurve(QEasingCurve.Type.InCubic)
+
+            self._details_fade_in_animation = QPropertyAnimation(self._details_fade_effect, b"opacity")
+            self._details_fade_in_animation.setDuration(200)
+            self._details_fade_in_animation.setStartValue(0.0)
+            self._details_fade_in_animation.setEndValue(1.0)
+            self._details_fade_in_animation.setEasingCurve(QEasingCurve.Type.InCubic)
+
+            def on_fade_in_finished():
+                self.grid_widget.setGraphicsEffect(None)
+                self.details_scroll.setGraphicsEffect(None)
+                self._fade_effect = None
+                self._fade_out_animation = None
+                self._fade_in_animation = None
+                self._details_fade_effect = None
+                self._details_fade_out_animation = None
+                self._details_fade_in_animation = None
+
+            self._fade_in_animation.finished.connect(on_fade_in_finished)
+            self._fade_in_animation.start()
+            self._details_fade_in_animation.start()
+
+        self._fade_out_animation.finished.connect(on_fade_out_finished)
+        self._fade_out_animation.start()
+        self._details_fade_out_animation.start()

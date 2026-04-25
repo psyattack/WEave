@@ -2130,7 +2130,12 @@ class DetailsPanel(QWidget):
 
                 QTimer.singleShot(100, self.refresh_after_state_change)
 
-                if hasattr(main_window, "refresh_wallpapers"):
+                if hasattr(main_window, "wallpapers_tab"):
+                    if hasattr(main_window.wallpapers_tab, "refresh_with_fade"):
+                        main_window.wallpapers_tab.refresh_with_fade()
+                    elif hasattr(main_window, "refresh_wallpapers"):
+                        main_window.refresh_wallpapers()
+                elif hasattr(main_window, "refresh_wallpapers"):
                     main_window.refresh_wallpapers()
             except Exception as error:
                 MessageBox.critical(self, self.tr.t("dialog.error"), f"Failed to delete:\n{str(error)}")
