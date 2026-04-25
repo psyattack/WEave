@@ -126,7 +126,9 @@
     "exit": "Exit",
     "multi_download": "Multi-Download",
     "about": "About",
-    "installation_started": "Installation Started"
+    "installation_started": "Installation Started",
+    "confirm": "Confirm",
+    "success": "Success"
   },
   "settings": {
     "title": "SETTINGS",
@@ -184,7 +186,16 @@
     "all_initialized": "✓ All {total} wallpapers initialized",
     "initialized_count": "{initialized} / {total} initialized",
     "initializing_progress": "Initializing... {current} / {total}",
-    "search_placeholder": "Search settings…"
+    "search_placeholder": "Search settings…",
+    "custom_accounts": "Custom Upload Accounts",
+    "custom_accounts_description": "Add your own Steam accounts for uploading",
+    "add_account_button": "Add Account",
+    "no_custom_accounts": "No custom accounts added",
+    "account_added": "Account added successfully",
+    "account_exists": "Account already exists",
+    "confirm_remove_account": "Remove account '{username}'?",
+    "no_results": "No settings found",
+    "no_results_hint": "Try a different search term"
   },
   "info": {
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",

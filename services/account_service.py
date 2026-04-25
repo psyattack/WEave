@@ -3,24 +3,33 @@ import sys
 
 from domain.models.account import AccountCredentials
 from services.config_service import ConfigService
+from services.user_accounts_service import UserAccountsService
 
 
 class AccountService:
-    _DEFAULT_ACCOUNTS = {
+    _PARSING_ACCOUNT = {
+        "username": "weworkshopmanager2",
+        "password": "a2Fpem9rdV9vX2h5b3U=",
+    }
+    
+    _DEFAULT_UPLOAD_ACCOUNTS = {
         "ruiiixx": "UzY3R0JUQjgzRDNZ",
         "premexilmenledgconis": "M3BYYkhaSmxEYg==",
         "vAbuDy": "Qm9vbHE4dmlw",
         "adgjl1182": "UUVUVU85OTk5OQ==",
         "gobjj16182": "enVvYmlhbzgyMjI=",
         "787109690": "SHVjVXhZTVFpZzE1",
-        "weworkshopmanager2": "a2Fpem9rdV9vX2h5b3U=",
     }
 
     def __init__(
         self,
-        accounts: list[AccountCredentials],
+        upload_accounts: list[AccountCredentials],
+        parsing_account: AccountCredentials,
+        user_accounts_service: UserAccountsService | None = None,
     ):
-        self._accounts = accounts
+        self._upload_accounts = upload_accounts
+        self._parsing_account = parsing_account
+        self._user_accounts_service = user_accounts_service
 
     @classmethod
     def from_runtime_arguments(cls) -> "AccountService":
@@ -58,15 +67,14 @@ class AccountService:
             except Exception:
                 pass
 
-        accounts = cls._build_default_accounts()
+        upload_accounts = cls._build_default_upload_accounts()
+        
+        user_accounts_service = UserAccountsService()
+        user_added_accounts = user_accounts_service.get_accounts()
+        upload_accounts.extend(user_added_accounts)
 
         if custom_login and custom_password:
-            accounts = [
-                account
-                for account in accounts
-                if account.username != "weworkshopmanager2"
-            ]
-            accounts.append(
+            upload_accounts.append(
                 AccountCredentials(
                     username=custom_login,
                     password=custom_password,
@@ -74,12 +82,14 @@ class AccountService:
                 )
             )
 
-        return cls(accounts)
+        parsing_account = cls._build_parsing_account()
+
+        return cls(upload_accounts, parsing_account, user_accounts_service)
 
     @classmethod
-    def _build_default_accounts(cls) -> list[AccountCredentials]:
+    def _build_default_upload_accounts(cls) -> list[AccountCredentials]:
         result: list[AccountCredentials] = []
-        for username, encoded_password in cls._DEFAULT_ACCOUNTS.items():
+        for username, encoded_password in cls._DEFAULT_UPLOAD_ACCOUNTS.items():
             decoded_password = base64.b64decode(encoded_password).decode("utf-8")
             result.append(
                 AccountCredentials(
@@ -89,41 +99,63 @@ class AccountService:
                 )
             )
         return result
+    
+    @classmethod
+    def _build_parsing_account(cls) -> AccountCredentials:
+        decoded_password = base64.b64decode(cls._PARSING_ACCOUNT["password"]).decode("utf-8")
+        return AccountCredentials(
+            username=cls._PARSING_ACCOUNT["username"],
+            password=decoded_password,
+            is_custom=False,
+        )
 
-    def get_accounts(self) -> list[str]:
-        return [account.username for account in self._accounts]
+    def get_upload_accounts(self) -> list[str]:
+        return [account.username for account in self._upload_accounts]
 
-    def get_account(self, index: int) -> str:
-        if not self._accounts:
+    def get_upload_account(self, index: int) -> str:
+        if not self._upload_accounts:
             return ""
 
-        if 0 <= index < len(self._accounts):
-            return self._accounts[index].username
+        if 0 <= index < len(self._upload_accounts):
+            return self._upload_accounts[index].username
 
-        return self._accounts[0].username
+        return self._upload_accounts[0].username
 
     def get_password(self, account_name: str) -> str:
-        for account in self._accounts:
+        for account in self._upload_accounts:
             if account.username == account_name:
                 return account.password
+        
+        if self._parsing_account.username == account_name:
+            return self._parsing_account.password
+        
         return ""
 
-    def get_credentials(self, index: int) -> tuple[str, str]:
-        if not self._accounts:
+    def get_upload_credentials(self, index: int) -> tuple[str, str]:
+        if not self._upload_accounts:
             return "", ""
 
-        if 0 <= index < len(self._accounts):
-            account = self._accounts[index]
+        if 0 <= index < len(self._upload_accounts):
+            account = self._upload_accounts[index]
         else:
-            account = self._accounts[0]
+            account = self._upload_accounts[0]
 
         return account.username, account.password
 
-    def get_credentials_model(self, index: int) -> AccountCredentials:
-        if not self._accounts:
+    def get_upload_credentials_model(self, index: int) -> AccountCredentials:
+        if not self._upload_accounts:
             return AccountCredentials(username="", password="")
 
-        if 0 <= index < len(self._accounts):
-            return self._accounts[index]
+        if 0 <= index < len(self._upload_accounts):
+            return self._upload_accounts[index]
 
-        return self._accounts[0]
+        return self._upload_accounts[0]
+    
+    def get_parsing_credentials(self) -> tuple[str, str]:
+        return self._parsing_account.username, self._parsing_account.password
+    
+    def get_parsing_credentials_model(self) -> AccountCredentials:
+        return self._parsing_account
+    
+    def get_user_accounts_service(self) -> UserAccountsService | None:
+        return self._user_accounts_service

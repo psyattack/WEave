@@ -646,7 +646,6 @@ class WorkshopTab(QWidget):
         self.details_panel.set_collection_info(contents)
 
     def _switch_to_wallpapers_mode(self) -> None:
-        """Switch to wallpapers mode (called from main window tab switch)"""
         if self._nav_mode == self.NAV_GLOBAL_COLLECTIONS or self._nav_mode == self.NAV_AUTHOR_COLLECTIONS:
             self.current_page = 1
             self.selected_pubfileid = None
@@ -662,7 +661,6 @@ class WorkshopTab(QWidget):
             self._load_current_mode_page()
 
     def _switch_to_collections_mode(self) -> None:
-        """Switch to collections mode (called from main window tab switch)"""
         if self._nav_mode == self.NAV_NORMAL or self._nav_mode == self.NAV_AUTHOR_ITEMS:
             self.current_page = 1
             self.selected_pubfileid = None
@@ -710,7 +708,6 @@ class WorkshopTab(QWidget):
         self._set_sort_period_enabled(False)
         self._load_current_mode_page()
         
-        # Reset scroll position
         self.scroll_area.verticalScrollBar().setValue(0)
 
     def _exit_author_mode(self) -> None:
@@ -752,7 +749,6 @@ class WorkshopTab(QWidget):
         self._current_collection_contents = None
         self.parser.load_collection_contents(pubfileid)
         
-        # Reset scroll position
         self.scroll_area.verticalScrollBar().setValue(0)
 
     def _on_collection_back(self) -> None:

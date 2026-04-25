@@ -1,25 +1,34 @@
 from pathlib import Path
 from typing import Any, Optional
 
-from infrastructure.persistence.config_repository import ConfigRepository
+from infrastructure.persistence.app_settings_repository import AppSettingsRepository
+from infrastructure.persistence.metadata_repository import MetadataRepository
+from infrastructure.persistence.backgrounds_repository import BackgroundsRepository
 from shared.filesystem import get_app_data_dir
 
 
 class ConfigService:
-    def __init__(self, config_path: str | Path | None = None):
-        if config_path is None:
-            config_path = get_app_data_dir() / "config.json"
-        self.repository = ConfigRepository(config_path)
-        self.config = self.repository.load()
+    def __init__(self, base_path: Path | None = None):
+        if base_path is None:
+            base_path = get_app_data_dir()
+        
+        self.app_settings_repo = AppSettingsRepository(base_path / "app_settings.json")
+        self.metadata_repo = MetadataRepository(base_path / "metadata.json")
+        self.backgrounds_repo = BackgroundsRepository(base_path / "backgrounds.json")
+        
+        self.app_settings = self.app_settings_repo.load()
+        self.backgrounds = self.backgrounds_repo.load()
 
     def reload(self) -> None:
-        self.config = self.repository.load()
+        self.app_settings = self.app_settings_repo.load()
+        self.backgrounds = self.backgrounds_repo.load()
 
     def save(self) -> bool:
-        return self.repository.save(self.config)
+        return self.app_settings_repo.save(self.app_settings) and \
+               self.backgrounds_repo.save(self.backgrounds)
 
     def get(self, key: str, default: Any = None) -> Any:
-        value = self.config
+        value = self.app_settings
         for part in key.split("."):
             if not isinstance(value, dict):
                 return default
@@ -30,7 +39,7 @@ class ConfigService:
 
     def set(self, key: str, value: Any) -> None:
         parts = key.split(".")
-        current = self.config
+        current = self.app_settings
         for part in parts[:-1]:
             existing = current.get(part)
             if not isinstance(existing, dict):
@@ -41,7 +50,7 @@ class ConfigService:
 
     def remove(self, key: str) -> None:
         parts = key.split(".")
-        current = self.config
+        current = self.app_settings
         for part in parts[:-1]:
             if not isinstance(current, dict):
                 return
@@ -143,55 +152,50 @@ class ConfigService:
         self.set("settings.advanced.debug.debug_mode", value)
 
     def get_wallpaper_metadata(self, pubfileid: str) -> Optional[dict]:
-        metadata = self.get("wallpaper_metadata", {})
-        if not isinstance(metadata, dict):
-            return None
-        return metadata.get(pubfileid)
+        return self.metadata_repo.get(pubfileid)
 
     def get_all_wallpaper_metadata(self) -> dict[str, dict]:
-        metadata = self.get("wallpaper_metadata", {})
-        if not isinstance(metadata, dict):
-            return {}
-        return metadata
+        return self.metadata_repo.get_all()
 
     def set_wallpaper_metadata(self, pubfileid: str, data: dict) -> None:
-        metadata = self.get("wallpaper_metadata", {})
-        if not isinstance(metadata, dict):
-            metadata = {}
-        metadata[pubfileid] = data
-        self.set("wallpaper_metadata", metadata)
+        self.metadata_repo.set(pubfileid, data)
 
     def remove_wallpaper_metadata(self, pubfileid: str) -> None:
-        metadata = self.get("wallpaper_metadata", {})
-        if not isinstance(metadata, dict):
-            return
-        if pubfileid in metadata:
-            del metadata[pubfileid]
-            self.set("wallpaper_metadata", metadata)
+        self.metadata_repo.remove(pubfileid)
 
     def get_background_image(self, area: str) -> str:
-        return self.get(f"settings.backgrounds.{area}.image", "")
+        return self.backgrounds.get(area, {}).get("image", "")
 
     def set_background_image(self, area: str, b64: str) -> None:
-        self.set(f"settings.backgrounds.{area}.image", b64)
+        if area not in self.backgrounds:
+            self.backgrounds[area] = {"image": "", "blur": 0, "opacity": 100}
+        self.backgrounds[area]["image"] = b64
+        self.backgrounds_repo.save(self.backgrounds)
 
     def get_background_blur(self, area: str) -> int:
-        return self.get(f"settings.backgrounds.{area}.blur", 0)
+        return self.backgrounds.get(area, {}).get("blur", 0)
 
     def set_background_blur(self, area: str, v: int) -> None:
-        self.set(f"settings.backgrounds.{area}.blur", v)
+        if area not in self.backgrounds:
+            self.backgrounds[area] = {"image": "", "blur": 0, "opacity": 100}
+        self.backgrounds[area]["blur"] = v
+        self.backgrounds_repo.save(self.backgrounds)
 
     def get_background_opacity(self, area: str) -> int:
-        return self.get(f"settings.backgrounds.{area}.opacity", 100)
+        return self.backgrounds.get(area, {}).get("opacity", 100)
 
     def set_background_opacity(self, area: str, v: int) -> None:
-        self.set(f"settings.backgrounds.{area}.opacity", v)
+        if area not in self.backgrounds:
+            self.backgrounds[area] = {"image": "", "blur": 0, "opacity": 100}
+        self.backgrounds[area]["opacity"] = v
+        self.backgrounds_repo.save(self.backgrounds)
 
     def get_background_extend_titlebar(self) -> bool:
-        return self.get("settings.backgrounds.extend_to_titlebar", False)
+        return self.backgrounds.get("extend_to_titlebar", False)
 
     def set_background_extend_titlebar(self, v: bool) -> None:
-        self.set("settings.backgrounds.extend_to_titlebar", v)
+        self.backgrounds["extend_to_titlebar"] = v
+        self.backgrounds_repo.save(self.backgrounds)
 
     def get_auto_init_metadata(self) -> bool:
         return self.get("settings.general.behavior.auto_init_metadata", False)
