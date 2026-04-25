@@ -96,7 +96,8 @@ class WorkshopTab(QWidget):
 
         self.details_panel.author_clicked.connect(self._on_author_clicked)
         self.parser.collection_contents_loaded.connect(self._on_collection_contents_loaded)
-        self.filter_bar.search_panel.author_close_requested.connect(self._exit_author_mode)
+        self.filter_bar.search_panel.author_close_requested.connect(self._on_back_requested)
+        self.filter_bar.search_panel.browse_mode_changed.connect(self._on_author_browse_mode_changed)
 
         self.dm.download_completed.connect(self._on_download_completed)
 
@@ -441,9 +442,15 @@ class WorkshopTab(QWidget):
 
         if self._author_url:
             self.filter_bar.search_panel.show_author_close()
+            self.filter_bar.search_panel.browse_toggle.show()
+            if self._nav_mode == self.NAV_AUTHOR_ITEMS:
+                self.filter_bar.search_panel.browse_toggle.setCurrentIndex(0)
+            elif self._nav_mode == self.NAV_AUTHOR_COLLECTIONS:
+                self.filter_bar.search_panel.browse_toggle.setCurrentIndex(1)
             self._set_sort_period_enabled(False)
         else:
             self.filter_bar.search_panel.hide_author_close()
+            self.filter_bar.search_panel.browse_toggle.hide()
             self._set_sort_period_enabled(True)
 
         if state.filters is not None:
@@ -642,6 +649,8 @@ class WorkshopTab(QWidget):
         self.selected_pubfileid = None
 
         self.filter_bar.search_panel.show_author_close()
+        self.filter_bar.search_panel.browse_toggle.show()
+        self.filter_bar.search_panel.browse_toggle.setCurrentIndex(0)
         self._set_sort_period_enabled(False)
         self._load_current_mode_page()
         
@@ -654,6 +663,7 @@ class WorkshopTab(QWidget):
         self.selected_pubfileid = None
 
         self.filter_bar.search_panel.hide_author_close()
+        self.filter_bar.search_panel.browse_toggle.hide()
         self._set_sort_period_enabled(True)
 
         restored = self._pop_and_restore_navigation_state()
@@ -666,6 +676,30 @@ class WorkshopTab(QWidget):
         filters.page = 1
         self.filter_bar.set_page(1)
         self.parser.load_page(filters)
+
+    def _on_back_requested(self) -> None:
+        if self._nav_mode == self.NAV_COLLECTION_CONTENTS:
+            self._on_collection_back()
+        else:
+            self._exit_author_mode()
+
+    def _on_author_browse_mode_changed(self, index: int) -> None:
+        if not self._author_url:
+            return
+        
+        self.current_page = 1
+        self.selected_pubfileid = None
+        filters = self.filter_bar.get_current_filters()
+        filters.page = 1
+        self.filter_bar.set_page(1)
+        
+        if index == 0:
+            self._nav_mode = self.NAV_AUTHOR_ITEMS
+        else:
+            self._nav_mode = self.NAV_AUTHOR_COLLECTIONS
+        
+        self._load_current_mode_page()
+        self.scroll_area.verticalScrollBar().setValue(0)
 
     def _set_sort_period_enabled(self, enabled: bool) -> None:
         if hasattr(self.filter_bar, 'filters_popup'):
@@ -692,6 +726,8 @@ class WorkshopTab(QWidget):
         self._current_collection_contents = None
         self.current_page = 1
         self.total_pages = 1
+
+        self.filter_bar.search_panel.hide_author_close()
 
         if self._pop_and_restore_navigation_state():
             return
@@ -735,16 +771,17 @@ class WorkshopTab(QWidget):
             parent=self,
             is_primary_collection_card=True,
             related_count=len(contents.related_collections),
-            show_back_button=True,
+            show_back_button=False,
             current_collection_text=self.tr.t("labels.current_collection"),
             related_collections_text=self.tr.t("labels.related_collections"),
         )
         primary_card.clicked.connect(
             lambda _pid=contents.collection_id: self._open_current_collection_details(contents)
         )
-        primary_card.back_clicked.connect(self._on_collection_back)
         self.grid_widget.add_item(primary_card)
         self.grid_items.append(primary_card)
+        
+        self.filter_bar.search_panel.show_author_close()
 
         if self.current_page == 1 and contents.related_collections:
             for col in contents.related_collections:
