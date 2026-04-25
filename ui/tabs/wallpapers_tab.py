@@ -2,9 +2,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtProperty
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
+from ui.widgets.animated_container import AnimatedDetailsContainer
 from ui.widgets.background_widget import BackgroundImageWidget
 from shared.filesystem import get_directory_size, get_folder_mtime
 from shared.formatting import human_readable_size
@@ -12,65 +13,6 @@ from ui.widgets.details_panel import DetailsPanel
 from ui.widgets.filter_bar import UnifiedFilterBar, LocalFilters
 from ui.widgets.flow_layout import AdaptiveGridWidget
 from ui.widgets.grid_items import LocalGridItem
-
-
-class AnimatedDetailsContainerLocal(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._target_width = 320
-        self._current_width = 320
-        self._is_panel_visible = True
-
-        self._animation = QPropertyAnimation(self, b"panelWidth")
-        self._animation.setDuration(250)
-        self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
-        self._animation.finished.connect(self._on_animation_finished)
-
-        self.setFixedWidth(self._target_width)
-        self.setMinimumWidth(0)
-
-    def get_panel_width(self) -> int:
-        return self._current_width
-
-    def set_panel_width(self, width: int) -> None:
-        self._current_width = width
-        self.setFixedWidth(max(0, width))
-
-    panelWidth = pyqtProperty(int, get_panel_width, set_panel_width)
-
-    def set_target_width(self, width: int) -> None:
-        self._target_width = width
-        if self._is_panel_visible:
-            self._current_width = width
-            self.setFixedWidth(width)
-
-    def is_panel_visible(self) -> bool:
-        return self._is_panel_visible
-
-    def show_panel(self) -> None:
-        if self._is_panel_visible:
-            return
-        self._is_panel_visible = True
-        self.setVisible(True)
-        for child in self.findChildren(QWidget):
-            child.setVisible(True)
-        self._animation.stop()
-        self._animation.setStartValue(0)
-        self._animation.setEndValue(self._target_width)
-        self._animation.start()
-
-    def hide_panel(self) -> None:
-        if not self._is_panel_visible:
-            return
-        self._is_panel_visible = False
-        self._animation.stop()
-        self._animation.setStartValue(self._current_width)
-        self._animation.setEndValue(0)
-        self._animation.start()
-
-    def _on_animation_finished(self) -> None:
-        if not self._is_panel_visible:
-            self.setVisible(False)
 
 
 class WallpapersTab(QWidget):
@@ -118,7 +60,7 @@ class WallpapersTab(QWidget):
         self.left_panel = self._create_left_panel()
         main_layout.addWidget(self.left_panel, 1)
 
-        self.details_container = AnimatedDetailsContainerLocal(self)
+        self.details_container = AnimatedDetailsContainer(self)
         self.details_container.set_target_width(322)
 
         details_outer_layout = QVBoxLayout(self.details_container)

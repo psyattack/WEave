@@ -1,6 +1,8 @@
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, pyqtProperty
 from PyQt6.QtWidgets import QLabel, QMessageBox
+
 from shared.formatting import hex_to_rgb
+from shared.theme_utils import find_theme_service
 
 class NotificationLabel(QLabel):
     _active_notifications: list["NotificationLabel"] = []
@@ -113,16 +115,8 @@ class NotificationLabel(QLabel):
         super().deleteLater()
 
     @staticmethod
-    def _find_theme_service(widget):
-        current = widget
-        while current:
-            if hasattr(current, "theme"):
-                return current.theme
-            current = current.parent() if hasattr(current, "parent") else None
-        return None
-
-    @staticmethod
     def _find_main_window(widget):
+        """Find main window by checking for title_bar and side_nav attributes."""
         current = widget
         while current:
             if hasattr(current, "title_bar") and hasattr(current, "side_nav"):
@@ -134,11 +128,12 @@ class NotificationLabel(QLabel):
     def show_notification(
         parent, message: str, x: int = -1, y: int = -1, theme_service=None
     ) -> None:
+        """Display a temporary notification message with fade animation."""
         if not parent or not message:
             return
 
         if theme_service is None:
-            theme_service = NotificationLabel._find_theme_service(parent)
+            theme_service = find_theme_service(parent)
 
         main_window = NotificationLabel._find_main_window(parent)
 
@@ -196,6 +191,8 @@ class NotificationLabel(QLabel):
 
 
 class MessageBox(QMessageBox):
+    """Themed message box with consistent styling."""
+    
     Icon = QMessageBox.Icon
     StandardButton = QMessageBox.StandardButton
     ButtonRole = QMessageBox.ButtonRole
@@ -211,6 +208,7 @@ class MessageBox(QMessageBox):
         self._apply_style()
 
     def _setup_colors(self) -> None:
+        """Initialize color palette from theme service with fallbacks."""
         if self.theme_service:
             self.c_bg_primary = self.theme_service.get_color("bg_primary")
             self.c_bg_secondary = self.theme_service.get_color("bg_secondary")
@@ -235,6 +233,7 @@ class MessageBox(QMessageBox):
             self.c_accent_red = "#EF5B5B"
 
     def _apply_style(self) -> None:
+        """Apply themed stylesheet to message box."""
         self.setStyleSheet(f"""
             QMessageBox {{ background-color: {self.c_bg_secondary}; border: 2px solid {self.c_border_light}; }}
             QMessageBox QLabel {{ color: {self.c_text_primary}; background: transparent; font-size: 13px; }}
@@ -244,19 +243,11 @@ class MessageBox(QMessageBox):
         """)
 
     @staticmethod
-    def _find_theme_service(widget):
-        current = widget
-        while current:
-            if hasattr(current, "theme"):
-                return current.theme
-            current = current.parent() if hasattr(current, "parent") else None
-        return None
-
-    @staticmethod
     def show(parent, title: str, text: str, icon=QMessageBox.Icon.Information,
              buttons=QMessageBox.StandardButton.Ok, default_button=None, theme_service=None):
+        """Show message box with automatic theme detection."""
         if theme_service is None and parent:
-            theme_service = MessageBox._find_theme_service(parent)
+            theme_service = find_theme_service(parent)
         msg_box = MessageBox(theme_service, title, text, icon, parent)
         msg_box.setStandardButtons(buttons)
         if default_button:

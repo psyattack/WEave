@@ -7,19 +7,34 @@ from shared.constants import APP_VERSION
 
 
 class UpdateService:
+    """
+    Service for checking application updates from GitHub releases.
+    
+    Fetches latest release information and compares versions using
+    semantic versioning.
+    """
+    
     REPO_OWNER = "psyattack"
     REPO_NAME = "we-workshop-manager"
 
     @classmethod
     def get_latest_release_url(cls) -> str:
+        """Get GitHub API URL for latest release."""
         return f"https://api.github.com/repos/{cls.REPO_OWNER}/{cls.REPO_NAME}/releases/latest"
 
     @staticmethod
     def normalize_version(version: str) -> str:
+        """Normalize version string by removing 'v' prefix and converting to lowercase."""
         return version.strip().lower().removeprefix("v")
 
     @classmethod
     def parse_version(cls, version: str) -> tuple[int, ...]:
+        """
+        Parse version string to tuple of integers for comparison.
+        
+        Handles versions like "2.5.0", "v1.2.3", "1.0.0-beta".
+        Extracts only numeric parts.
+        """
         normalized = cls.normalize_version(version)
         parts = normalized.split(".")
         result = []
@@ -27,16 +42,23 @@ class UpdateService:
             try:
                 result.append(int(part))
             except ValueError:
+                # Extract digits from parts like "0-beta"
                 digits = "".join(ch for ch in part if ch.isdigit())
                 result.append(int(digits) if digits else 0)
         return tuple(result)
 
     @classmethod
     def is_newer_version(cls, latest: str, current: str) -> bool:
+        """Check if latest version is newer than current version."""
         return cls.parse_version(latest) > cls.parse_version(current)
 
     @classmethod
     def _choose_download_url(cls, release_data: dict) -> str:
+        """
+        Choose best download URL from release assets.
+        
+        Prefers: .zip > .7z > .exe > any asset > release page
+        """
         assets = release_data.get("assets", [])
         preferred_suffixes = (".zip", ".7z", ".exe")
 
@@ -47,6 +69,7 @@ class UpdateService:
                 if url and name.endswith(suffix):
                     return url
 
+        # Fallback to first asset or release page
         for asset in assets:
             url = asset.get("browser_download_url", "")
             if url:
@@ -56,6 +79,18 @@ class UpdateService:
 
     @classmethod
     def fetch_latest_release(cls, timeout: int = 8) -> ReleaseInfo:
+        """
+        Fetch latest release information from GitHub API.
+        
+        Args:
+            timeout: Request timeout in seconds
+            
+        Returns:
+            ReleaseInfo object with release details
+            
+        Raises:
+            urllib.error.URLError: Network or HTTP errors
+        """
         request = urllib.request.Request(
             cls.get_latest_release_url(),
             headers={
@@ -83,6 +118,15 @@ class UpdateService:
 
     @classmethod
     def check_for_updates(cls, skipped_version: str = "") -> UpdateCheckResult:
+        """
+        Check if newer version is available.
+        
+        Args:
+            skipped_version: Version user chose to skip
+            
+        Returns:
+            UpdateCheckResult with availability and release info
+        """
         current_version = APP_VERSION
         try:
             release = cls.fetch_latest_release()
@@ -96,6 +140,7 @@ class UpdateService:
                     error="Invalid release version",
                 )
 
+            # Don't notify if user skipped this version
             if skipped_version and cls.normalize_version(skipped_version) == cls.normalize_version(latest_version):
                 return UpdateCheckResult(
                     update_available=False,

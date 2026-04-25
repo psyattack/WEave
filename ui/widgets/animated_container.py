@@ -1,69 +1,71 @@
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, pyqtProperty, pyqtSignal
+from PyQt6.QtWidgets import QWidget
 
 
-class AnimatedContainer(QWidget):
-    height_changed = pyqtSignal()
+class AnimatedDetailsContainer(QWidget):
+    """Animated container for details panel with smooth width transitions."""
+    
+    animation_finished = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._target_width = 320
+        self._current_width = 320
+        self._is_panel_visible = True
 
-        self._animation = QPropertyAnimation(self, b"maximumHeight")
+        # Setup animation with cubic easing for smooth transitions
+        self._animation = QPropertyAnimation(self, b"panelWidth")
         self._animation.setDuration(250)
         self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
-        self._animation.valueChanged.connect(self._on_animation_value_changed)
+        self._animation.finished.connect(self._on_animation_finished)
 
-        self._expanded = False
-        self._content_height = 0
+        self.setFixedWidth(self._target_width)
+        self.setMinimumWidth(0)
 
-        self.setMaximumHeight(0)
+    def get_panel_width(self) -> int:
+        return self._current_width
 
-        self._inner_layout = QVBoxLayout(self)
-        self._inner_layout.setContentsMargins(0, 0, 0, 0)
-        self._inner_layout.setSpacing(4)
+    def set_panel_width(self, width: int) -> None:
+        self._current_width = width
+        self.setFixedWidth(max(0, width))
 
-    def set_content_widget(self, widget: QWidget) -> None:
-        self._inner_layout.addWidget(widget)
+    panelWidth = pyqtProperty(int, get_panel_width, set_panel_width)
 
-    def is_expanded(self) -> bool:
-        return self._expanded
+    def set_target_width(self, width: int) -> None:
+        """Set the target width when panel is visible."""
+        self._target_width = width
+        if self._is_panel_visible:
+            self._current_width = width
+            self.setFixedWidth(width)
 
-    def snap_open(self) -> None:
-        self._expanded = True
-        self._recalculate_content_height()
-        self.setMaximumHeight(self._content_height)
+    def is_panel_visible(self) -> bool:
+        return self._is_panel_visible
 
-    def toggle(self, expand: bool) -> None:
-        if expand == self._expanded:
+    def show_panel(self) -> None:
+        """Animate panel expansion from 0 to target width."""
+        if self._is_panel_visible:
             return
-
-        self._expanded = expand
-        self._recalculate_content_height()
-
+        self._is_panel_visible = True
+        self.setVisible(True)
+        for child in self.findChildren(QWidget):
+            child.setVisible(True)
         self._animation.stop()
-        self._animation.setStartValue(self.maximumHeight())
-        self._animation.setEndValue(self._content_height if expand else 0)
+        self._animation.setStartValue(0)
+        self._animation.setEndValue(self._target_width)
         self._animation.start()
 
-    def update_height(self) -> None:
-        if not self._expanded:
+    def hide_panel(self) -> None:
+        """Animate panel collapse from current width to 0."""
+        if not self._is_panel_visible:
             return
-
-        self._recalculate_content_height()
-        self.setMaximumHeight(self._content_height)
-
-    def animate_height_change(self, height_delta: int, duration: int = 250) -> None:
-        if not self._expanded:
-            return
-
+        self._is_panel_visible = False
         self._animation.stop()
-        self._animation.setDuration(duration)
-        self._animation.setStartValue(self.maximumHeight())
-        self._animation.setEndValue(max(0, self.maximumHeight() + height_delta))
+        self._animation.setStartValue(self._current_width)
+        self._animation.setEndValue(0)
         self._animation.start()
 
-    def _recalculate_content_height(self) -> None:
-        self._content_height = self._inner_layout.sizeHint().height()
-
-    def _on_animation_value_changed(self) -> None:
-        self.height_changed.emit()
+    def _on_animation_finished(self) -> None:
+        """Hide widget after collapse animation completes."""
+        if not self._is_panel_visible:
+            self.setVisible(False)
+        self.animation_finished.emit()
