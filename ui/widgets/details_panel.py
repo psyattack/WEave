@@ -580,6 +580,8 @@ class DetailsPanel(QWidget):
         metadata = self.metadata_service.get(self.current_pubfileid) if self.metadata_service else None
         if not metadata:
             QTimer.singleShot(200, lambda: self._fetch_metadata_from_workshop(self.current_pubfileid))
+        
+        self.details_scroll.verticalScrollBar().setValue(0)
 
     def set_workshop_item(self, item) -> None:
         if self._is_externally_locked():
@@ -604,6 +606,8 @@ class DetailsPanel(QWidget):
 
         if not self._try_copy_from_grid_item(item.pubfileid):
             self._load_remote_preview(item.preview_url)
+        
+        self.details_scroll.verticalScrollBar().setValue(0)
 
     def refresh_after_state_change(self) -> None:
         if not self.current_pubfileid:
@@ -1806,6 +1810,8 @@ class DetailsPanel(QWidget):
             self._load_remote_preview(contents.preview_url)
         else:
             self._show_image_placeholder()
+        
+        self.details_scroll.verticalScrollBar().setValue(0)
 
     def _create_collection_link(self, collection_id: str, title: str):
         if not collection_id:

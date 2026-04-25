@@ -117,26 +117,26 @@ class SearchPanel(QWidget):
         frame.setObjectName("searchPanelInfoBox")
         frame.setFixedHeight(36)
         layout = QHBoxLayout(frame)
-        layout.setContentsMargins(12, 0, 6, 0)
+        layout.setContentsMargins(6, 0, 6, 0)
         layout.setSpacing(4)
+
+        back_btn = QPushButton(frame)
+        back_btn.setFixedSize(24, 24)
+        back_btn.setIcon(get_icon("ICON_BACK"))
+        back_btn.setIconSize(QSize(16, 16))
+        back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        back_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        back_btn.setObjectName("infoBackBtn")
+        back_btn.clicked.connect(self.author_close_requested.emit)
+        back_btn.hide()
+        layout.addWidget(back_btn)
 
         label = QLabel("", frame)
         label.setObjectName("searchPanelInfoLabel")
         layout.addWidget(label, 1)
 
-        close_btn = QPushButton(frame)
-        close_btn.setFixedSize(20, 20)
-        close_btn.setIcon(get_icon("ICON_CLOSE2"))
-        close_btn.setIconSize(QSize(10, 10))
-        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        close_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        close_btn.setObjectName("infoCloseBtn")
-        close_btn.clicked.connect(self.author_close_requested.emit)
-        close_btn.hide()
-        layout.addWidget(close_btn)
-
         frame._label = label
-        frame._close_btn = close_btn
+        frame._back_btn = back_btn
         frame.hide()
         return frame
 
@@ -277,15 +277,15 @@ class SearchPanel(QWidget):
         )
 
         for frame in (self.info_primary_frame, self.info_secondary_frame):
-            if hasattr(frame, '_close_btn'):
-                frame._close_btn.setStyleSheet(f"""
-                    QPushButton#infoCloseBtn {{
+            if hasattr(frame, '_back_btn'):
+                frame._back_btn.setStyleSheet(f"""
+                    QPushButton#infoBackBtn {{
                         background: transparent;
                         border: none;
-                        border-radius: 10px;
+                        border-radius: 12px;
                     }}
-                    QPushButton#infoCloseBtn:hover {{
-                        background-color: rgba(239, 91, 91, 0.25);
+                    QPushButton#infoBackBtn:hover {{
+                        background-color: {active_surface};
                     }}
                 """)
 
@@ -331,9 +331,9 @@ class SearchPanel(QWidget):
         return self.actions_button
 
     def show_author_close(self) -> None:
-        if hasattr(self.info_primary_frame, '_close_btn'):
-            self.info_primary_frame._close_btn.show()
+        if hasattr(self.info_primary_frame, '_back_btn'):
+            self.info_primary_frame._back_btn.show()
 
     def hide_author_close(self) -> None:
-        if hasattr(self.info_primary_frame, '_close_btn'):
-            self.info_primary_frame._close_btn.hide()
+        if hasattr(self.info_primary_frame, '_back_btn'):
+            self.info_primary_frame._back_btn.hide()
