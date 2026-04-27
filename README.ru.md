@@ -33,7 +33,7 @@
 
 WEave (бывший WE Workshop Manager) — это десктопное приложение на Python/PyQt6, которое позволяет легко загружать, устанавливать и управлять обоями из Steam Workshop для Wallpaper Engine **без необходимости запускать клиент Steam**.
 
-### <strong>В разработке 3.0 - миграция на Tauri (React) + Rust или PyWebView</strong>
+### <strong>Доступна версия 3.0.0-dev1 в релизах. Порт на Tauri + React (В разработке)</strong>
 
 ### 🔑 Основные возможности:
 
