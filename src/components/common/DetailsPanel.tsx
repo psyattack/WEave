@@ -27,6 +27,8 @@ import { useNavStore } from "@/stores/nav";
 import { useInstalledStore } from "@/stores/installed";
 import { formatBytes, formatTimestamp } from "@/lib/utils";
 import { maybeMinimize } from "@/lib/window";
+import { useConfirm } from "@/hooks/useConfirm";
+import { Tooltip } from "@/components/common/Tooltip";
 
 /**
  * One unified details drawer used by both the Workshop view and the
@@ -73,31 +75,20 @@ type Props = WorkshopProps | InstalledProps;
 type RawTag = string | { tag?: string; category?: string };
 
 /** Row in the two-column info grid. Optional 3rd slot tints the value. */
-type MetaRow = [string, string] | [string, string, "warning"];
+type MetaRow = [string, string | React.ReactNode] | [string, string | React.ReactNode, "warning"];
 
 /**
- * Turn Steam's `NN-star.png` / `NN-star_small.png` filenames and a raw
- * vote count into a display string like "★★★★☆ 1,234". Returns an empty
- * string when there is neither a star rating nor a vote count.
+ * Extract star rating (0-5) from Steam's rating filename.
  */
-function formatRating(
-  ratingStarFile: string | undefined,
-  numRatings: string | undefined,
-): string {
-  const votes = (numRatings || "").trim();
-  let stars = 0;
-  const m = (ratingStarFile || "").match(/(\d+)/);
-  if (m) {
-    const n = parseInt(m[1], 10);
-    if (Number.isFinite(n)) stars = Math.max(0, Math.min(5, n));
-  }
-  if (stars === 0 && !votes) return "";
-  const filled = "★".repeat(stars);
-  const empty = "☆".repeat(Math.max(0, 5 - stars));
-  const starStr = stars > 0 ? filled + empty : "";
-  if (starStr && votes) return `${starStr}  ${votes}`;
-  return starStr || votes;
+function getRatingStars(ratingStarFile: string | undefined): number {
+  if (!ratingStarFile) return 0;
+  const m = ratingStarFile.match(/(\d+)/);
+  if (!m) return 0;
+  const n = parseInt(m[1], 10);
+  return Number.isFinite(n) ? Math.max(0, Math.min(5, n)) : 0;
 }
+
+
 
 interface Meta {
   pubfileid: string;
@@ -329,9 +320,7 @@ export default function DetailsPanel(props: Props) {
 
   const datesAndStats: MetaRow[] = [];
   if (meta) {
-    datesAndStats.push(["ID", meta.pubfileid]);
     if (showInstalledActions) {
-      datesAndStats.push([t("labels.type"), meta.file_type || "—"]);
       datesAndStats.push([
         t("labels.size", { size: "" }).replace(/:$/, ""),
         meta.size_bytes
@@ -365,11 +354,20 @@ export default function DetailsPanel(props: Props) {
     // Rating lives inside the info grid so it sits alongside the other
     // metadata rather than hanging off the action row. Unicode stars +
     // vote count, rendered in the same warning-yellow as before.
-    const ratingValue = formatRating(meta.rating_star_file, meta.num_ratings);
-    if (ratingValue) {
+    const ratingStars = getRatingStars(meta.rating_star_file);
+    const votes = (meta.num_ratings || "").trim();
+    if (ratingStars > 0 || votes) {
+      const filled = "★".repeat(ratingStars);
+      const empty = "☆".repeat(Math.max(0, 5 - ratingStars));
       datesAndStats.push([
         t("labels.rating") || "Rating",
-        ratingValue,
+        (
+          <span className="flex items-center">
+            <span className="text-warning">{filled}</span>
+            <span className="text-warning/30">{empty}</span>
+            {votes && <span className="ml-1 text-foreground">({votes})</span>}
+          </span>
+        ),
         "warning",
       ]);
     }
@@ -409,11 +407,11 @@ export default function DetailsPanel(props: Props) {
               onClick={goToAuthor}
               disabled={!meta.author_url}
               title={meta.author_url}
-              className="inline-flex items-center gap-2 self-start rounded-md px-2 py-1 text-xs hover:bg-surface-raised disabled:opacity-60"
+              className="inline-flex items-center gap-1 self-start rounded-md px-2 py-1 text-xs hover:bg-surface-raised disabled:opacity-60"
             >
               <User className="h-3.5 w-3.5 text-primary" />
               <span className="text-subtle">
-                {t("labels.author", { author: "" }).replace(/:$/, "")}:{" "}
+                {t("labels.author", { author: "" })}{" "}
                 <span className="font-semibold text-foreground">
                   {meta.author}
                 </span>
@@ -454,7 +452,7 @@ export default function DetailsPanel(props: Props) {
                     key={c.id}
                     type="button"
                     onClick={() => goToCollection(c)}
-                    className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-sunken px-2 py-1.5 text-left hover:border-border-strong hover:bg-surface-raised"
+                    className="flex items-center justify-between gap-2 rounded-md bg-surface-sunken/50 px-2 py-1.5 text-left hover:bg-surface-raised"
                   >
                     <span className="line-clamp-1 text-xs font-medium">
                       {c.title}
@@ -491,7 +489,7 @@ export default function DetailsPanel(props: Props) {
                 </button>
               </div>
             </div>
-            <div className="max-h-60 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface-sunken p-2 text-xs leading-relaxed">
+            <div className="max-h-60 overflow-auto whitespace-pre-wrap rounded-md bg-surface-sunken/50 p-2 text-xs leading-relaxed">
               {displayedDescription || t("labels.no_description")}
             </div>
           </div>
@@ -507,24 +505,29 @@ function MetaGrid({ rows }: { rows: MetaRow[] }) {
     <div className="grid grid-cols-2 gap-1 text-[11px]">
       {rows.map((row) => {
         const [label, value, tone] = row;
+        const isReactNode = typeof value !== 'string';
         return (
           <div
-            key={label + value}
-            className="flex flex-col gap-0.5 rounded-md border border-border bg-surface-sunken px-2 py-1"
+            key={label + (typeof value === 'string' ? value : '')}
+            className="flex flex-col gap-0.5 rounded-md bg-surface-sunken/50 px-2 py-1"
           >
             <span className="text-[9px] uppercase tracking-wide text-subtle">
               {label}
             </span>
-            <span
-              className={
-                tone === "warning"
-                  ? "truncate font-semibold text-warning"
-                  : "truncate text-foreground"
-              }
-              title={value || "—"}
-            >
-              {value || "—"}
-            </span>
+            {isReactNode ? (
+              <div className="truncate">{value}</div>
+            ) : (
+              <span
+                className={
+                  tone === "warning"
+                    ? "truncate font-semibold text-warning"
+                    : "truncate text-foreground"
+                }
+                title={value || "—"}
+              >
+                {value || "—"}
+              </span>
+            )}
           </div>
         );
       })}
@@ -542,6 +545,7 @@ function ActionRow(
   },
 ) {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialog } = useConfirm();
   const buttons: { node: React.ReactNode; key: string }[] = [];
 
   // Resolve the InstalledWallpaper handle to act on. In the Installed
@@ -611,7 +615,14 @@ function ActionRow(
       );
       return;
     }
-    if (!confirm(t("messages.confirm_delete") || "Delete?")) return;
+    const confirmed = await confirm({
+      title: t("tooltips.delete_wallpaper") || "Delete Wallpaper",
+      message: t("messages.confirm_delete") || "Delete this wallpaper?\n\nThe wallpaper folder will be removed from your Wallpaper Engine library permanently. This action cannot be undone.",
+      confirmLabel: t("buttons.delete") || "Delete",
+      cancelLabel: t("buttons.cancel") || "Cancel",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     const ok = await tryInvokeOk("we_delete_wallpaper", {
       pubfileid: installedHandle.pubfileid,
     });
@@ -628,13 +639,7 @@ function ActionRow(
       );
     }
   };
-  const overlayCopyId = async () => {
-    if (!installedHandle) return;
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(installedHandle.pubfileid);
-      pushToast(t("messages.copied") || "Copied", "success");
-    }
-  };
+
 
   if (props.showInstalledActions && installedHandle) {
     buttons.push({
@@ -726,29 +731,35 @@ function ActionRow(
     ),
   });
 
-  if (props.showInstalledActions && installedHandle) {
+  // Copy ID button - show for both installed and workshop items
+  const copyIdHandle = installedHandle || (props.kind === "workshop" ? props.item : null);
+  if (copyIdHandle) {
     buttons.push({
       key: "id",
       node: (
         <ActionBtn
           icon={<Copy className="h-3.5 w-3.5" />}
           label="ID"
-          onClick={() =>
-            props.kind === "installed"
-              ? props.onCopyId(installedHandle)
-              : void overlayCopyId()
-          }
+          onClick={async () => {
+            if (typeof navigator !== "undefined" && navigator.clipboard) {
+              await navigator.clipboard.writeText(copyIdHandle.pubfileid);
+              pushToast(t("messages.copied") || "Copied", "success");
+            }
+          }}
         />
       ),
     });
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      {buttons.map((b) => (
-        <span key={b.key}>{b.node}</span>
-      ))}
-    </div>
+    <>
+      <div className="flex flex-wrap items-center gap-1">
+        {buttons.map((b) => (
+          <span key={b.key}>{b.node}</span>
+        ))}
+      </div>
+      <ConfirmDialog />
+    </>
   );
 }
 
@@ -773,12 +784,12 @@ function ActionBtn({
       : variant === "danger"
         ? "text-danger hover:bg-danger/10"
         : "border border-border-strong hover:bg-surface-raised";
-  return (
+  
+  const button = (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title={iconOnly ? label : undefined}
       aria-label={iconOnly ? label : undefined}
       className={`inline-flex items-center gap-1 rounded-md ${
         iconOnly ? "px-1.5 py-1" : "px-2 py-1"
@@ -788,4 +799,14 @@ function ActionBtn({
       {!iconOnly && label}
     </button>
   );
+
+  if (iconOnly) {
+    return (
+      <Tooltip content={label} side="top">
+        {button}
+      </Tooltip>
+    );
+  }
+
+  return button;
 }

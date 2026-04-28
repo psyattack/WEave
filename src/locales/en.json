@@ -14,7 +14,13 @@
     "check_updates": "Check for updates",
     "changelog": "Changelog",
     "view_on_github": "View on GitHub",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "browse": "Browse",
+    "open": "Open",
+    "copy_id": "Copy ID",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "remove": "Remove"
   },
   "tooltips": {
     "open_folder": "Open folder in Explorer",
@@ -32,7 +38,9 @@
     "translate_description": "Translate description",
     "show_original": "Show original",
     "sort_order": "Toggle sort order",
-    "collapse_sidebar": "Collapse sidebar",
+    "sort_asc": "Ascending",
+    "sort_desc": "Descending",
+    "collapse_sidebar": "Collapse",
     "expand_sidebar": "Expand sidebar"
   },
   "labels": {
@@ -40,7 +48,7 @@
     "total_size": "Total size: {size}",
     "id": "ID: {id}",
     "size": "Size: {size}",
-    "installed": "Installed: {date}",
+    "installed": "Installed:",
     "description": "Description:",
     "no_description": "No description available.",
     "no_preview": "No preview",
@@ -69,6 +77,7 @@
     "rating": "Rating:",
     "posted": "Posted: {date}",
     "updated": "Updated: {date}",
+    "ratings": "ratings",
     "author": "Author: {author}",
     "tags": "Tags:",
     "showing_wallpapers": "Showing {start}-{end} of {total} wallpapers",
@@ -91,7 +100,13 @@
     "items_count": "Items: {count}",
     "related_collections": "Related Collections",
     "back": "Back",
-    "current_collection": "Current collection"
+    "current_collection": "Current collection",
+    "metadata_initialized": "Metadata initialized for {count} wallpapers",
+    "remove_account_question": "Remove account {user}?",
+    "collection_badge": "Collection",
+    "downloading": "Downloading…",
+    "install": "Install",
+    "details": "Details"
   },
   "messages": {
     "download_started": "Download started!",
@@ -125,7 +140,14 @@
     "restart_theme_message": "Theme will be applied after the next launch. Close the application now?",
     "restart_debug_message": "Debug mode will be applied after the next launch. Close the application now?",
     "changelog_error": "Failed to load changelog: {error}",
-    "no_releases": "No releases published yet."
+    "no_releases": "No releases published yet.",
+    "signed_in_to_steam": "Signed in to Steam",
+    "removed": "Removed",
+    "applied": "Applied",
+    "apply_failed": "Apply failed",
+    "deleted": "Deleted",
+    "copied": "Copied",
+    "wallpaper_applied": "Wallpaper applied"
   },
   "dialog": {
     "tasks": "Tasks",
@@ -140,6 +162,7 @@
   "settings": {
     "title": "SETTINGS",
     "theme_dev": "Theme",
+    "theme": "Theme",
     "account": "Account",
     "language": "Language",
     "steam_login": "Steam Login",
@@ -155,6 +178,7 @@
     "language_description": "Change the interface language",
     "behavior": "Behavior",
     "minimize_description": "Minimize the window after applying wallpaper",
+    "minimize_on_apply": "Minimize on Apply",
     "preload_next_page": "Preload Next Page (BETA)",
     "preload_description": "Preload the next workshop page in background for faster navigation",
     "save_window_state": "Save Window State",
@@ -164,6 +188,7 @@
     "auto_check_updates": "Auto Check Updates",
     "auto_check_updates_description": "Automatically check GitHub releases on application startup",
     "tab_general": "General",
+    "general": "General",
     "account_selection": "Account selection",
     "account_description": "Select an account (to download)",
     "tab_account": "Account",
@@ -181,12 +206,50 @@
     "all_initialized": "✓ All {total} wallpapers initialized",
     "initialized_count": "{initialized} / {total} initialized",
     "initializing_progress": "Initializing... {current} / {total}",
-    "search_placeholder": "Search settings…"
+    "search_placeholder": "Search settings…",
+    "accent_color": "Accent Color",
+    "run_metadata_init": "Initialize Metadata",
+    "metadata_init_hint": "Fetch and cache Workshop metadata for every locally installed wallpaper.",
+    "wallpaper_engine": "Wallpaper Engine",
+    "we_directory": "WE Directory",
+    "we_directory_hint": "Path to your Wallpaper Engine install folder. Required for Apply / Extract and for detecting already-installed workshop items.",
+    "parser_log": "Parser Log",
+    "parser_log_hint": "Inspect raw HTML/JSON returned by the Steam parser",
+    "steam_session": "Steam Web Session",
+    "steam_session_description": "Log in to Steam so authenticated Workshop browsing (age-gated items, personal subscriptions, following lists) works the same as in a browser.",
+    "download_account": "Download Account",
+    "download_account_description": "Pick a Steam account used for downloading via DepotDownloaderMod. Custom credentials can be added below.",
+    "custom_badge": "Custom",
+    "signed_in": "Signed in",
+    "not_signed_in": "Not signed in",
+    "waiting_for_login": "Waiting for login…",
+    "reopen_steam": "Re-open Steam",
+    "open_steam_login": "Open Steam Login",
+    "steam_account_unknown": "Logged in, but Steam didn't return account details — the parser may be running anonymously.",
+    "custom_accounts": "Custom Accounts",
+    "custom_accounts_description": "Encrypted on disk with a machine-bound key (PBKDF2 + AES-256-GCM).",
+    "username": "Username",
+    "password": "Password",
+    "add_account_button": "Add",
+    "no_custom_accounts": "No custom accounts yet.",
+    "remove_account": "Remove account",
+    "account_added": "Account added",
+    "account_exists": "Account already exists",
+    "confirm_remove_account": "Remove this account?"
   },
   "info": {
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
     "developed": "Developed with ❤ free",
     "changelog_title": "Release notes"
+  },
+  "debug": {
+    "entries": "entries",
+    "no_entries": "No parser responses recorded yet. Browse the workshop to populate the log.",
+    "select_entry": "Select an entry to inspect."
+  },
+  "common": {
+    "refresh": "Refresh",
+    "clear": "Clear"
   },
   "filters": {
     "local_sort": {

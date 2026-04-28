@@ -123,15 +123,10 @@ export function useBootstrap() {
               );
             });
             // The newly-downloaded item should now show the Installed
-            // indicator on cards regardless of which view we're in —
-            // and any open view (e.g. the Installed tab) re-fetches its
-            // cached metadata so Misc/Genre filter chips pick up the
-            // new wallpaper's tags without a manual refresh. We also
-            // fire `workshop_get_item` once for the new pubfileid so
-            // that the workshop-side metadata (tags, author, rating…)
-            // is persisted right away — otherwise the filter chips
-            // would only gain the new values after the user manually
-            // opened the details drawer or triggered init metadata.
+            // indicator on cards regardless of which view we're in.
+            // We refresh the installed store so cards update their
+            // installed indicators, and fetch workshop metadata for
+            // the new item so it's cached for future use.
             void useInstalledStore.getState().refresh();
             void (async () => {
               await tryInvoke(
@@ -139,7 +134,6 @@ export function useBootstrap() {
                 { pubfileid: event.payload.pubfileid },
                 null,
               );
-              triggerGlobalRefresh();
             })();
             void maybeAutoApply(event.payload.pubfileid);
           }

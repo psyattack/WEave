@@ -36,6 +36,9 @@ export const useNavStore = create<NavState>((set, get) => ({
       sub: { kind: "author", profileUrl, displayName },
       stack: prev.kind === "none" ? s.stack : [...s.stack, prev],
     }));
+    // Reset page to 1 when navigating to author view
+    const { useFiltersStore } = require("./filters");
+    useFiltersStore.getState().setPage(1);
   },
   openCollection: (collectionId, title) => {
     const prev = get().sub;
@@ -43,6 +46,9 @@ export const useNavStore = create<NavState>((set, get) => ({
       sub: { kind: "collection", collectionId, title },
       stack: prev.kind === "none" ? s.stack : [...s.stack, prev],
     }));
+    // Reset page to 1 when navigating to collection view
+    const { useFiltersStore } = require("./filters");
+    useFiltersStore.getState().setPage(1);
   },
   back: () => {
     const stack = get().stack;

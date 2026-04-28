@@ -22,6 +22,7 @@ import { pushToast } from "@/stores/toasts";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/hooks/useConfirm";
 
 interface Props {
   item: WorkshopItem;
@@ -38,6 +39,7 @@ export default function WorkshopCard({
   hideDownload,
 }: Props) {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialog } = useConfirm();
   const installed = useInstalledStore((s) => s.byId[item.pubfileid]);
   const refreshInstalled = useInstalledStore((s) => s.refresh);
   const downloadTask = useTasksStore(
@@ -109,7 +111,14 @@ export default function WorkshopCard({
         return;
       }
     }
-    if (!confirm(t("messages.confirm_delete"))) return;
+    const confirmed = await confirm({
+      title: t("tooltips.delete_wallpaper") || "Delete Wallpaper",
+      message: t("messages.confirm_delete") || "Delete this wallpaper?\n\nThe wallpaper folder will be removed from your Wallpaper Engine library permanently. This action cannot be undone.",
+      confirmLabel: t("buttons.delete") || "Delete",
+      cancelLabel: t("buttons.cancel") || "Cancel",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     if (!inTauri) {
       pushToast(t("messages.wallpaper_deleted"), "success");
       return;
@@ -134,19 +143,19 @@ export default function WorkshopCard({
   };
 
   return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.18 }}
-      className={cn(
-        "card card-hover group relative flex flex-col overflow-hidden",
-      )}
-    >
-      <button
-        type="button"
-        className="relative aspect-square w-full overflow-hidden bg-surface-sunken"
+    <>
+      <motion.article
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.18 }}
+        className={cn(
+          "card card-hover group relative flex flex-col overflow-hidden",
+        )}
+      >
+      <div
+        className="relative aspect-square w-full overflow-hidden bg-surface-sunken cursor-pointer"
         onClick={() => onOpen(item)}
       >
         <PreviewImage
@@ -214,7 +223,7 @@ export default function WorkshopCard({
                   e.stopPropagation();
                   void applyInstalled(installed);
                 }}
-                title={t("tooltips.install_wallpaper")}
+                tooltip={t("tooltips.install_wallpaper")}
               >
                 <Play className="h-3.5 w-3.5" />
               </QuickIcon>
@@ -223,7 +232,7 @@ export default function WorkshopCard({
                   e.stopPropagation();
                   void extractInstalled(installed);
                 }}
-                title={t("tooltips.extract_wallpaper")}
+                tooltip={t("tooltips.extract_wallpaper")}
                 disabled={!installed.has_pkg}
               >
                 <Package className="h-3.5 w-3.5" />
@@ -233,7 +242,7 @@ export default function WorkshopCard({
                   e.stopPropagation();
                   void openFolderInstalled(installed);
                 }}
-                title={t("tooltips.open_folder")}
+                tooltip={t("tooltips.open_folder")}
               >
                 <FolderOpen className="h-3.5 w-3.5" />
               </QuickIcon>
@@ -242,7 +251,7 @@ export default function WorkshopCard({
                   e.stopPropagation();
                   void copyIdInstalled(installed);
                 }}
-                title={t("buttons.copy_id")}
+                tooltip={t("buttons.copy_id")}
               >
                 <Copy className="h-3.5 w-3.5" />
               </QuickIcon>
@@ -251,7 +260,7 @@ export default function WorkshopCard({
                   e.stopPropagation();
                   void deleteInstalled(installed);
                 }}
-                title={t("tooltips.delete_wallpaper")}
+                tooltip={t("tooltips.delete_wallpaper")}
                 danger
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -295,7 +304,7 @@ export default function WorkshopCard({
             </div>
           </div>
         )}
-      </button>
+      </div>
 
       <div className="flex flex-col gap-0.5 px-2.5 py-2">
         <h3
@@ -319,20 +328,22 @@ export default function WorkshopCard({
           )}
         </div>
       </div>
-    </motion.article>
+      </motion.article>
+      <ConfirmDialog />
+    </>
   );
 }
 
 function QuickIcon({
   onClick,
   children,
-  title,
+  tooltip,
   disabled,
   danger,
 }: {
   onClick: (e: React.MouseEvent) => void;
   children: React.ReactNode;
-  title: string;
+  tooltip: string;
   disabled?: boolean;
   danger?: boolean;
 }) {
@@ -341,7 +352,7 @@ function QuickIcon({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title={title}
+      aria-label={tooltip}
       className={cn(
         "inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-foreground shadow ring-1 ring-border backdrop-blur transition-colors hover:bg-background",
         disabled && "opacity-40 cursor-not-allowed",

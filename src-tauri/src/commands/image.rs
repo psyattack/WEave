@@ -2,16 +2,7 @@ use std::path::PathBuf;
 
 use tauri::command;
 
-use crate::commands::{map_err, AppStateHandle};
-
-#[command]
-pub async fn image_cache_get(
-    state: AppStateHandle<'_>,
-    url: String,
-) -> Result<String, String> {
-    let path = state.image_cache.get_or_fetch(&url).await.map_err(map_err)?;
-    Ok(path.to_string_lossy().to_string())
-}
+use crate::commands::map_err;
 
 #[command]
 pub fn open_path(path: String) -> Result<(), String> {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Layers, User } from "lucide-react";
@@ -22,6 +22,8 @@ export default function AuthorView() {
   const { t } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
   const setPage = useFiltersStore((s) => s.setPage);
+  const setViewPage = useFiltersStore((s) => s.setViewPage);
+  const getViewPage = useFiltersStore((s) => s.getViewPage);
   const accountIndex = useAppStore((s) => s.accountIndex);
   const sub = useNavStore((s) => s.sub);
   const navBack = useNavStore((s) => s.back);
@@ -35,12 +37,31 @@ export default function AuthorView() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WorkshopItem | null>(null);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Get the saved page for this author
+  const currentPage = getViewPage("author", profileUrl);
+
+  // Sync filters.page with the view-specific page
+  useEffect(() => {
+    if (profileUrl && filters.page !== currentPage) {
+      setPage(currentPage);
+    }
+  }, [profileUrl, currentPage, filters.page, setPage]);
+
   const key = useMemo(
     () => JSON.stringify({ u: profileUrl, t: tab, p: filters.page, s: filters.sort }),
     [profileUrl, tab, filters.page, filters.sort],
   );
 
   const refreshCounter = useRefreshStore((s) => s.counter);
+
+  useEffect(() => {
+    // Reset scroll to top when page changes
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [filters.page]);
 
   useEffect(() => {
     if (!profileUrl) return;
@@ -134,7 +155,7 @@ export default function AuthorView() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 py-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 py-3">
         {loading ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -180,7 +201,10 @@ export default function AuthorView() {
       <Pagination
         page={filters.page}
         totalPages={totalPages}
-        onChange={setPage}
+        onChange={(newPage) => {
+          setPage(newPage);
+          setViewPage("author", newPage, profileUrl);
+        }}
       />
 
       <DetailsPanel

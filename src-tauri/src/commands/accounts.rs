@@ -28,7 +28,7 @@ pub fn accounts_list(state: AppStateHandle<'_>) -> Vec<AccountSummary> {
 
 #[command]
 pub fn accounts_get_current(state: AppStateHandle<'_>) -> AccountCredentials {
-    let index = state.config.read().get_account_number() as usize;
+    let index = state.settings.read().get_account_number() as usize;
     let mut credentials = state.accounts.credentials(index);
     credentials.password = String::new();
     credentials
@@ -36,7 +36,7 @@ pub fn accounts_get_current(state: AppStateHandle<'_>) -> AccountCredentials {
 
 #[command]
 pub fn accounts_set_current(state: AppStateHandle<'_>, index: u32) {
-    state.config.read().set_account_number(index);
+    state.settings.read().set_account_number(index);
 }
 
 /// Add a new user account. The password is stored encrypted via

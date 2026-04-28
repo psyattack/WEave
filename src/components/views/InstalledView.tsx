@@ -11,6 +11,7 @@ import {
   Package,
   Play,
   Search,
+  SortAsc,
   Trash2,
   X,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { open as openPath } from "@tauri-apps/plugin-dialog";
 
 import PreviewImage from "@/components/common/PreviewImage";
 import DetailsPanel from "@/components/common/DetailsPanel";
+import Select from "@/components/common/Select";
 import { useAppStore } from "@/stores/app";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
@@ -40,9 +42,12 @@ import {
   GENRE_TAG_KEYS,
   type LocalSortKey,
 } from "@/lib/filterConfig";
+import { useConfirm } from "@/hooks/useConfirm";
+import { Tooltip } from "@/components/common/Tooltip";
 
 export default function InstalledView() {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialog } = useConfirm();
   const weDirectory = useAppStore((s) => s.weDirectory);
   const [items, setItems] = useState<InstalledWallpaper[]>([]);
   const [loading, setLoading] = useState(true);
@@ -263,7 +268,14 @@ export default function InstalledView() {
         return;
       }
     }
-    if (!confirm(t("messages.confirm_delete"))) return;
+    const confirmed = await confirm({
+      title: t("tooltips.delete_wallpaper") || "Delete Wallpaper",
+      message: t("messages.confirm_delete") || "Delete this wallpaper?\n\nThe wallpaper folder will be removed from your Wallpaper Engine library permanently. This action cannot be undone.",
+      confirmLabel: t("buttons.delete") || "Delete",
+      cancelLabel: t("buttons.cancel") || "Cancel",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     if (!inTauri) {
       setItems((prev) => prev.filter((i) => i.pubfileid !== item.pubfileid));
       pushToast(t("messages.wallpaper_deleted"), "success");
@@ -348,9 +360,41 @@ export default function InstalledView() {
   const hasAnyExtraTags =
     visibleMiscTags.length > 0 || visibleGenreTags.length > 0;
 
+  // Prepare options for Select components
+  const sortOptions = LOCAL_SORT_KEYS.map((k) => ({
+    value: k,
+    label: t(`filters.local_sort.${k}`, LOCAL_SORT_OPTIONS[k]),
+  }));
+
+  const categoryOptions = CATEGORY_KEYS.map((k) => ({
+    value: k,
+    label: t(`filters.category.${k || "empty"}`, CATEGORIES[k] ?? k),
+  }));
+
+  const typeOptions = TYPE_KEYS.map((k) => ({
+    value: k,
+    label: t(`filters.type.${k || "empty"}`, TYPES[k] ?? k),
+  }));
+
+  const ageOptions = AGE_RATING_KEYS.map((k) => ({
+    value: k,
+    label: t(`filters.age_rating.${k || "empty"}`, AGE_RATINGS[k] ?? k),
+  }));
+
+  const resolutionOptions = RESOLUTION_KEYS.map((k) => ({
+    value: k,
+    label: t(
+      `filters.resolution.${(k || "empty").replace(/ /g, "_")}`,
+      RESOLUTIONS[k] ?? k,
+    ),
+  }));
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-col gap-2 border-b border-border bg-surface/60 px-4 py-3">
+      <div className={cn(
+        "flex flex-col gap-2 bg-surface/60 px-4 py-3",
+        !showAdvanced && "border-b border-border"
+      )}>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
@@ -361,98 +405,62 @@ export default function InstalledView() {
               placeholder={t("labels.search_placeholder")}
             />
           </div>
-                    <button
-            type="button"
-            onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
-            className={cn(
-              "group inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-xs font-medium shadow-sm transition-colors hover:border-primary/60 hover:text-primary",
-            )}
-            title={
+          <Tooltip
+            content={
               sortOrder === "asc"
                 ? t("tooltips.sort_asc") || "Ascending"
                 : t("tooltips.sort_desc") || "Descending"
             }
+            side="bottom"
           >
-            <motion.span
-              key={sortOrder}
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              transition={{ duration: 0.18 }}
-              className="inline-flex"
-            >
-              {sortOrder === "asc" ? (
-                <ArrowUpAZ className="h-4 w-4" />
-              ) : (
-                <ArrowDownAZ className="h-4 w-4" />
+            <button
+              type="button"
+              onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+              className={cn(
+                "flex h-[38px] items-center gap-2 rounded-md bg-surface-sunken border border-border px-3 py-2 text-sm outline-none hover:border-border-strong transition-colors",
               )}
-            </motion.span>
-          </button>
-          <select
-            className="input h-9 w-auto"
+            >
+              <motion.span
+                key={sortOrder}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ duration: 0.18 }}
+                className="inline-flex"
+              >
+                {sortOrder === "asc" ? (
+                  <ArrowUpAZ className="h-4 w-4" />
+                ) : (
+                  <ArrowDownAZ className="h-4 w-4" />
+                )}
+              </motion.span>
+            </button>
+          </Tooltip>
+          <Select
             value={sort}
-            onChange={(e) => setSort(e.target.value as LocalSortKey)}
-            title={t("labels.sort")}
-          >
-            {LOCAL_SORT_KEYS.map((k) => (
-              <option key={k} value={k}>
-                {t(`filters.local_sort.${k}`, LOCAL_SORT_OPTIONS[k])}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input h-9 w-auto"
+            onValueChange={(v) => setSort(v as LocalSortKey)}
+            options={sortOptions}
+            icon={<SortAsc className="h-4 w-4 text-muted" />}
+          />
+          <Select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            title={t("labels.category") || "Category"}
-          >
-            {CATEGORY_KEYS.map((k) => (
-              <option key={k} value={k}>
-                {t(`filters.category.${k || "empty"}`, CATEGORIES[k] ?? k)}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input h-9 w-auto"
+            onValueChange={(v) => setCategory(v)}
+            options={categoryOptions}
+          />
+          <Select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            title={t("labels.type")}
-          >
-            {TYPE_KEYS.map((k) => (
-              <option key={k} value={k}>
-                {t(`filters.type.${k || "empty"}`, TYPES[k] ?? k)}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input h-9 w-auto"
+            onValueChange={(v) => setTypeFilter(v)}
+            options={typeOptions}
+          />
+          <Select
             value={age}
-            onChange={(e) => setAge(e.target.value)}
-            title={t("labels.age") || "Age"}
-          >
-            {AGE_RATING_KEYS.map((k) => (
-              <option key={k} value={k}>
-                {t(
-                  `filters.age_rating.${k || "empty"}`,
-                  AGE_RATINGS[k] ?? k,
-                )}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input h-9 w-auto"
+            onValueChange={(v) => setAge(v)}
+            options={ageOptions}
+          />
+          <Select
             value={resolution}
-            onChange={(e) => setResolution(e.target.value)}
-            title={t("labels.resolution") || "Resolution"}
-          >
-            {RESOLUTION_KEYS.map((k) => (
-              <option key={k} value={k}>
-                {t(
-                  `filters.resolution.${(k || "empty").replace(/ /g, "_")}`,
-                  RESOLUTIONS[k] ?? k,
-                )}
-              </option>
-            ))}
-          </select>
+            onValueChange={(v) => setResolution(v)}
+            options={resolutionOptions}
+          />
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
@@ -487,24 +495,48 @@ export default function InstalledView() {
           )}
         </div>
       </div>
-      {showAdvanced && visibleMiscTags.length > 0 && (
-        <FilterChipsRow
-          title={t("labels.miscellaneous") || "Miscellaneous"}
-          keys={visibleMiscTags}
-          active={tagFilters}
-          excluded={excludedTagFilters}
-          toggle={toggleTag}
-        />
-      )}
-      {showAdvanced && visibleGenreTags.length > 0 && (
-        <FilterChipsRow
-          title={t("labels.genre") || "Genre"}
-          keys={visibleGenreTags}
-          active={tagFilters}
-          excluded={excludedTagFilters}
-          toggle={toggleTag}
-        />
-      )}
+      <AnimatePresence>
+        {showAdvanced && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              {visibleMiscTags.length > 0 && (
+                <FilterChipsRow
+                  title={t("labels.miscellaneous") || "Miscellaneous"}
+                  keys={visibleMiscTags}
+                  active={tagFilters}
+                  excluded={excludedTagFilters}
+                  toggle={toggleTag}
+                  isFirst={true}
+                  isLast={visibleGenreTags.length === 0}
+                />
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut", delay: 0.05 }}
+            >
+              {visibleGenreTags.length > 0 && (
+                <FilterChipsRow
+                  title={t("labels.genre") || "Genre"}
+                  keys={visibleGenreTags}
+                  active={tagFilters}
+                  excluded={excludedTagFilters}
+                  toggle={toggleTag}
+                  isFirst={visibleMiscTags.length === 0}
+                  isLast={true}
+                />
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <div className="flex-1 overflow-auto px-4 py-3">
         {loading ? (
@@ -546,7 +578,7 @@ export default function InstalledView() {
                           e.stopPropagation();
                           handleApply(item);
                         }}
-                        title={t("tooltips.install_wallpaper")}
+                        tooltip={t("tooltips.install_wallpaper")}
                       >
                         <Play className="h-3.5 w-3.5" />
                       </IconBtn>
@@ -555,7 +587,7 @@ export default function InstalledView() {
                           e.stopPropagation();
                           handleExtract(item);
                         }}
-                        title={t("tooltips.extract_wallpaper")}
+                        tooltip={t("tooltips.extract_wallpaper")}
                         disabled={!item.has_pkg}
                       >
                         <Package className="h-3.5 w-3.5" />
@@ -565,7 +597,7 @@ export default function InstalledView() {
                           e.stopPropagation();
                           handleOpenFolder(item);
                         }}
-                        title={t("tooltips.open_folder")}
+                        tooltip={t("tooltips.open_folder")}
                       >
                         <FolderOpen className="h-3.5 w-3.5" />
                       </IconBtn>
@@ -574,7 +606,7 @@ export default function InstalledView() {
                           e.stopPropagation();
                           handleCopyId(item);
                         }}
-                        title={t("buttons.copy_id")}
+                        tooltip={t("buttons.copy_id")}
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </IconBtn>
@@ -583,7 +615,7 @@ export default function InstalledView() {
                           e.stopPropagation();
                           handleDelete(item);
                         }}
-                        title={t("tooltips.delete_wallpaper")}
+                        tooltip={t("tooltips.delete_wallpaper")}
                         kind="danger"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -639,6 +671,7 @@ export default function InstalledView() {
         onOpenFolder={handleOpenFolder}
         onCopyId={handleCopyId}
       />
+      <ConfirmDialog />
     </div>
   );
 }
@@ -649,15 +682,23 @@ function FilterChipsRow({
   active,
   excluded,
   toggle,
+  isFirst,
+  isLast,
 }: {
   title: string;
   keys: readonly string[];
   active: string[];
   excluded: string[];
   toggle: (k: string) => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-surface/30 px-4 py-2">
+    <div className={cn(
+      "flex flex-wrap items-center gap-1.5 bg-surface/60 px-4 py-1",
+      isFirst && "pt-1",
+      isLast && "pb-2 border-b border-border"
+    )}>
       <span className="text-[11px] uppercase tracking-wide text-subtle">
         {title}
       </span>
@@ -671,7 +712,6 @@ function FilterChipsRow({
             onClick={() => toggle(k)}
             className={cn(
               "chip cursor-pointer select-none text-[11px] transition-colors",
-              !isIncluded && !isExcluded && "hover:bg-surface",
               isIncluded &&
                 "border-primary/60 bg-primary/15 text-foreground",
               isExcluded &&
@@ -689,13 +729,13 @@ function FilterChipsRow({
 function IconBtn({
   onClick,
   children,
-  title,
+  tooltip,
   disabled,
   kind = "default",
 }: {
   onClick: (e: React.MouseEvent) => void;
   children: React.ReactNode;
-  title: string;
+  tooltip: string;
   disabled?: boolean;
   kind?: "default" | "danger";
 }) {
@@ -703,7 +743,7 @@ function IconBtn({
     <button
       onClick={onClick}
       disabled={disabled}
-      title={title}
+      aria-label={tooltip}
       className={cn(
         "flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-foreground shadow ring-1 ring-border backdrop-blur transition-colors",
         disabled && "opacity-40 cursor-not-allowed",

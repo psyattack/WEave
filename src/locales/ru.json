@@ -14,7 +14,10 @@
     "check_updates": "Проверить обновления",
     "changelog": "История изменений",
     "view_on_github": "Открыть на GitHub",
-    "refresh": "Обновить"
+    "refresh": "Обновить",
+    "browse": "Обзор",
+    "open": "Открыть",
+    "copy_id": "Копировать ID"
   },
   "tooltips": {
     "open_folder": "Открыть папку в проводнике",
@@ -32,6 +35,8 @@
     "translate_description": "Перевести описание",
     "show_original": "Показать оригинал",
     "sort_order": "Изменить порядок сортировки",
+    "sort_asc": "По возрастанию",
+    "sort_desc": "По убыванию",
     "collapse_sidebar": "Свернуть боковую панель",
     "expand_sidebar": "Развернуть боковую панель"
   },
@@ -69,6 +74,7 @@
     "rating": "Рейтинг:",
     "posted": "Опубликовано: {date}",
     "updated": "Обновлено: {date}",
+    "ratings": "оценок",
     "author": "Автор: {author}",
     "tags": "Теги:",
     "showing_wallpapers": "Показано {start}-{end} из {total} обоев",
@@ -92,7 +98,13 @@
     "items_count": "Предметов: {count}",
     "related_collections": "Связанные коллекции",
     "back": "Назад",
-    "current_collection": "Текущая коллекция"
+    "current_collection": "Текущая коллекция",
+    "metadata_initialized": "Метаданные инициализированы для {count} обоев",
+    "remove_account_question": "Удалить аккаунт {user}?",
+    "collection_badge": "Коллекция",
+    "downloading": "Загрузка…",
+    "install": "Установить",
+    "details": "Подробнее"
   },
   "messages": {
     "download_started": "Загрузка началась!",
@@ -126,7 +138,14 @@
     "restart_theme_message": "Тема будет применена после следующего запуска. Закрыть приложение сейчас?",
     "restart_debug_message": "Режим отладки будет применён после следующего запуска. Закрыть приложение сейчас?",
     "changelog_error": "Не удалось загрузить историю изменений: {error}",
-    "no_releases": "Выпуски пока не опубликованы."
+    "no_releases": "Выпуски пока не опубликованы.",
+    "signed_in_to_steam": "Вход в Steam выполнен",
+    "removed": "Удалено",
+    "applied": "Применено",
+    "apply_failed": "Не удалось применить",
+    "deleted": "Удалено",
+    "copied": "Скопировано",
+    "wallpaper_applied": "Обои применены"
   },
   "dialog": {
     "tasks": "Задачи",
@@ -141,6 +160,7 @@
   "settings": {
     "title": "НАСТРОЙКИ",
     "theme_dev": "Тема",
+    "theme": "Тема",
     "account": "Аккаунт",
     "language": "Язык",
     "steam_login": "Вход в Steam",
@@ -156,6 +176,7 @@
     "language_description": "Изменить язык интерфейса",
     "behavior": "Поведение",
     "minimize_description": "Свернуть окно после применения обоев",
+    "minimize_on_apply": "Свернуть при применении",
     "preload_next_page": "Предварительная загрузка следующей страницы (БЕТА)",
     "preload_description": "Предварительно загружать следующую страницу мастерской в фоновом режиме для более быстрой навигации",
     "save_window_state": "Сохранять состояние окна",
@@ -165,6 +186,7 @@
     "auto_check_updates": "Автоматически проверять обновления",
     "auto_check_updates_description": "Автоматически проверять выпуски GitHub при запуске приложения",
     "tab_general": "Общие",
+    "general": "Общие",
     "account_selection": "Выбор аккаунта",
     "account_description": "Выбрать аккаунт (для загрузки)",
     "tab_account": "Аккаунт",
@@ -182,12 +204,50 @@
     "all_initialized": "✓ Все {total} обоев инициализированы",
     "initialized_count": "{initialized} / {total} инициализировано",
     "initializing_progress": "Инициализация... {current} / {total}",
-    "search_placeholder": "Искать настройки…"
+    "search_placeholder": "Искать настройки…",
+    "accent_color": "Цвет акцента",
+    "run_metadata_init": "Инициализировать метаданные",
+    "metadata_init_hint": "Получить и кэшировать метаданные Мастерской для каждых локально установленных обоев.",
+    "wallpaper_engine": "Wallpaper Engine",
+    "we_directory": "Папка WE",
+    "we_directory_hint": "Путь к папке установки Wallpaper Engine. Требуется для применения/извлечения и для определения уже установленных элементов мастерской.",
+    "parser_log": "Журнал парсера",
+    "parser_log_hint": "Просмотр необработанного HTML/JSON, возвращаемого парсером Steam",
+    "steam_session": "Веб-сессия Steam",
+    "steam_session_description": "Войдите в Steam, чтобы аутентифицированный просмотр Мастерской (элементы с возрастными ограничениями, личные подписки, списки отслеживания) работал так же, как в браузере.",
+    "download_account": "Аккаунт для загрузки",
+    "download_account_description": "Выберите аккаунт Steam, используемый для загрузки через DepotDownloaderMod. Пользовательские учётные данные можно добавить ниже.",
+    "custom_badge": "Пользовательский",
+    "signed_in": "Вход выполнен",
+    "not_signed_in": "Вход не выполнен",
+    "waiting_for_login": "Ожидание входа…",
+    "reopen_steam": "Открыть Steam снова",
+    "open_steam_login": "Открыть вход в Steam",
+    "steam_account_unknown": "Вход выполнен, но Steam не вернул данные аккаунта — парсер может работать анонимно.",
+    "custom_accounts": "Пользовательские аккаунты",
+    "custom_accounts_description": "Зашифровано на диске с помощью ключа, привязанного к машине (PBKDF2 + AES-256-GCM).",
+    "username": "Имя пользователя",
+    "password": "Пароль",
+    "add_account_button": "Добавить",
+    "no_custom_accounts": "Пока нет пользовательских аккаунтов.",
+    "remove_account": "Удалить аккаунт",
+    "account_added": "Аккаунт добавлен",
+    "account_exists": "Аккаунт уже существует",
+    "confirm_remove_account": "Удалить этот аккаунт?"
   },
   "info": {
     "description": "Это приложение позволяет легко загружать и управлять обоями Wallpaper Engine из Steam Мастерской.",
     "developed": "Разработано с ❤ бесплатно.",
     "changelog_title": "Примечания к выпуску"
+  },
+  "debug": {
+    "entries": "записей",
+    "no_entries": "Ответы парсера пока не записаны. Просмотрите мастерскую, чтобы заполнить журнал.",
+    "select_entry": "Выберите запись для просмотра."
+  },
+  "common": {
+    "refresh": "Обновить",
+    "clear": "Очистить"
   },
   "filters": {
     "local_sort": {

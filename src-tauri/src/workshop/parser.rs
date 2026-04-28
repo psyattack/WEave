@@ -574,7 +574,12 @@ pub fn parse_item_details(html: &str, pubfileid: &str) -> WorkshopItem {
 
     let num_sel = Selector::parse(".numRatings").unwrap();
     if let Some(el) = doc.select(&num_sel).next() {
-        item.num_ratings = text(el);
+        let raw = text(el);
+        let digits: String = raw
+            .chars()
+            .filter(|c| c.is_ascii_digit() || *c == ',')
+            .collect();
+        item.num_ratings = digits;
     }
 
     // Workshop tags. Steam lists them as `<div class="workshopTags">Category:

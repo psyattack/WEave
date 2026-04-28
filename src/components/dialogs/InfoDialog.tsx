@@ -15,6 +15,7 @@ import {
 import Dialog from "@/components/common/Dialog";
 import Markdown from "@/components/common/Markdown";
 import { inTauri, invoke, tryInvoke } from "@/lib/tauri";
+import AppIcon from "@/assets/icon.svg?react";
 
 interface GithubRelease {
   tag_name: string;
@@ -132,7 +133,7 @@ export default function InfoDialog({
       size="sm"
     >
       <div className="flex flex-col items-center gap-3 text-center">
-        <img src="/icon.png" alt="WEave" className="h-20 w-20 rounded-xl" />
+        <AppIcon className="h-32 w-32" />
         <div className="space-y-1">
           <div className="text-lg font-semibold">
             {t("info.app_full_name")}

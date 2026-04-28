@@ -12,11 +12,11 @@ pub async fn download_start(
     pubfileid: String,
     account_index: Option<usize>,
 ) -> Result<(), String> {
-    let Some(we_directory) = state.config.read().get_directory() else {
+    let Some(we_directory) = state.settings.read().get_directory() else {
         return Err("Wallpaper Engine directory is not configured".into());
     };
     let exe = plugin_paths::depot_downloader()?;
-    let index = account_index.unwrap_or_else(|| state.config.read().get_account_number() as usize);
+    let index = account_index.unwrap_or_else(|| state.settings.read().get_account_number() as usize);
     let credentials = state.accounts.credentials(index);
     state
         .downloads
@@ -36,7 +36,7 @@ pub async fn download_cancel(
     pubfileid: String,
 ) -> Result<bool, String> {
     let we_directory = state
-        .config
+        .settings
         .read()
         .get_directory()
         .map(PathBuf::from)

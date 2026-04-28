@@ -28,7 +28,7 @@ pub fn we_set_directory(state: AppStateHandle<'_>, path: String) -> Result<(), S
         return Err("Not a Wallpaper Engine directory".into());
     }
     state.we_client.write().set_directory(Some(dir));
-    state.config.read().set_directory(&path);
+    state.settings.read().set_directory(&path);
     Ok(())
 }
 
@@ -76,7 +76,7 @@ pub fn we_delete_wallpaper(
     if active.iter().any(|id| id == &pubfileid) {
         return Err(format!("ACTIVE:{pubfileid}"));
     }
-    state.config.read().remove_metadata_item(&pubfileid);
+    state.metadata.read().remove_item(&pubfileid);
     delete_wallpaper_folder(&projects, &pubfileid).map_err(map_err)
 }
 

@@ -57,6 +57,9 @@ export default function Drawer({
                   <RadixDialog.Title className="text-sm font-semibold">
                     {title}
                   </RadixDialog.Title>
+                  <RadixDialog.Description className="sr-only">
+                    {title}
+                  </RadixDialog.Description>
                   <RadixDialog.Close className="btn-icon" aria-label="Close">
                     <X className="h-5 w-5" />
                   </RadixDialog.Close>
