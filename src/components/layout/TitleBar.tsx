@@ -98,7 +98,6 @@ export default function TitleBar() {
             className="titlebar-btn"
             onClick={minimize}
             aria-label={t("window.minimize")}
-            title={t("window.minimize")}
           >
             <Minus className="h-3.5 w-3.5" />
           </button>
@@ -106,7 +105,6 @@ export default function TitleBar() {
             className="titlebar-btn"
             onClick={toggleMaximize}
             aria-label={maximized ? t("window.restore") : t("window.maximize")}
-            title={maximized ? t("window.restore") : t("window.maximize")}
           >
             {maximized ? (
               <Square className="h-3 w-3" />
@@ -118,7 +116,6 @@ export default function TitleBar() {
             className="titlebar-btn titlebar-btn-close"
             onClick={close}
             aria-label={t("window.close")}
-            title={t("window.close")}
           >
             <X className="h-3.5 w-3.5" />
           </button>

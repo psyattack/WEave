@@ -10,7 +10,6 @@ pub mod constants;
 pub mod download;
 pub mod extract;
 pub mod i18n;
-pub mod image_cache;
 pub mod metadata;
 pub mod plugin_paths;
 pub mod translator;
@@ -99,7 +98,6 @@ pub fn run() {
             commands::download::download_multi_start,
             commands::extract::extract_start,
             commands::extract::extract_status_all,
-            commands::image::image_cache_get,
             commands::image::open_path,
             commands::steam::steam_login_show,
             commands::steam::steam_login_hide,

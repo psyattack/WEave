@@ -14,6 +14,7 @@ import { inTauri, invoke, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { triggerGlobalRefresh } from "@/stores/refresh";
 import { ThemeCode, useAppStore } from "@/stores/app";
+import { useConfirm } from "@/hooks/useConfirm";
 
 interface Props {
   open: boolean;
@@ -520,6 +521,7 @@ function SteamSessionRow() {
 
 function CustomAccountsSection() {
   const { t } = useTranslation();
+  const { confirm: showConfirm, ConfirmDialog } = useConfirm();
   const state = useAppStore();
   const [list, setList] = useState<string[]>([]);
   const [username, setUsername] = useState("");
@@ -574,13 +576,15 @@ function CustomAccountsSection() {
 
   const remove = async (u: string) => {
     if (!inTauri) return;
-    if (
-      !confirm(
-        t("settings.confirm_remove_account") ||
-          t("labels.remove_account_question", { user: u }),
-      )
-    )
-      return;
+    const confirmed = await showConfirm({
+      title: t("labels.remove_account") || "Remove Account",
+      message: t("settings.confirm_remove_account") ||
+        t("labels.remove_account_question", { user: u }),
+      confirmLabel: t("buttons.remove") || "Remove",
+      cancelLabel: t("buttons.cancel") || "Cancel",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     const ok = await tryInvokeOk("accounts_remove_custom", { username: u });
     if (ok) {
       pushToast(t("messages.removed"), "success");
@@ -647,6 +651,7 @@ function CustomAccountsSection() {
           ))}
         </ul>
       )}
+      <ConfirmDialog />
     </div>
   );
 }

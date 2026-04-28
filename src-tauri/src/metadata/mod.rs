@@ -32,7 +32,7 @@ pub struct WallpaperMetadata {
 /// `MetadataBatchInitializer`.
 pub async fn batch_initialize_metadata(state: Arc<AppState>) -> anyhow::Result<u32> {
     let installed = state.we_client.read().installed_wallpapers();
-    let cached = state.config.read().get_metadata_all();
+    let cached = state.metadata.read().get_all();
 
     let pending: Vec<String> = installed
         .iter()
@@ -63,7 +63,7 @@ pub async fn batch_initialize_metadata(state: Arc<AppState>) -> anyhow::Result<u
                 })
                 .unwrap_or(Value::Null);
                 if !value.is_null() {
-                    state.config.read().set_metadata_item(&item.pubfileid, value);
+                    state.metadata.read().set_item(&item.pubfileid, value);
                     count += 1;
                 }
             }

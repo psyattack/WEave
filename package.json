@@ -1,7 +1,7 @@
 {
   "name": "weave",
   "private": true,
-  "version": "3.0.0-1",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -53,6 +53,7 @@
     "tailwindcss": "^3.4.15",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vite-plugin-svgr": "^5.2.0"
   }
 }

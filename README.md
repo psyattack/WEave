@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/icon.png" alt="WEave Logo" width="128" height="128">
+  <img src="src/assets/icon.svg" alt="WEave Logo" width="128" height="128">
   
   # WEave
   
@@ -164,9 +164,8 @@ The compiled application will be in `src-tauri/target/release/`.
 
 ## Configuration
 
-Configuration is stored in:
-`%APPDATA%\dev.psyattack.weave\`
-`%APPDATA%\WEave\`
+Configuration is stored in:  
+`%LOCALAPPDATA%\com.weave.app\`  
 
 ## Project Structure
 
@@ -183,16 +182,15 @@ weave-tauri/
 │   ├── lib/                 # Utilities and helpers
 │   ├── locales/             # Frontend translations
 │   └── styles/              # Global styles
-├── src-tauri/               # Rust backend
-│   ├── src/
-│   │   ├── commands/        # Tauri commands
-│   │   ├── workshop/        # Workshop parser
-│   │   ├── wallpaper/       # Wallpaper Engine integration
-│   │   ├── download/        # Download manager
-│   │   ├── config/          # Configuration management
-│   │   └── utils/           # Rust utilities
-│   └── locales/             # Backend translations
-└── public/                  # Repository assets
+└── src-tauri/               # Rust backend
+    ├── src/
+    │   ├── commands/        # Tauri commands
+    │   ├── workshop/        # Workshop parser
+    │   ├── wallpaper/       # Wallpaper Engine integration
+    │   ├── download/        # Download manager
+    │   ├── config/          # Configuration management
+    │   └── utils/           # Rust utilities
+    └── locales/             # Backend translations
 ```
 
 ## Contributing

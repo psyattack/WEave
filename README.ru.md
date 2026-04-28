@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/icon.png" alt="WEave Logo" width="128" height="128">
+  <img src="src/assets/icon.svg" alt="WEave Logo" width="128" height="128">
   
   # WEave
   
@@ -164,9 +164,8 @@ npm run tauri build
 
 ## Конфигурация
 
-Конфигурация хранится в:
-`%APPDATA%\dev.psyattack.weave\`
-`%APPDATA%\WEave\`
+Конфигурация хранится в:  
+`%LOCALAPPDATA%\com.weave.app\`
 
 ## Структура проекта
 
@@ -183,16 +182,15 @@ weave-tauri/
 │   ├── lib/                 # Утилиты и хелперы
 │   ├── locales/             # Переводы frontend
 │   └── styles/              # Глобальные стили
-├── src-tauri/               # Rust backend
-│   ├── src/
-│   │   ├── commands/        # Tauri команды
-│   │   ├── workshop/        # Парсер Workshop
-│   │   ├── wallpaper/       # Интеграция с Wallpaper Engine
-│   │   ├── download/        # Менеджер загрузок
-│   │   ├── config/          # Управление конфигурацией
-│   │   └── utils/           # Rust утилиты
-│   └── locales/             # Переводы backend
-└── public/                  # Ресурсы репозитория
+└── src-tauri/               # Rust backend
+    ├── src/
+    │   ├── commands/        # Tauri команды
+    │   ├── workshop/        # Парсер Workshop
+    │   ├── wallpaper/       # Интеграция с Wallpaper Engine
+    │   ├── download/        # Менеджер загрузок
+    │   ├── config/          # Управление конфигурацией
+    │   └── utils/           # Rust утилиты
+    └── locales/             # Переводы backend
 ```
 
 ## Участие в разработке

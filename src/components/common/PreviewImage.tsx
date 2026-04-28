@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { Image as ImageIcon } from "lucide-react";
 
-import { inTauri, tryInvoke } from "@/lib/tauri";
+import { inTauri } from "@/lib/tauri";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -42,12 +42,10 @@ export default function PreviewImage({
   const [resolved, setResolved] = useState<string | undefined>(
     toDisplaySrc(src),
   );
-  const [triedCache, setTriedCache] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     setFailed(false);
-    setTriedCache(false);
     setResolved(toDisplaySrc(src));
   }, [src]);
 
@@ -70,26 +68,8 @@ export default function PreviewImage({
       alt={alt ?? ""}
       loading="lazy"
       draggable={false}
-      onError={async () => {
-        if (!inTauri || triedCache) {
-          setFailed(true);
-          return;
-        }
-        setTriedCache(true);
-        const file = await tryInvoke<string | null>("image_cache_get", {
-          url: src,
-        });
-        if (file) {
-          try {
-            setResolved(convertFileSrc(file));
-          } catch {
-            setResolved(
-              `asset://localhost/${encodeURI(file.replace(/\\/g, "/"))}`,
-            );
-          }
-        } else {
-          setFailed(true);
-        }
+      onError={() => {
+        setFailed(true);
       }}
       initial={{ opacity: 0, scale: 1.02 }}
       animate={{ opacity: 1, scale: 1 }}

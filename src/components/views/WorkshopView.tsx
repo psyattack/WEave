@@ -19,10 +19,22 @@ export default function WorkshopView() {
   const { t } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
   const setPage = useFiltersStore((s) => s.setPage);
+  const setViewPage = useFiltersStore((s) => s.setViewPage);
+  const getViewPage = useFiltersStore((s) => s.getViewPage);
   const accountIndex = useAppStore((s) => s.accountIndex);
   const [page, setPageData] = useState<WorkshopPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WorkshopItem | null>(null);
+
+  // Get the saved page for workshop view
+  const currentPage = getViewPage("workshop");
+
+  // Sync filters.page with the view-specific page
+  useEffect(() => {
+    if (filters.page !== currentPage) {
+      setPage(currentPage);
+    }
+  }, [currentPage, filters.page, setPage]);
 
   const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
   const refreshCounter = useRefreshStore((s) => s.counter);
@@ -30,12 +42,20 @@ export default function WorkshopView() {
   // pagination but is invalidated the moment any filter / sort / search
   // changes. Reset on `workshop_refresh_cache` too (via refreshCounter).
   const cacheRef = useRef<Map<string, WorkshopPage>>(new Map());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Whenever cache is forcibly refreshed from the outside, drop the
     // preload cache — the pages in it may be stale.
     cacheRef.current.clear();
   }, [refreshCounter]);
+
+  useEffect(() => {
+    // Reset scroll to top when page changes
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [filters.page]);
 
   useEffect(() => {
     let active = true;
@@ -123,7 +143,7 @@ export default function WorkshopView() {
   return (
     <div className="flex h-full flex-col">
       <FilterBar />
-      <div className="flex-1 overflow-auto px-4 py-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 py-3">
         {loading ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -149,21 +169,22 @@ export default function WorkshopView() {
           </AnimatePresence>
         )}
       </div>
-      <div className="flex items-center justify-between gap-2 border-t border-border px-4 py-1.5 text-xs text-muted">
-        <span>
-          {total
+      <Pagination
+        page={filters.page}
+        totalPages={totalPages}
+        onChange={(newPage) => {
+          setPage(newPage);
+          setViewPage("workshop", newPage);
+        }}
+        infoText={
+          total
             ? t("labels.showing_wallpapers", {
                 start: (filters.page - 1) * 30 + 1,
                 end: (filters.page - 1) * 30 + items.length,
                 total,
               })
-            : ""}
-        </span>
-      </div>
-      <Pagination
-        page={filters.page}
-        totalPages={totalPages}
-        onChange={setPage}
+            : ""
+        }
       />
       <DetailsPanel
         kind="workshop"

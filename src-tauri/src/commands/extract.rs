@@ -12,7 +12,7 @@ pub async fn extract_start(
     pubfileid: String,
     output_dir: String,
 ) -> Result<(), String> {
-    let Some(we_directory) = state.config.read().get_directory() else {
+    let Some(we_directory) = state.settings.read().get_directory() else {
         return Err("Wallpaper Engine directory is not configured".into());
     };
     let exe = plugin_paths::repkg()?;

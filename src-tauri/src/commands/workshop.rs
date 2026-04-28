@@ -36,7 +36,7 @@ pub async fn workshop_get_item(
     // Persist metadata so that it's available offline next time (mirrors
     // the Python `MetadataService.save_from_workshop_item`).
     if let Ok(value) = serde_json::to_value(&item) {
-        state.config.read().set_metadata_item(&pubfileid, value);
+        state.metadata.read().set_item(&pubfileid, value);
     }
     Ok(item)
 }

@@ -240,7 +240,7 @@
   }
 
   .nav-item {
-    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
+    @apply flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium
       text-muted transition-colors hover:bg-surface-raised hover:text-foreground;
   }
 
@@ -259,12 +259,12 @@
     inset: 0;
     background: linear-gradient(
       90deg,
-      transparent,
-      rgb(var(--surface-raised) / 0.55),
-      transparent
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
     );
     transform: translateX(-100%);
-    animation: shimmer 1.8s infinite;
+    animation: shimmer 2s ease-in-out infinite;
   }
 
   .titlebar {
@@ -283,5 +283,14 @@
   .titlebar-btn-close:hover {
     background: rgb(232 17 35);
     color: white;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }

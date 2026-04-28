@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "workshop": "Workshop",
+    "workshop": "Wallpapers",
     "wallpapers": "Installed",
     "collections": "Collections"
   },
@@ -52,14 +52,14 @@
     "cancel_task": "Cancel task",
     "clear_history": "Clear history",
     "expand_sidebar": "Expand sidebar",
-    "collapse_sidebar": "Collapse sidebar"
+    "collapse_sidebar": "Collapse Bar"
   },
   "labels": {
     "wallpapers_filtered": "Showing {filtered} of {total} wallpapers",
     "total_size": "Total size: {size}",
     "id": "ID: {id}",
     "size": "Size: {size}",
-    "installed": "Installed: {date}",
+    "installed": "Installed:",
     "description": "Description:",
     "no_description": "No description available.",
     "no_preview": "No preview",

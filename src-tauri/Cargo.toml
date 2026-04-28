@@ -1,6 +1,6 @@
 [package]
 name = "weave"
-version = "3.0.0-dev1"
+version = "3.0.0"
 description = "WEave"
 authors = ["psyattack"]
 edition = "2021"

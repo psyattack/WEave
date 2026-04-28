@@ -104,11 +104,11 @@ pub fn app_quit(app: AppHandle) {
 /// saved yet or `save_window_state` is disabled.
 #[command]
 pub fn app_get_window_geometry(state: AppStateHandle<'_>) -> Option<WindowGeometry> {
-    let cfg = state.config.read();
+    let cfg = state.settings.read();
     if !cfg.get_save_window_state() {
         return None;
     }
-    cfg.get("settings.general.behavior.window_geometry")
+    cfg.get("general.behavior.window_geometry")
         .and_then(|v| serde_json::from_value::<WindowGeometry>(v).ok())
         .filter(|g| g.width > 0 && g.height > 0)
 }
@@ -128,7 +128,7 @@ pub struct WindowGeometryInput {
 /// the original Python behavior).
 #[command]
 pub fn app_save_window_geometry(state: AppStateHandle<'_>, geom: WindowGeometryInput) {
-    state.config.read().set_window_geometry(WindowGeometry {
+    state.settings.read().set_window_geometry(WindowGeometry {
         x: geom.x,
         y: geom.y,
         width: geom.width,
