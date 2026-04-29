@@ -65,6 +65,8 @@
     "clear": "Очистить фильтры",
     "more_filters": "▼ Больше фильтров",
     "less_filters": "▲ Меньше фильтров",
+    "show_filters": "Показать фильтры",
+    "hide_filters": "Скрыть фильтры",
     "asset_type": "Тип ассета:",
     "asset_genre": "Жанр ассета:",
     "script_type": "Тип скрипта:",

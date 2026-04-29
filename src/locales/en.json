@@ -68,6 +68,8 @@
     "clear": "Clear Filters",
     "more_filters": "More Filters",
     "less_filters": "Less Filters",
+    "show_filters": "Show Filters",
+    "hide_filters": "Hide Filters",
     "asset_type": "Asset Type:",
     "asset_genre": "Asset Genre:",
     "script_type": "Script Type:",

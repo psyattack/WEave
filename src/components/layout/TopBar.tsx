@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
+  ChevronDown,
+  ChevronUp,
   Droplet,
   Info,
   Layers,
@@ -15,6 +17,7 @@ import {
 
 import { useAppStore, ThemeCode, THEME_CODES } from "@/stores/app";
 import { useTasksStore } from "@/stores/tasks";
+import { useFiltersStore } from "@/stores/filters";
 import { triggerGlobalRefresh } from "@/stores/refresh";
 import { persistTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
@@ -46,6 +49,8 @@ export default function TopBar({
   const setTheme = useAppStore((s) => s.setTheme);
   const tasks = useTasksStore((s) => s.tasks);
   const activeCount = Object.values(tasks).length;
+  const collapsed = useFiltersStore((s) => s.collapsed);
+  const toggleCollapsed = useFiltersStore((s) => s.toggleCollapsed);
 
   const cycleTheme = () => {
     const i = THEME_CODES.indexOf(theme);
@@ -73,6 +78,19 @@ export default function TopBar({
             aria-label={t("tooltips.refresh") || "Refresh"}
           >
             <RefreshCw className="h-5 w-5" />
+          </button>
+        </Tooltip>
+        <Tooltip content={t(collapsed ? "labels.show_filters" : "labels.hide_filters")} side="bottom">
+          <button
+            className="btn-icon"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+          >
+            {collapsed ? (
+              <ChevronDown className="h-5 w-5" />
+            ) : (
+              <ChevronUp className="h-5 w-5" />
+            )}
           </button>
         </Tooltip>
       </div>
