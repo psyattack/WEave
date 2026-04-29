@@ -15,14 +15,15 @@ WEave — это мощный менеджер Steam Workshop для Wallpaper E
 ## Возможности
 
 ### Браузер Workshop
-- Просмотр обоев Steam Workshop
-- Поиск по ключевым словам, сортировка по популярности/новизне
+- Просмотр обоев Steam Workshop с расширенным поиском
+- Поиск по ключевым словам, сортировка по популярности/новизне с диапазонами дат
 - Фильтры по категориям, типам, возрастным рейтингам, разрешениям, тегам
-- Трёхстороннее фильтрование (включить/исключить/игнорировать)
-- Превью изображений с ленивой загрузкой
+- Трёхстороннее фильтрование (включить/исключить/игнорировать) для всех типов фильтров
+- Превью изображений с ленивой загрузкой и кэшированием
 - Просмотр деталей, рейтингов, описаний и информации об авторах
 - Поддержка коллекций и связанных коллекций
 - Предзагрузка страниц для быстрой навигации
+- Поддержка перевода описаний (Google Translate API)
 
 ### Управление загрузками
 - Многопоточная система загрузки через DepotDownloaderMod
@@ -64,9 +65,11 @@ WEave — это мощный менеджер Steam Workshop для Wallpaper E
 - Шифрованное хранилище аккаунтов (PBKDF2 + AES-256-GCM)
 - Кэширование метаданных для офлайн-доступа
 - Автопроверка обновлений через GitHub releases
-- Управление задачами с историей
-- Система кэширования изображений
+- Управление задачами с историей и отслеживанием статуса
+- Система кэширования изображений с LRU кэшем
 - Запрет множественных экземпляров
+- Сохранение геометрии окна
+- Перевод описаний (Google Translate API)
 
 ## Технологический стек
 
@@ -164,33 +167,64 @@ npm run tauri build
 
 ## Конфигурация
 
-Конфигурация хранится в:  
+Файлы конфигурации хранятся в:  
 `%LOCALAPPDATA%\com.weave.app\`
+
+Файлы включают:
+- `settings.json` - Настройки приложения (тема, язык, директория WE и др.)
+- `metadata.json` - Кэшированные метаданные обоев
+- `user_accounts.enc` - Зашифрованные пользовательские Steam аккаунты
+- `cookies.json` - Cookies аутентификации Steam
 
 ## Структура проекта
 
 ```
-weave-tauri/
-├── src/                     # React frontend
-│   ├── components/          # React компоненты
-│   │   ├── common/          # Переиспользуемые компоненты
-│   │   ├── dialogs/         # Модальные окна
-│   │   ├── drawers/         # Боковые панели
-│   │   └── workshop/        # Компоненты Workshop
-│   ├── views/               # Основные компоненты представлений
-│   ├── stores/              # Zustand хранилища состояний
-│   ├── lib/                 # Утилиты и хелперы
-│   ├── locales/             # Переводы frontend
-│   └── styles/              # Глобальные стили
-└── src-tauri/               # Rust backend
-    ├── src/
-    │   ├── commands/        # Tauri команды
-    │   ├── workshop/        # Парсер Workshop
-    │   ├── wallpaper/       # Интеграция с Wallpaper Engine
-    │   ├── download/        # Менеджер загрузок
-    │   ├── config/          # Управление конфигурацией
-    │   └── utils/           # Rust утилиты
-    └── locales/             # Переводы backend
+WEave/
+├── src/                         # React frontend
+│   ├── components/
+│   │   ├── common/              # Переиспользуемые UI компоненты (Dialog, Drawer, Tooltip и др.)
+│   │   ├── dialogs/             # Модальные окна (Settings, MultiDownload, Update и др.)
+│   │   ├── installed/           # Компоненты установленных обоев
+│   │   ├── layout/              # TitleBar, Sidebar, TopBar
+│   │   ├── settings/            # Секции диалога настроек
+│   │   ├── tasks/               # Панель задач загрузки/извлечения
+│   │   ├── views/               # Основные представления (Workshop, Collections, Installed, Author)
+│   │   └── workshop/            # Компоненты Workshop (Cards, Filters, Details)
+│   ├── stores/                  # Zustand хранилища состояний
+│   ├── hooks/                   # React хуки (useBootstrap, useTheme, useConfirm)
+│   ├── lib/                     # Утилиты и хелперы
+│   ├── locales/                 # Переводы frontend (en.json, ru.json)
+│   ├── types/                   # TypeScript определения типов
+│   └── assets/                  # Статические ресурсы
+│
+├── src-tauri/                   # Rust backend
+│   ├── src/
+│   │   ├── commands/          # Обработчики Tauri команд
+│   │   │   ├── accounts.rs    # Управление аккаунтами
+│   │   │   ├── download.rs    # Оркестрация загрузок
+│   │   │   ├── extract.rs     # Извлечение пакетов
+│   │   │   ├── steam.rs       # Steam логин/cookies
+│   │   │   ├── translator.rs  # Перевод описаний
+│   │   │   ├── updater.rs     # Проверка обновлений
+│   │   │   ├── we.rs          # Интеграция с Wallpaper Engine
+│   │   │   └── workshop.rs    # Просмотр Workshop
+│   │   ├── workshop/          # Парсер Steam Workshop
+│   │   ├── accounts/          # Управление аккаунтами с шифрованием
+│   │   ├── config/            # Управление конфигурацией
+│   │   ├── download/          # Менеджер загрузок (обёртка DepotDownloaderMod)
+│   │   ├── extract/           # Менеджер извлечения (обёртка RePKG)
+│   │   ├── we_client/         # Клиент Wallpaper Engine
+│   │   ├── i18n/              # Переводы backend
+│   │   ├── metadata/          # Инициализатор пакетных метаданных
+│   │   ├── translator/        # Интеграция Google Translate
+│   │   └── updater/           # Проверка релизов GitHub
+│   ├── locales/               # Переводы backend (en.json, ru.json)
+│   ├── icons/                 # Иконка приложения
+│   └── capabilities/          # Разрешения Tauri
+│
+└── plugins/                   # Внешние инструменты (gitignored)
+    ├── DepotDownloaderMod/    # Загрузчик Steam депо (.NET)
+    └── RePKG/                 # Распаковщик пакетов Wallpaper Engine
 ```
 
 ## Участие в разработке

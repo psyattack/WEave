@@ -41,6 +41,7 @@ export const DEFAULT_FILTERS: WorkshopFilters = {
 interface FiltersState {
   filters: WorkshopFilters;
   showAdvanced: boolean;
+  collapsed: boolean;
   // Separate page state for each view to preserve navigation history
   viewPages: {
     workshop: number;
@@ -55,11 +56,13 @@ interface FiltersState {
   setViewPage: (view: string, page: number, key?: string) => void;
   getViewPage: (view: string, key?: string) => number;
   toggleAdvanced: () => void;
+  toggleCollapsed: () => void;
 }
 
 export const useFiltersStore = create<FiltersState>((set, get) => ({
   filters: DEFAULT_FILTERS,
   showAdvanced: false,
+  collapsed: true,
   viewPages: {
     workshop: 1,
     collections: 1,
@@ -105,4 +108,6 @@ export const useFiltersStore = create<FiltersState>((set, get) => ({
   },
   toggleAdvanced: () =>
     set((state) => ({ showAdvanced: !state.showAdvanced })),
+  toggleCollapsed: () =>
+    set((state) => ({ collapsed: !state.collapsed })),
 }));
