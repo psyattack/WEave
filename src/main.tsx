@@ -19,6 +19,11 @@ if (theme === "light") html.classList.remove("dark");
 else html.classList.add("dark");
 html.dataset.theme = theme;
 
+// Apply no-select class to body only in production builds
+if (import.meta.env.PROD) {
+  document.body.classList.add("no-select");
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
