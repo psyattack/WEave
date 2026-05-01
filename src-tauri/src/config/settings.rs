@@ -105,7 +105,7 @@ impl SettingsService {
     pub fn get_account_number(&self) -> u32 {
         self.get("account.account.account_number")
             .and_then(|v| v.as_u64())
-            .unwrap_or(3) as u32
+            .unwrap_or(0) as u32
     }
 
     pub fn set_account_number(&self, value: u32) {
@@ -149,7 +149,7 @@ fn default_settings() -> Value {
         },
         "account": {
             "account": {
-                "account_number": 3
+                "account_number": 0
             }
         },
         "general": {

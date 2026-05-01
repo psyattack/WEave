@@ -16,6 +16,7 @@ import TasksDrawer from "@/components/tasks/TasksDrawer";
 import ToastStack from "@/components/common/ToastStack";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useApplyTheme } from "@/hooks/useTheme";
+import { useProductionProtection } from "@/hooks/useProductionProtection";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { useFiltersStore } from "@/stores/filters";
@@ -23,6 +24,7 @@ import { useFiltersStore } from "@/stores/filters";
 export default function App() {
   useBootstrap();
   useApplyTheme();
+  useProductionProtection();
   const ready = useAppStore((s) => s.ready);
   const sub = useNavStore((s) => s.sub);
   const resetNav = useNavStore((s) => s.reset);
@@ -79,9 +81,7 @@ export default function App() {
             onOpenInfo={() => setInfoOpen(true)}
             onOpenTasks={() => setTasksOpen(true)}
           />
-          <main
-            className="relative flex-1 overflow-hidden"
-          >
+          <main className="relative flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
               {ready && activeKey === "workshop" && (
                 <ViewWrap key="workshop">

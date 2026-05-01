@@ -31,10 +31,8 @@ pub struct AccountManager {
 
 const BUILTIN_ACCOUNT_BUNDLE_KEY: &[u8] = b"WEave built-in Steam accounts bundle v1";
 const BUILTIN_ACCOUNT_BUNDLE: &str = concat!(
-    "V0VhdmVBY2N0MDAxI0OedwXdnRGyKIzyG9DqJSrCmfP5uvje40DeXiI+e4qdETXVxWl0Nh3GKfZtnKRMyE4GZvum",
-    "OBc/XEGHW4KHyh6zzAMr6L/nuqCLbTxvvTzLWs4kKQdPbN55ts+ue3SqAWJVTOJ0MXaGQUCdQ/ejH7PQot84sz3J",
-    "HYO1vIKoYIanoC1LmcuMZlkkKlmwPyh/Km82n/2nlDMsgD6qP7/+GcqW+EeFcqCKSfsje8PM27d+IwqXmrSmWSRM",
-    "zzBxtA33SJ/1AStLq38dG6vW8dv3GNercy0JTt48uL5qCJM7I9aDVqueRAfRIp7WyLX7dTmqUK7CkYI4Xd22GK8/"
+    "bXsyB7bDopuysU63FGp4jrVnVDk3U6ZNLEHAsAaT8Uzg1uqp6AoDNW+atjMCWX2MWBFcXQsJ8TVNf7E0Jyf9nZR4FxNSRub3WFMy",
+    "jvAjalnm+5M4EbygvfJJKT/UAS2HO8HKH9x3RMuU"
 );
 
 #[derive(Debug, Deserialize)]
