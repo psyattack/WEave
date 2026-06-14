@@ -54,6 +54,7 @@ pub struct DownloadManager {
     app: AppHandle,
     tasks: Arc<Mutex<HashMap<String, TaskStatus>>>,
     handles: Arc<Mutex<HandleMap>>,
+    cancelled: Arc<Mutex<std::collections::HashSet<String>>>,
 }
 
 impl DownloadManager {
@@ -62,6 +63,7 @@ impl DownloadManager {
             app,
             tasks: Arc::new(Mutex::new(HashMap::new())),
             handles: Arc::new(Mutex::new(HashMap::new())),
+            cancelled: Arc::new(Mutex::new(std::collections::HashSet::new())),
         }
     }
 
@@ -141,6 +143,7 @@ impl DownloadManager {
 
         let tasks = self.tasks.clone();
         let handles = self.handles.clone();
+        let cancelled = self.cancelled.clone();
         let app = self.app.clone();
         let pubfileid_owned = pubfileid.to_string();
         let username = credentials.username.clone();
@@ -188,6 +191,9 @@ impl DownloadManager {
                 }
             }
 
+            // Check if this task was manually cancelled BEFORE removing the handle
+            let was_cancelled = cancelled.lock().contains(&pubfileid);
+
             let holder = handles.lock().remove(&pubfileid);
             let mut exit_ok = false;
             if let Some(holder) = holder {
@@ -197,6 +203,13 @@ impl DownloadManager {
                         exit_ok = status.success();
                     }
                 }
+            }
+
+            // If cancelled, clean up and exit early
+            if was_cancelled {
+                cancelled.lock().remove(&pubfileid);
+                tasks.lock().remove(&pubfileid);
+                return;
             }
 
             // Trust disk state over the exit code: DepotDownloaderMod sometimes
@@ -243,24 +256,13 @@ impl DownloadManager {
     }
 
     pub async fn cancel(&self, pubfileid: &str, we_directory: &std::path::Path) -> bool {
-        let holder = self.handles.lock().remove(pubfileid);
-        if let Some(holder) = holder {
-            let mut guard = holder.lock().await;
-            if let Some(child) = guard.as_mut() {
-                let _ = child.kill().await;
-            }
-        }
+        // Mark as cancelled and check if task exists BEFORE removing handle
+        self.cancelled.lock().insert(pubfileid.to_string());
 
-        let folder = we_directory
-            .join("projects")
-            .join("myprojects")
-            .join(pubfileid);
-        if folder.exists() {
-            let _ = std::fs::remove_dir_all(&folder);
-        }
+        let task_exists = self.tasks.lock().contains_key(pubfileid);
 
-        let removed = self.tasks.lock().remove(pubfileid).is_some();
-        if removed {
+        // Send cancelled status BEFORE removing handle (which allows main thread to finish)
+        if task_exists {
             let status = TaskStatus {
                 pubfileid: pubfileid.into(),
                 status: "Cancelled".into(),
@@ -279,7 +281,25 @@ impl DownloadManager {
                 )
                 .ok();
         }
-        removed
+
+        // NOW remove the handle and kill the process
+        let holder = self.handles.lock().remove(pubfileid);
+        if let Some(holder) = holder {
+            let mut guard = holder.lock().await;
+            if let Some(child) = guard.as_mut() {
+                let _ = child.kill().await;
+            }
+        }
+
+        let folder = we_directory
+            .join("projects")
+            .join("myprojects")
+            .join(pubfileid);
+        if folder.exists() {
+            let _ = std::fs::remove_dir_all(&folder);
+        }
+
+        task_exists
     }
 
     fn emit_status(&self, status: &TaskStatus) {

@@ -127,19 +127,27 @@ export function useBootstrap() {
           phase: string;
           progress?: number | null;
         }>("download://status", (event) => {
+          const normalizedPhase = normalizeTaskPhase(event.payload.phase);
           useTasksStore.getState().upsert({
             ...event.payload,
             kind: "download",
-            phase: normalizeTaskPhase(event.payload.phase),
+            phase: normalizedPhase,
           });
-          if (event.payload.phase === "failed") {
+          if (normalizedPhase === "failed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
                 `Download failed (${event.payload.pubfileid}): ${event.payload.status}`,
                 "error",
               );
             });
-          } else if (event.payload.phase === "completed") {
+          } else if (normalizedPhase === "cancelled") {
+            void import("@/stores/toasts").then(({ pushToast }) => {
+              pushToast(
+                `Download cancelled: ${event.payload.pubfileid}`,
+                "warning",
+              );
+            });
+          } else if (normalizedPhase === "completed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
                 `Download completed: ${event.payload.pubfileid}`,
@@ -169,19 +177,20 @@ export function useBootstrap() {
           phase: string;
           progress?: number | null;
         }>("extract://status", (event) => {
+          const normalizedPhase = normalizeTaskPhase(event.payload.phase);
           useTasksStore.getState().upsert({
             ...event.payload,
             kind: "extract",
-            phase: normalizeTaskPhase(event.payload.phase),
+            phase: normalizedPhase,
           });
-          if (event.payload.phase === "failed") {
+          if (normalizedPhase === "failed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
                 `Extract failed (${event.payload.pubfileid}): ${event.payload.status}`,
                 "error",
               );
             });
-          } else if (event.payload.phase === "completed") {
+          } else if (normalizedPhase === "completed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
                 `Extract completed: ${event.payload.pubfileid}`,

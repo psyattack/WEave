@@ -41,7 +41,8 @@ pub async fn download_cancel(state: AppStateHandle<'_>, pubfileid: String) -> Re
         .get_directory()
         .map(PathBuf::from)
         .unwrap_or_default();
-    Ok(state.downloads.cancel(&pubfileid, &we_directory).await)
+    let result = state.downloads.cancel(&pubfileid, &we_directory).await;
+    Ok(result)
 }
 
 #[command]
