@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import {
   ChevronDown,
   ChevronUp,

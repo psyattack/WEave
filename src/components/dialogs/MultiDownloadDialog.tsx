@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 
 import Dialog from "@/components/common/Dialog";
 import { inTauri, tryInvokeOk } from "@/lib/tauri";

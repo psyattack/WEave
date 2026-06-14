@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "@/App";
 import "@/index.css";
-import "@/lib/i18n";
+import "@/i18n";
 import { THEME_CODES } from "@/hooks/useTheme";
 
 // Apply the persisted theme class before React mounts so that the very first

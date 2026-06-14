@@ -49,8 +49,7 @@ impl AppState {
         let metadata_path = app_data_dir.join("metadata.json");
         let metadata = MetadataService::load(&metadata_path)?;
 
-        let language = settings.get_language();
-        let i18n = I18nService::load(&language);
+        let i18n = I18nService::new();
 
         let accounts = AccountManager::from_runtime(&app_data_dir);
 

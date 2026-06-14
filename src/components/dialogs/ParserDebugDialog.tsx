@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import { Trash2, RefreshCw } from "lucide-react";
 
 import Dialog from "@/components/common/Dialog";
@@ -23,7 +23,7 @@ export default function ParserDebugDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [entries, setEntries] = useState<DebugEntry[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -46,7 +46,6 @@ export default function ParserDebugDialog({
   };
 
   const ordered = [...entries].reverse();
-  const current = selected != null ? ordered[selected] : null;
 
   return (
     <Dialog
@@ -60,8 +59,8 @@ export default function ParserDebugDialog({
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <div className="text-sm font-medium">
           {t("settings.parser_log") || "Parser log"}
-          <span className="ml-2 text-xs text-muted">
-            ({entries.length} {t("debug.entries") || "entries"})
+          <span className="text-xs text-muted">
+            ({entries.length} {i18n.t("debug.entries") || "entries"})
           </span>
         </div>
         <div className="flex items-center gap-2">

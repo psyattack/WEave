@@ -63,7 +63,6 @@ pub fn run() {
             commands::config::config_set,
             commands::config::config_get,
             commands::config::config_save_window_geometry,
-            commands::i18n::i18n_get_translations,
             commands::i18n::i18n_get_available_languages,
             commands::i18n::i18n_set_language,
             commands::accounts::accounts_list,
