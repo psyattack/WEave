@@ -3,6 +3,9 @@
 mod metadata;
 mod settings;
 
+#[cfg(test)]
+mod tests;
+
 use serde_json::{json, Value};
 
 pub use metadata::MetadataService;
