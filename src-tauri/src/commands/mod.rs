@@ -6,6 +6,7 @@ pub mod download;
 pub mod extract;
 pub mod i18n;
 pub mod image;
+pub mod logging;
 pub mod metadata;
 pub mod steam;
 pub mod translator;

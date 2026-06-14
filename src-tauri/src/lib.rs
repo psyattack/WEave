@@ -9,8 +9,10 @@ pub mod config;
 pub mod constants;
 pub mod dotnet_runtime;
 pub mod download;
+pub mod errors;
 pub mod extract;
 pub mod i18n;
+pub mod logger;
 pub mod metadata;
 pub mod plugin_paths;
 pub mod translator;
@@ -25,7 +27,22 @@ use crate::app_state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    env_logger::try_init().ok();
+    // Initialize custom logger - fallback to env_logger if it fails
+    let log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
+    // Try to initialize custom logger, fallback to env_logger
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let log_dir = data_dir.join("com.weave.app");
+        if logger::WEaveLogger::init(&log_dir, log_level).is_err() {
+            env_logger::try_init().ok();
+        }
+    } else {
+        env_logger::try_init().ok();
+    }
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -112,6 +129,7 @@ pub fn run() {
             commands::steam::steam_auto_login,
             commands::dotnet::dotnet_get_root,
             commands::dotnet::dotnet_init,
+            commands::logging::log_frontend_message,
         ]);
 
     builder

@@ -10,6 +10,17 @@ export default defineConfig(async () => ({
   test: {
     environment: "jsdom",
     globals: true,
+    setupFiles: ["./src/lib/test-setup.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/",
+        "src/lib/test-setup.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+      ],
+    },
   },
   resolve: {
     alias: {

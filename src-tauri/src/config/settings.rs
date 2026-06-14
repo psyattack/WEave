@@ -25,11 +25,22 @@ pub struct SettingsService {
 
 impl SettingsService {
     pub fn load(path: &Path) -> anyhow::Result<Self> {
+        log::info!("Loading settings from: {}", path.display());
         let data = match fs::read_to_string(path) {
-            Ok(raw) => serde_json::from_str::<Value>(&raw).unwrap_or_else(|_| default_settings()),
-            Err(_) => default_settings(),
+            Ok(raw) => {
+                log::debug!("Settings file found, parsing JSON");
+                serde_json::from_str::<Value>(&raw).unwrap_or_else(|e| {
+                    log::warn!("Failed to parse settings JSON: {}, using defaults", e);
+                    default_settings()
+                })
+            }
+            Err(e) => {
+                log::info!("Settings file not found ({}), using defaults", e);
+                default_settings()
+            }
         };
         let merged = deep_merge(default_settings(), data);
+        log::info!("Settings loaded successfully");
         Ok(Self {
             path: path.to_path_buf(),
             data: Mutex::new(merged),
@@ -41,11 +52,16 @@ impl SettingsService {
     }
 
     pub fn save(&self) -> anyhow::Result<()> {
+        log::debug!("Saving settings to: {}", self.path.display());
         if let Some(parent) = self.path.parent() {
             fs::create_dir_all(parent).ok();
         }
         let raw = serde_json::to_string_pretty(&*self.data.lock())?;
-        fs::write(&self.path, raw)?;
+        fs::write(&self.path, &raw).map_err(|e| {
+            log::error!("Failed to save settings: {}", e);
+            e
+        })?;
+        log::debug!("Settings saved successfully");
         Ok(())
     }
 
@@ -54,6 +70,7 @@ impl SettingsService {
     }
 
     pub fn set(&self, path: &str, value: Value) -> anyhow::Result<()> {
+        log::debug!("Setting config value: {} = {:?}", path, value);
         {
             let mut guard = self.data.lock();
             set_value(&mut guard, normalize_settings_path(path), value);
@@ -138,7 +155,7 @@ impl SettingsService {
     }
 }
 
-fn normalize_settings_path(path: &str) -> &str {
+pub(crate) fn normalize_settings_path(path: &str) -> &str {
     path.strip_prefix("settings.").unwrap_or(path)
 }
 

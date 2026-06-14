@@ -40,7 +40,9 @@ pub struct AppState {
 
 impl AppState {
     pub fn initialize(app_handle: AppHandle) -> anyhow::Result<Self> {
+        log::info!("Initializing AppState");
         let app_data_dir = resolve_app_data_dir();
+        log::info!("App data directory: {}", app_data_dir.display());
         std::fs::create_dir_all(&app_data_dir).ok();
 
         let settings_path = app_data_dir.join("settings.json");
@@ -49,8 +51,10 @@ impl AppState {
         let metadata_path = app_data_dir.join("metadata.json");
         let metadata = MetadataService::load(&metadata_path)?;
 
+        log::debug!("Initializing i18n service");
         let i18n = I18nService::new();
 
+        log::debug!("Loading account manager");
         let accounts = AccountManager::from_runtime(&app_data_dir);
 
         // Resolve the WE install directory: prefer whatever the user has
@@ -59,22 +63,32 @@ impl AppState {
         // every launch.
         let mut we_dir: Option<PathBuf> = settings.get_directory().map(PathBuf::from);
         if we_dir.as_ref().map(|p| !p.exists()).unwrap_or(true) {
+            log::info!("Detecting Wallpaper Engine installation");
             if let Some(detected) = WallpaperEngineClient::detect_installation() {
+                log::info!("Wallpaper Engine detected at: {}", detected.display());
                 settings.set_directory(&detected.to_string_lossy());
                 we_dir = Some(detected);
+            } else {
+                log::warn!("Wallpaper Engine installation not found");
             }
+        } else {
+            log::info!("Using configured Wallpaper Engine directory: {:?}", we_dir);
         }
         let we_client = WallpaperEngineClient::new(we_dir);
 
         let steam_webview_dir = app_data_dir.join("SteamWebView");
+        log::debug!("Initializing Workshop client");
         let workshop = Arc::new(WorkshopClient::new(steam_webview_dir.clone()));
 
+        log::debug!("Initializing download and extract managers");
         let downloads = DownloadManager::new(app_handle.clone());
         let extracts = ExtractManager::new(app_handle.clone());
 
+        log::debug!("Initializing Steam WebView");
         let steam_webview =
             SteamWebview::new(app_handle.clone(), steam_webview_dir, workshop.cookie_jar());
 
+        log::info!("AppState initialized successfully");
         Ok(Self {
             app_handle,
             app_data_dir,
@@ -97,15 +111,23 @@ impl AppState {
     /// This ensures the Workshop client has authentication cookies from
     /// previous sessions without needing to wait for an explicit login.
     pub fn init_cookies(&self) {
+        log::info!("Initializing cookies from WebView2");
         let steam_webview = self.steam_webview.clone();
         let workshop = self.workshop.clone();
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async move {
-                if let Ok(n) = steam_webview.sync_cookies().await {
-                    if n > 0 {
-                        log::info!("Synced {} cookies from WebView2 on startup", n);
-                        workshop.clear_caches();
+                match steam_webview.sync_cookies().await {
+                    Ok(n) => {
+                        if n > 0 {
+                            log::info!("Synced {} cookies from WebView2 on startup", n);
+                            workshop.clear_caches();
+                        } else {
+                            log::debug!("No cookies to sync from WebView2");
+                        }
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to sync cookies from WebView2: {}", e);
                     }
                 }
             });
@@ -114,6 +136,7 @@ impl AppState {
 
     /// Initialize .NET Runtime check in background. Call this after state is created.
     pub fn init_dotnet_runtime(&self) {
+        log::info!("Initializing .NET Runtime check");
         let app = self.app_handle.clone();
         let dotnet_root = self.dotnet_root.clone();
         std::thread::spawn(move || {
@@ -121,10 +144,15 @@ impl AppState {
             rt.block_on(async move {
                 match crate::dotnet_runtime::ensure_dotnet_runtime(&app).await {
                     Ok(path) => {
+                        if let Some(ref p) = path {
+                            log::info!(".NET Runtime available at: {}", p.display());
+                        } else {
+                            log::info!("Using system .NET Runtime");
+                        }
                         *dotnet_root.lock() = path;
                     }
                     Err(e) => {
-                        log::warn!("Failed to ensure .NET Runtime: {}", e);
+                        log::error!("Failed to ensure .NET Runtime: {}", e);
                     }
                 }
             });
