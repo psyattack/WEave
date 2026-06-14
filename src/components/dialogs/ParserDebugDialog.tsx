@@ -54,7 +54,7 @@ export default function ParserDebugDialog({
       onOpenChange={(o) => {
         if (!o) onClose();
       }}
-      size="xl"
+      size="lg"
       title={t("settings.parser_log") || "Parser log"}
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
@@ -75,8 +75,8 @@ export default function ParserDebugDialog({
           </button>
         </div>
       </div>
-      <div className="grid h-[60vh] grid-cols-[280px_1fr] gap-0">
-        <div className="overflow-auto border-r border-border">
+      <div className="flex h-[50vh]">
+        <div className="flex-1 overflow-auto">
           {ordered.length === 0 && (
             <div className="p-4 text-xs text-muted">
               {t("debug.no_entries") ||
@@ -114,33 +114,6 @@ export default function ParserDebugDialog({
               </div>
             </button>
           ))}
-        </div>
-        <div className="flex flex-col overflow-hidden">
-          {current ? (
-            <>
-              <div className="border-b border-border px-3 py-2">
-                <div className="break-all font-mono text-[11px] text-foreground/90">
-                  {current.url}
-                </div>
-                <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-muted">
-                  <span>HTTP {current.status}</span>
-                  <span>•</span>
-                  <span>{(current.size_bytes / 1024).toFixed(1)} KiB</span>
-                  <span>•</span>
-                  <span>{current.elapsed_ms}ms</span>
-                  <span>•</span>
-                  <span>{current.items_parsed} items parsed</span>
-                </div>
-              </div>
-              <pre className="flex-1 overflow-auto whitespace-pre-wrap break-all bg-surface-sunken p-3 font-mono text-[10px] text-foreground/80">
-                {current.html}
-              </pre>
-            </>
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-xs text-muted">
-              {t("debug.select_entry") || "Select an entry to inspect."}
-            </div>
-          )}
         </div>
       </div>
     </Dialog>

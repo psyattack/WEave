@@ -236,7 +236,7 @@
     "we_directory": "WE Directory",
     "advanced": "Advanced",
     "steam_session": "Steam web session",
-    "steam_session_description": "Log in to Steam so authenticated Workshop browsing (age-gated items, personal subscriptions, following lists) works the same as in a browser.",
+    "steam_session_description": "Log in to Steam so authenticated Workshop browsing (age-gated items) works the same as in a browser.",
     "download_account": "Download account",
     "download_account_description": "Pick a Steam account used for downloading via DepotDownloaderMod. Custom credentials can be added below.",
     "custom_accounts": "Custom accounts",
