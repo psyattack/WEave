@@ -12,6 +12,7 @@ import SettingsDialog from "@/components/settings/SettingsDialog";
 import MultiDownloadDialog from "@/components/dialogs/MultiDownloadDialog";
 import InfoDialog from "@/components/dialogs/InfoDialog";
 import UpdateDialog from "@/components/dialogs/UpdateDialog";
+import LegalDialog from "@/components/dialogs/LegalDialog";
 import TasksDrawer from "@/components/tasks/TasksDrawer";
 import ToastStack from "@/components/common/ToastStack";
 import DotnetProgressOverlay from "@/components/common/DotnetProgressOverlay";
@@ -36,6 +37,17 @@ export default function App() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
+
+  const legalAccepted = useAppStore((s) => s.legalAccepted);
+  const setLegalAccepted = useAppStore((s) => s.setLegalAccepted);
+
+  // Show legal dialog on first run
+  useEffect(() => {
+    if (ready && !legalAccepted) {
+      setLegalOpen(true);
+    }
+  }, [ready, legalAccepted]);
 
   const setPage = useFiltersStore((s) => s.setPage);
 
@@ -116,9 +128,16 @@ export default function App() {
         open={infoOpen}
         onOpenChange={setInfoOpen}
         onCheckUpdates={() => setUpdateOpen(true)}
+        onOpenLegal={() => setLegalOpen(true)}
       />
       <UpdateDialog open={updateOpen} onOpenChange={setUpdateOpen} />
       <TasksDrawer open={tasksOpen} onOpenChange={setTasksOpen} />
+      <LegalDialog
+        open={legalOpen}
+        onOpenChange={setLegalOpen}
+        requireAccept={!legalAccepted}
+        onAccept={() => setLegalAccepted(true)}
+      />
       <ToastStack />
       <DotnetProgressOverlay />
     </div>

@@ -20,7 +20,10 @@
     "copy_id": "Copy ID",
     "delete": "Delete",
     "cancel": "Cancel",
-    "remove": "Remove"
+    "remove": "Remove",
+    "continue": "Continue",
+    "close": "Close",
+    "legal": "Terms & Legal"
   },
   "tooltips": {
     "open_folder": "Open folder in Explorer",
@@ -159,7 +162,8 @@
     "exit": "Exit",
     "multi_download": "Multi-Download",
     "about": "About",
-    "installation_started": "Installation Started"
+    "installation_started": "Installation Started",
+    "legal": "Terms & Legal Information"
   },
   "settings": {
     "title": "SETTINGS",
@@ -242,7 +246,11 @@
   "info": {
     "description": "This application allows you to easily download and manage Wallpaper Engine wallpapers from Steam Workshop.",
     "developed": "Developed with ❤ free",
-    "changelog_title": "Release notes"
+    "changelog_title": "Release notes",
+    "app_full_name": "WEave",
+    "version_label": "Version",
+    "author": "psyattack",
+    "tools_section_title": "Built with"
   },
   "debug": {
     "entries": "entries",
@@ -252,6 +260,43 @@
   "common": {
     "refresh": "Refresh",
     "clear": "Clear"
+  },
+  "legal": {
+    "main_tab": "Overview",
+    "disclaimer_tab": "Disclaimer",
+    "license_tab": "License",
+    "opensource_title": "Free & Open Source Software",
+    "opensource_message": "WEave is free and open source software released under the MIT License. The source code is publicly available on GitHub. If someone sold you this software, you have been scammed.",
+    "scam_warning_title": "Important: Beware of Scams",
+    "scam_warning_message": "This software is completely FREE. If you paid for it, request a refund immediately. WEave is distributed exclusively through the official GitHub repository at no cost.",
+    "summary_title": "By using this software, you acknowledge:",
+    "summary_point_1": "This software is provided 'as is' without any warranty of any kind",
+    "summary_point_2": "This project is not affiliated with, endorsed by, or associated with Valve Corporation, Steam, or Wallpaper Engine",
+    "summary_point_3": "You use this software at your own risk and accept full responsibility for any consequences",
+    "summary_point_4": "The developers are not liable for any damages, data loss, or issues arising from the use of this software",
+    "summary_point_5": "You also accept the licenses of all third-party software and dependencies used by this application",
+    "third_party_notice": "This software uses third-party libraries and tools. See the License tab for details.",
+    "disclaimer_title": "Disclaimer of Liability",
+    "no_affiliation_title": "No Affiliation",
+    "no_affiliation_text": "WEave is an independent, unofficial tool. It is not affiliated with, endorsed by, sponsored by, or associated with Valve Corporation, Steam, Wallpaper Engine, or any of their subsidiaries or affiliates. All product names, logos, brands, trademarks, and registered trademarks are property of their respective owners.",
+    "no_warranty_title": "No Warranty",
+    "no_warranty_text": "This software is provided 'as is', without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. The entire risk as to the quality and performance of the software is with you.",
+    "use_at_risk_title": "Use at Your Own Risk",
+    "use_at_risk_text": "You acknowledge that the use of this software is at your sole risk. You are solely responsible for any damage to your computer system, loss of data, or any other consequences that may result from downloading, installing, or using this software.",
+    "not_responsible_title": "The Developers Are Not Responsible For:",
+    "not_responsible_point_1": "Any direct, indirect, incidental, special, or consequential damages",
+    "not_responsible_point_2": "Loss of data, profits, or business interruption",
+    "not_responsible_point_3": "System failures, software conflicts, or hardware damage",
+    "not_responsible_point_4": "Violation of Steam Terms of Service or any third-party terms",
+    "not_responsible_point_5": "Any legal consequences or account suspensions resulting from the use of this software",
+    "age_requirement_title": "Age Requirement",
+    "age_requirement_text": "By using this software, you confirm that you are of legal age in your jurisdiction and have the legal capacity to agree to these terms.",
+    "compliance_title": "User Compliance",
+    "compliance_text": "You are responsible for ensuring your use of this software complies with all applicable laws, regulations, and third-party terms of service (including Steam's Terms of Service and Subscriber Agreement). The developers assume no responsibility for any violations.",
+    "dependencies_title": "Third-Party Software & Dependencies",
+    "dependencies_text": "This application uses the following third-party software and libraries, each governed by their respective licenses. By using WEave, you also accept the terms of these licenses:",
+    "accept_terms": "I have read and accept the terms above",
+    "accept_explanation": "You must accept these terms to continue using WEave."
   },
   "filters": {
     "local_sort": {
