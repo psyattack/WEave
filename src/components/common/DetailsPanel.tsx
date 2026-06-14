@@ -31,6 +31,7 @@ import { maybeMinimize } from "@/lib/window";
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
 import { groupTags, parseRatingStars, workshopUrl } from "@/lib/workshop";
+import { triggerGlobalRefresh } from "@/stores/refresh";
 
 /**
  * One unified details drawer used by both the Workshop view and the
@@ -644,6 +645,7 @@ function ActionRow(
     if (ok) {
       pushToast(t("messages.deleted") || "Deleted", "success");
       void props.refreshInstalled();
+      triggerGlobalRefresh();
       props.onClose();
     } else {
       pushToast(

@@ -23,6 +23,7 @@ import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/useConfirm";
+import { triggerGlobalRefresh } from "@/stores/refresh";
 
 interface Props {
   item: WorkshopItem;
@@ -131,6 +132,7 @@ export default function WorkshopCard({
     if (ok) {
       pushToast(t("messages.wallpaper_deleted"), "success");
       await refreshInstalled();
+      triggerGlobalRefresh();
     } else {
       pushToast(
         t("messages.cannot_delete_active_single") ||

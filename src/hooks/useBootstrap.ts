@@ -149,6 +149,9 @@ export function useBootstrap() {
             // installed indicators, and fetch workshop metadata for
             // the new item so it's cached for future use.
             void useInstalledStore.getState().refresh();
+            void import("@/stores/refresh").then(({ triggerGlobalRefresh }) => {
+              triggerGlobalRefresh();
+            });
             void (async () => {
               await tryInvoke(
                 "workshop_get_item",

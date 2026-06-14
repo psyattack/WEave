@@ -241,10 +241,10 @@ WEave/
 
 ## Благодарности
 
-- **Создано с помощью**: [Tauri](https://tauri.app/), [React](https://react.dev/), [Rust](https://www.rust-lang.org/)
+- **Создано с помощью**: [Tauri](https://tauri.app/), [React](https://react.dev/)
 - **Иконки**: [Lucide](https://lucide.dev/)
 - **UI компоненты**: [Radix UI](https://www.radix-ui.com/)
-- **Инструмент загрузки**: [DepotDownloaderMod](https://gitlab.com/steamautocracks/DepotDownloaderMod)
+- **Инструмент загрузки**: [DepotDownloaderMod](https://github.com/SteamAutoCracks/DepotDownloaderMod)
 - **Распаковщик пакетов**: [RePKG](https://github.com/notscuffed/repkg)
 
 ## Отказ от ответственности

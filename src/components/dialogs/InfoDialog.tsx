@@ -40,7 +40,7 @@ const TOOLS: { label: string; url: string; license?: string }[] = [
   { label: "React", url: "https://react.dev/", license: "MIT" },
   {
     label: "DepotDownloaderMod",
-    url: "https://gitlab.com/steamautocracks/DepotDownloaderMod",
+    url: "https://github.com/SteamAutoCracks/DepotDownloaderMod",
     license: "GPL-2.0",
   },
   {

@@ -241,10 +241,10 @@ This project is licensed under the MIT License.
 
 ## Credits
 
-- **Built with**: [Tauri](https://tauri.app/), [React](https://react.dev/), [Rust](https://www.rust-lang.org/)
+- **Built with**: [Tauri](https://tauri.app/), [React](https://react.dev/)
 - **Icons**: [Lucide](https://lucide.dev/)
 - **UI Components**: [Radix UI](https://www.radix-ui.com/)
-- **Download Tool**: [DepotDownloaderMod](https://gitlab.com/steamautocracks/DepotDownloaderMod)
+- **Download Tool**: [DepotDownloaderMod](https://github.com/SteamAutoCracks/DepotDownloaderMod)
 - **Package Extractor**: [RePKG](https://github.com/notscuffed/repkg)
 
 ## Disclaimer
