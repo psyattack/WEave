@@ -79,12 +79,17 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
             value: "general",
             label: t("settings.general") || "General",
             content: (
-              <div className="space-y-2 p-3">
+              <div className="space-y-4 p-4">
                 <Section
                   title={t("settings.appearance") || "Appearance"}
                   defaultOpen
                 >
-                  <Row label={t("settings.language") || "Language"}>
+                  <Row
+                    label={t("settings.language") || "Language"}
+                    description={
+                      t("settings.language_hint") || "Interface language"
+                    }
+                  >
                     <Select
                       value={state.language}
                       options={state.availableLanguages.map((l) => ({
@@ -97,7 +102,13 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                       }}
                     />
                   </Row>
-                  <Row label={t("settings.theme") || "Theme"}>
+                  <Row
+                    label={t("settings.theme") || "Theme"}
+                    description={
+                      t("settings.theme_hint") ||
+                      "Color theme for the application"
+                    }
+                  >
                     <Select
                       value={state.theme}
                       options={THEMES}
@@ -107,66 +118,25 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                       }}
                     />
                   </Row>
-                  <Row label={t("settings.accent_color") || "Accent color"}>
+                  <Row
+                    label={t("settings.accent_color") || "Accent color"}
+                    description={
+                      t("settings.accent_hint") ||
+                      "Highlight color used throughout the interface"
+                    }
+                  >
                     <AccentPicker />
                   </Row>
                 </Section>
 
-                <Section title={t("settings.behavior") || "Behavior"}>
-                  <Row
-                    label={
-                      t("settings.auto_check_updates") || "Auto check updates"
-                    }
-                  >
-                    <SettingSwitch
-                      path="settings.general.behavior.auto_check_updates"
-                      fallback={true}
-                    />
-                  </Row>
-                  <Row
-                    label={
-                      t("settings.preload_next_page") || "Preload next page"
-                    }
-                  >
-                    <SettingSwitch
-                      path="settings.general.behavior.preload_next_page"
-                      fallback={true}
-                    />
-                  </Row>
-                  <Row
-                    label={
-                      t("settings.minimize_on_apply") || "Minimize on apply"
-                    }
-                  >
-                    <SettingSwitch
-                      path="settings.general.behavior.minimize_on_apply"
-                      fallback={false}
-                    />
-                  </Row>
-                  <Row
-                    label={
-                      t("settings.auto_init_metadata") || "Auto init metadata"
-                    }
-                  >
-                    <SettingSwitch
-                      path="settings.general.behavior.auto_init_metadata"
-                      fallback={true}
-                    />
-                  </Row>
-                  <Row
-                    label={
-                      t("settings.auto_apply_last_downloaded") ||
-                      "Auto apply last downloaded"
-                    }
-                  >
-                    <SettingSwitch
-                      path="settings.general.behavior.auto_apply_last_downloaded"
-                      fallback={false}
-                    />
-                  </Row>
+                <Section title={t("settings.application") || "Application"}>
                   <Row
                     label={
                       t("settings.save_window_state") || "Save window state"
+                    }
+                    description={
+                      t("settings.save_window_state_hint") ||
+                      "Remember window size and position between sessions"
                     }
                   >
                     <SettingSwitch
@@ -176,12 +146,88 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                   </Row>
                   <Row
                     label={
-                      t("settings.run_metadata_init") ||
-                      "Initialize metadata for installed wallpapers"
+                      t("settings.auto_check_updates") || "Auto check updates"
+                    }
+                    description={
+                      t("settings.auto_check_updates_hint") ||
+                      "Automatically check for application updates on startup"
+                    }
+                  >
+                    <SettingSwitch
+                      path="settings.general.behavior.auto_check_updates"
+                      fallback={true}
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      t("settings.minimize_on_apply") || "Minimize on apply"
+                    }
+                    description={
+                      t("settings.minimize_on_apply_hint") ||
+                      "Minimize window when applying a wallpaper"
+                    }
+                  >
+                    <SettingSwitch
+                      path="settings.general.behavior.minimize_on_apply"
+                      fallback={false}
+                    />
+                  </Row>
+                </Section>
+
+                <Section title={t("settings.workshop") || "Workshop Browsing"}>
+                  <Row
+                    label={
+                      t("settings.preload_next_page") || "Preload next page"
+                    }
+                    description={
+                      t("settings.preload_next_page_hint") ||
+                      "Load the next page in the background for faster navigation"
+                    }
+                  >
+                    <SettingSwitch
+                      path="settings.general.behavior.preload_next_page"
+                      fallback={true}
+                    />
+                  </Row>
+                </Section>
+
+                <Section title={t("settings.wallpapers") || "Wallpapers"}>
+                  <Row
+                    label={
+                      t("settings.auto_apply_last_downloaded") ||
+                      "Auto apply last downloaded"
+                    }
+                    description={
+                      t("settings.auto_apply_hint") ||
+                      "Automatically apply wallpaper after download completes"
+                    }
+                  >
+                    <SettingSwitch
+                      path="settings.general.behavior.auto_apply_last_downloaded"
+                      fallback={false}
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      t("settings.auto_init_metadata") || "Auto init metadata"
+                    }
+                    description={
+                      t("settings.auto_init_metadata_hint") ||
+                      "Automatically fetch metadata for installed wallpapers on startup"
+                    }
+                  >
+                    <SettingSwitch
+                      path="settings.general.behavior.auto_init_metadata"
+                      fallback={true}
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      t("settings.run_metadata_init") || "Initialize metadata"
                     }
                     description={
                       t("settings.metadata_init_hint") ||
-                      "Fetch and cache Workshop metadata for every locally installed wallpaper."
+                      "Fetch and cache Workshop metadata for every locally installed wallpaper"
                     }
                   >
                     <button
@@ -200,12 +246,6 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                           }),
                           "success",
                         );
-                        // Ensure the Installed view re-pulls
-                        // `metadata_get_all` so the Misc/Genre filter
-                        // chips immediately reflect the newly cached
-                        // tags — otherwise they stay stuck showing only
-                        // whatever was in the bundled project.json
-                        // files until a manual refresh.
                         triggerGlobalRefresh();
                       }}
                     >
@@ -344,11 +384,13 @@ function Row({
   description?: string | null;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1">
-      <div className="min-w-0">
-        <div className="text-[13px] text-foreground">{label}</div>
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] font-medium text-foreground">{label}</div>
         {description ? (
-          <div className="text-[11px] text-muted">{description}</div>
+          <div className="mt-1 text-[11px] leading-relaxed text-muted">
+            {description}
+          </div>
         ) : null}
       </div>
       <div className="flex-shrink-0">{children}</div>
@@ -373,13 +415,13 @@ function Section({
   return (
     <details
       open={defaultOpen}
-      className="group rounded-md border border-border bg-surface-sunken/40"
+      className="group rounded-lg border border-border bg-surface-sunken/40"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide text-subtle hover:bg-surface-raised/50">
+      <summary className="flex cursor-pointer list-none items-center justify-between rounded-t-lg px-4 py-3 text-xs font-semibold uppercase tracking-wide text-subtle hover:bg-surface-raised/50 transition-colors">
         <span>{title}</span>
         <span className="transition-transform group-open:rotate-90">›</span>
       </summary>
-      <div className="divide-y divide-border/40 px-3 pb-2 pt-1">{children}</div>
+      <div className="divide-y divide-border/40 px-4 pb-3 pt-1">{children}</div>
     </details>
   );
 }
@@ -657,7 +699,7 @@ function CustomAccountsSection() {
 function AccentPicker() {
   const state = useAppStore();
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2.5">
       {ACCENTS.map((a) => (
         <button
           key={a.value}
@@ -674,8 +716,8 @@ function AccentPicker() {
           }}
           className={
             state.accent === a.value
-              ? "h-6 w-6 rounded-full ring-2 ring-offset-2 ring-offset-surface-sunken ring-foreground"
-              : "h-6 w-6 rounded-full ring-1 ring-border hover:ring-foreground"
+              ? "h-7 w-7 rounded-full ring-2 ring-offset-2 ring-offset-surface-sunken ring-foreground transition-all"
+              : "h-7 w-7 rounded-full ring-1 ring-border hover:ring-foreground hover:scale-110 transition-all"
           }
           style={{ backgroundColor: a.color }}
         />
