@@ -35,14 +35,19 @@ interface Props {
   onOpenLegal?: () => void;
 }
 
-const TOOLS: { label: string; url: string }[] = [
-  { label: "Tauri", url: "https://v2.tauri.app/" },
-  { label: "React", url: "https://react.dev/" },
+const TOOLS: { label: string; url: string; license?: string }[] = [
+  { label: "Tauri", url: "https://v2.tauri.app/", license: "MIT/Apache-2.0" },
+  { label: "React", url: "https://react.dev/", license: "MIT" },
   {
     label: "DepotDownloaderMod",
     url: "https://gitlab.com/steamautocracks/DepotDownloaderMod",
+    license: "GPL-2.0",
   },
-  { label: "RePKG", url: "https://github.com/notscuffed/repkg" },
+  {
+    label: "RePKG",
+    url: "https://github.com/notscuffed/repkg",
+    license: "MIT",
+  },
 ];
 
 export default function InfoDialog({
@@ -144,18 +149,7 @@ export default function InfoDialog({
           </div>
         </div>
         <p className="text-sm text-muted">{t("info.description")}</p>
-        <p className="text-xs text-subtle">
-          {t("info.developed")} —{" "}
-          <button
-            type="button"
-            className="text-primary hover:underline"
-            onClick={() =>
-              openLink(`https://github.com/${t("info.author") || "psyattack"}`)
-            }
-          >
-            {t("info.author")}
-          </button>
-        </p>
+        <p className="text-xs text-subtle">{t("info.developed")}</p>
 
         <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button
@@ -221,7 +215,12 @@ export default function InfoDialog({
               </div>
               <div className="flex items-center gap-1">
                 <select
-                  className="input h-9 w-auto text-xs disabled:opacity-50"
+                  className="input h-9 w-auto min-w-[80px] text-xs disabled:opacity-50"
+                  style={{
+                    width: selectedTag
+                      ? `${Math.max(80, (selectedTag.length + (selectedRelease?.prerelease ? 6 : 0)) * 6.5 + 24)}px`
+                      : "auto",
+                  }}
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
                   disabled={!releases || releases.length === 0}
@@ -309,22 +308,19 @@ export default function InfoDialog({
                 type="button"
                 className="inline-flex items-center gap-1 text-muted hover:text-primary"
                 onClick={() => openLink(tool.url)}
+                title={tool.license ? `License: ${tool.license}` : undefined}
               >
                 {tool.label}
+                {tool.license && (
+                  <span className="text-[10px] text-subtle">
+                    ({tool.license})
+                  </span>
+                )}
                 <ExternalLink className="h-3 w-3" />
               </button>
             ))}
           </div>
         </div>
-
-        {dataDir && (
-          <div
-            className="w-full overflow-hidden text-ellipsis text-[10px] text-subtle"
-            title={dataDir}
-          >
-            {dataDir}
-          </div>
-        )}
       </div>
     </Dialog>
   );
