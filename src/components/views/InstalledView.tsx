@@ -68,6 +68,10 @@ export default function InstalledView() {
   const [resolution, setResolution] = useState<string>("");
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [excludedTagFilters, setExcludedTagFilters] = useState<string[]>([]);
+  const [authorFilters, setAuthorFilters] = useState<string[]>([]);
+  const [excludedAuthorFilters, setExcludedAuthorFilters] = useState<string[]>(
+    [],
+  );
   const [sort, setSort] = useState<LocalSortKey>("install_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -169,6 +173,22 @@ export default function InstalledView() {
     [presentTags],
   );
 
+  // Collect all unique authors from metadata
+  const visibleAuthors = useMemo(() => {
+    const authorSet = new Set<string>();
+    for (const item of items) {
+      const author = (
+        metaMap[item.pubfileid] as { author?: string } | undefined
+      )?.author;
+      if (author && author.trim()) {
+        authorSet.add(author.trim());
+      }
+    }
+    return Array.from(authorSet).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    );
+  }, [items, metaMap]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let result = items.filter((item) => {
@@ -193,6 +213,20 @@ export default function InstalledView() {
       }
       if (excludedTagFilters.length > 0) {
         if (excludedTagFilters.some((f) => has.has(f))) return false;
+      }
+      // Author filtering
+      if (authorFilters.length > 0 || excludedAuthorFilters.length > 0) {
+        const author =
+          (
+            metaMap[item.pubfileid] as { author?: string } | undefined
+          )?.author?.trim() || "";
+        if (authorFilters.length > 0 && !authorFilters.includes(author))
+          return false;
+        if (
+          excludedAuthorFilters.length > 0 &&
+          excludedAuthorFilters.includes(author)
+        )
+          return false;
       }
       return true;
     });
@@ -245,8 +279,11 @@ export default function InstalledView() {
     sort,
     sortOrder,
     excludedTagFilters,
+    authorFilters,
+    excludedAuthorFilters,
     tagsFor,
     metaFor,
+    metaMap,
   ]);
 
   const handleApply = async (item: InstalledWallpaper) => {
@@ -431,17 +468,34 @@ export default function InstalledView() {
     }
   };
 
+  const toggleAuthor = (author: string) => {
+    const isIncluded = authorFilters.includes(author);
+    const isExcluded = excludedAuthorFilters.includes(author);
+    if (isExcluded) {
+      setExcludedAuthorFilters((prev) => prev.filter((a) => a !== author));
+    } else if (isIncluded) {
+      setAuthorFilters((prev) => prev.filter((a) => a !== author));
+      setExcludedAuthorFilters((prev) => [...prev, author]);
+    } else {
+      setAuthorFilters((prev) => [...prev, author]);
+    }
+  };
+
   const totalSize = filtered.reduce((sum, i) => sum + i.size_bytes, 0);
   const hasActiveFilters =
     tagFilters.length > 0 ||
     excludedTagFilters.length > 0 ||
+    authorFilters.length > 0 ||
+    excludedAuthorFilters.length > 0 ||
     category !== "" ||
     typeFilter !== "" ||
     age !== "" ||
     resolution !== "" ||
     search.length > 0;
   const hasAnyExtraTags =
-    visibleMiscTags.length > 0 || visibleGenreTags.length > 0;
+    visibleAuthors.length > 0 ||
+    visibleMiscTags.length > 0 ||
+    visibleGenreTags.length > 0;
 
   // Prepare options for Select components
   const sortOptions = LOCAL_SORT_KEYS.map((k) => ({
@@ -600,6 +654,8 @@ export default function InstalledView() {
               onClick={() => {
                 setTagFilters([]);
                 setExcludedTagFilters([]);
+                setAuthorFilters([]);
+                setExcludedAuthorFilters([]);
                 setCategory("");
                 setTypeFilter("");
                 setAge("");
@@ -622,6 +678,27 @@ export default function InstalledView() {
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
               >
+                {visibleAuthors.length > 0 && (
+                  <FilterChipsRow
+                    title={t("labels.authors") || "Authors"}
+                    keys={visibleAuthors}
+                    active={authorFilters}
+                    excluded={excludedAuthorFilters}
+                    toggle={toggleAuthor}
+                    isFirst={true}
+                    isLast={
+                      visibleMiscTags.length === 0 &&
+                      visibleGenreTags.length === 0
+                    }
+                  />
+                )}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
                 {visibleMiscTags.length > 0 && (
                   <FilterChipsRow
                     title={t("labels.miscellaneous") || "Miscellaneous"}
@@ -629,7 +706,7 @@ export default function InstalledView() {
                     active={tagFilters}
                     excluded={excludedTagFilters}
                     toggle={toggleTag}
-                    isFirst={true}
+                    isFirst={visibleAuthors.length === 0}
                     isLast={visibleGenreTags.length === 0}
                   />
                 )}
@@ -650,7 +727,10 @@ export default function InstalledView() {
                     active={tagFilters}
                     excluded={excludedTagFilters}
                     toggle={toggleTag}
-                    isFirst={visibleMiscTags.length === 0}
+                    isFirst={
+                      visibleAuthors.length === 0 &&
+                      visibleMiscTags.length === 0
+                    }
                     isLast={true}
                   />
                 )}

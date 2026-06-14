@@ -96,6 +96,7 @@ export default {
     script_type: "Script Type:",
     miscellaneous: "Miscellaneous:",
     genre: "Genre:",
+    authors: "Authors:",
     incompatible_items: "Incompatible items",
     rating: "Rating:",
     posted: "Posted: {{date}}",
@@ -332,7 +333,7 @@ export default {
     opensource_title: "Open Source Software",
     opensource_message:
       "WEave is free and open-source software distributed under the MIT License.",
-    scam_warning_title: "⚠️ Beware of Scams",
+    scam_warning_title: "Beware of Scams",
     scam_warning_message:
       "WEave is and always will be completely free. Anyone selling this software or asking for payment is scamming you.",
     summary_title: "Summary",
