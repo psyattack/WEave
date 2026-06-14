@@ -105,46 +105,13 @@ pub struct CollectionContents {
 pub struct WorkshopClient {
     client: Client,
     cookie_jar: Arc<Jar>,
-    cookies_file: PathBuf,
     page_cache: Arc<Mutex<lru::LruCache<String, WorkshopPage>>>,
     item_cache: Arc<Mutex<lru::LruCache<String, WorkshopItem>>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct PersistedCookie {
-    name: String,
-    value: String,
-    domain: String,
-    path: String,
-}
-
 impl WorkshopClient {
-    pub fn new(cookies_dir: PathBuf) -> Self {
-        std::fs::create_dir_all(&cookies_dir).ok();
+    pub fn new(_cookies_dir: PathBuf) -> Self {
         let cookie_jar = Arc::new(Jar::default());
-        let cookies_file = cookies_dir.join("cookies.json");
-
-        // Load persisted cookies into the jar so that subsequent runs remain
-        // "logged in" even before the hidden webview has a chance to sync —
-        // this mirrors the Python app's QWebEngineProfile persistence.
-        if let Ok(bytes) = std::fs::read(&cookies_file) {
-            if let Ok(cookies) = serde_json::from_slice::<Vec<PersistedCookie>>(&bytes) {
-                for c in cookies {
-                    let url_str = format!(
-                        "https://{}{}",
-                        c.domain.trim_start_matches('.'),
-                        if c.path.is_empty() { "/" } else { &c.path }
-                    );
-                    if let Ok(url) = url_str.parse::<url::Url>() {
-                        let header = format!(
-                            "{}={}; Path={}; Domain={}",
-                            c.name, c.value, c.path, c.domain
-                        );
-                        cookie_jar.add_cookie_str(&header, &url);
-                    }
-                }
-            }
-        }
 
         let client = Client::builder()
             .cookie_provider(cookie_jar.clone())
@@ -161,35 +128,12 @@ impl WorkshopClient {
         Self {
             client,
             cookie_jar,
-            cookies_file,
             page_cache: Arc::new(Mutex::new(lru::LruCache::new(
                 std::num::NonZeroUsize::new(20).unwrap(),
             ))),
             item_cache: Arc::new(Mutex::new(lru::LruCache::new(
                 std::num::NonZeroUsize::new(600).unwrap(),
             ))),
-        }
-    }
-
-    /// Persist the list of cookies we just scraped from the hidden webview
-    /// to `cookies.json` so that they survive across restarts. Takes a
-    /// vector of (name, value, domain, path) tuples — the jar doesn't expose
-    /// enumeration directly, so we feed it from the webview sync path.
-    pub fn save_cookies(&self, cookies: &[(String, String, String, String)]) {
-        let persisted: Vec<PersistedCookie> = cookies
-            .iter()
-            .map(|(n, v, d, p)| PersistedCookie {
-                name: n.clone(),
-                value: v.clone(),
-                domain: d.clone(),
-                path: p.clone(),
-            })
-            .collect();
-        if let Ok(json) = serde_json::to_vec_pretty(&persisted) {
-            if let Some(parent) = self.cookies_file.parent() {
-                std::fs::create_dir_all(parent).ok();
-            }
-            let _ = std::fs::write(&self.cookies_file, json);
         }
     }
 
@@ -321,9 +265,7 @@ impl WorkshopClient {
             &html,
             parsed.items.len() as u32,
         );
-        self.page_cache
-            .lock()
-            .put(url.to_string(), parsed.clone());
+        self.page_cache.lock().put(url.to_string(), parsed.clone());
         Ok(parsed)
     }
 
@@ -331,9 +273,7 @@ impl WorkshopClient {
         if let Some(cached) = self.item_cache.lock().get(pubfileid) {
             return Ok(cached.clone());
         }
-        let url = format!(
-            "https://steamcommunity.com/sharedfiles/filedetails/?id={pubfileid}"
-        );
+        let url = format!("https://steamcommunity.com/sharedfiles/filedetails/?id={pubfileid}");
         let started = std::time::Instant::now();
         let resp = self.client.get(&url).send().await?;
         let status = resp.status().as_u16();

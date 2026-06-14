@@ -178,7 +178,7 @@ Files include:
 - `settings.json` - Application settings (theme, language, WE directory, etc.)
 - `metadata.json` - Cached wallpaper metadata
 - `user_accounts.enc` - Encrypted custom Steam accounts
-- `cookies.json` - Steam authentication cookies  
+- `SteamWebView/` - WebView2 data directory (includes persisted cookies)  
 
 ## Project Structure
 
