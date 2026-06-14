@@ -118,12 +118,11 @@ fn parse_browse_html(doc: &Html) -> Vec<WorkshopItem> {
         } else {
             None
         };
-        let href = tile_href
-            .or_else(|| {
-                tile.select(&link_sel)
-                    .next()
-                    .and_then(|l| l.value().attr("href"))
-            });
+        let href = tile_href.or_else(|| {
+            tile.select(&link_sel)
+                .next()
+                .and_then(|l| l.value().attr("href"))
+        });
         let Some(href) = href else { continue };
         let Some(id) = extract_pubfileid(href) else {
             continue;
@@ -322,7 +321,11 @@ fn parse_browse_ssr(html: &str) -> Vec<WorkshopItem> {
                 .get("publishedfileid")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
-                .or_else(|| i.get("publishedfileid").and_then(|v| v.as_u64()).map(|n| n.to_string()))?;
+                .or_else(|| {
+                    i.get("publishedfileid")
+                        .and_then(|v| v.as_u64())
+                        .map(|n| n.to_string())
+                })?;
             let title = i
                 .get("title")
                 .and_then(|v| v.as_str())
@@ -373,8 +376,7 @@ fn parse_browse_ssr(html: &str) -> Vec<WorkshopItem> {
                     .and_then(|v| v.as_str())
                     .or_else(|| i.get("creator_steamid").and_then(|v| v.as_str()))
                 {
-                    author_url =
-                        format!("https://steamcommunity.com/profiles/{steamid}");
+                    author_url = format!("https://steamcommunity.com/profiles/{steamid}");
                 }
             }
 
@@ -426,7 +428,35 @@ fn unescape_json_string(s: &str) -> String {
 }
 
 fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
-    let re_total = Regex::new(r#"(?:Showing|Отображаются?)\s+(\d+)[\s\-–](\d+)\s+(?:of|из)\s+([\d,\.\s]+)"#).unwrap();
+    // Приоритет 1: ищем паттерн с многоточием и последним числом в пагинации
+    // Паттерн: <div>...</div><div class="...Panel" tabindex="0" role="button">1,000</div>
+    let re_ellipsis_last = Regex::new(
+        r#"<div>\.\.\.</div><div[^>]*class="[^"]*Panel[^"]*"[^>]*tabindex="0"[^>]*role="button"[^>]*>\s*([\d,]+)\s*</div>"#
+    ).unwrap();
+
+    if let Some(cap) = re_ellipsis_last.captures(html) {
+        if let Ok(max) = cap[1].replace(',', "").parse::<u32>() {
+            // Пытаемся определить общее количество элементов из текста
+            let re_total = Regex::new(
+                r#"(?:Showing|Отображаются?)\s+\d+[\s\-–]\d+\s+(?:of|из)\s+([\d,.\s]+)"#,
+            )
+            .unwrap();
+            let total_items = re_total
+                .captures(html)
+                .and_then(|cap| cap[1].replace([',', '.', ' '], "").parse::<u64>().ok())
+                .unwrap_or_else(|| {
+                    // Если не удалось извлечь, оцениваем на основе количества элементов на странице
+                    let per_page = items.len().max(30) as u64;
+                    (max as u64) * per_page
+                });
+            return (max, total_items);
+        }
+    }
+
+    // Приоритет 2: извлечение из текста "Showing X-Y of Z"
+    let re_total =
+        Regex::new(r#"(?:Showing|Отображаются?)\s+(\d+)[\s\-–](\d+)\s+(?:of|из)\s+([\d,.\s]+)"#)
+            .unwrap();
     if let Some(cap) = re_total.captures(html) {
         let start: u64 = cap[1].replace([',', '.', ' '], "").parse().unwrap_or(0);
         let end: u64 = cap[2].replace([',', '.', ' '], "").parse().unwrap_or(0);
@@ -436,8 +466,9 @@ fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
             return (total.div_ceil(per_page) as u32, total);
         }
     }
-    let re_pages =
-        Regex::new(r#"(?:p|page)=(\d+)[^"]*"\s*class="[^"]*"\s*>\s*(\d+)\s*<"#).unwrap();
+
+    // Приоритет 3: поиск по ссылкам пагинации (старый метод)
+    let re_pages = Regex::new(r#"(?:p|page)=(\d+)[^"]*"\s*class="[^"]*"\s*>\s*(\d+)\s*<"#).unwrap();
     let max_page = re_pages
         .captures_iter(html)
         .filter_map(|c| c[2].parse::<u32>().ok())
@@ -446,6 +477,7 @@ fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
         let per_page = items.len().max(30) as u64;
         return (max, (max as u64) * per_page);
     }
+
     // Fallback: assume more pages exist if we filled a full page of 30
     if items.len() >= 30 {
         return (99, (items.len() as u64) * 99);
@@ -462,7 +494,8 @@ fn upscale_preview(src: &str) -> String {
     // Steam serves thumbs at imw=288&imh=288. Replace with a larger size when
     // hinted via the `ima=fit` letterbox template so the UI has crisp
     // previews.
-    src.replace("imw=288", "imw=512").replace("imh=288", "imh=512")
+    src.replace("imw=288", "imw=512")
+        .replace("imh=288", "imh=512")
 }
 
 fn inner_text(el: ElementRef<'_>) -> String {
@@ -474,7 +507,9 @@ fn text(el: ElementRef<'_>) -> String {
 }
 
 fn select_first<'a>(doc: &'a Html, sel: &str) -> Option<ElementRef<'a>> {
-    Selector::parse(sel).ok().and_then(|s| doc.select(&s).next())
+    Selector::parse(sel)
+        .ok()
+        .and_then(|s| doc.select(&s).next())
 }
 
 pub fn parse_item_details(html: &str, pubfileid: &str) -> WorkshopItem {
@@ -555,7 +590,10 @@ pub fn parse_item_details(html: &str, pubfileid: &str) -> WorkshopItem {
     let lbls: Vec<_> = doc.select(&labels).map(text).collect();
     let vals: Vec<_> = doc.select(&values).map(text).collect();
     for (i, lbl) in lbls.iter().enumerate() {
-        if stat_keys.iter().any(|k| lbl.trim_end_matches(':').eq_ignore_ascii_case(k.trim_end_matches(':'))) {
+        if stat_keys.iter().any(|k| {
+            lbl.trim_end_matches(':')
+                .eq_ignore_ascii_case(k.trim_end_matches(':'))
+        }) {
             let v = vals.get(i).cloned().unwrap_or_default();
             if lbl.to_lowercase().contains("post") {
                 item.posted_date = v;
@@ -645,11 +683,7 @@ pub fn parse_item_details(html: &str, pubfileid: &str) -> WorkshopItem {
             continue;
         };
         let id = cap[1].to_string();
-        let title = pc
-            .select(&title_sel)
-            .next()
-            .map(text)
-            .unwrap_or_default();
+        let title = pc.select(&title_sel).next().map(text).unwrap_or_default();
         let count = pc
             .select(&count_sel)
             .next()
@@ -751,19 +785,13 @@ pub fn parse_collection_contents(html: &str, collection_id: &str) -> CollectionC
                 .trim_end_matches(".jpg")
                 .trim_end_matches(".gif");
             if !stem.is_empty() {
-                info.insert(
-                    "rating_star_file".into(),
-                    Value::String(stem.to_string()),
-                );
+                info.insert("rating_star_file".into(), Value::String(stem.to_string()));
             }
         }
     }
     if let Some(el) = select_first(&doc, ".numRatings") {
         let raw = text(el);
-        let digits: String = raw
-            .chars()
-            .filter(|c| c.is_ascii_digit())
-            .collect();
+        let digits: String = raw.chars().filter(|c| c.is_ascii_digit()).collect();
         if !digits.is_empty() {
             info.insert("num_ratings".into(), Value::String(digits));
         }
@@ -804,7 +832,8 @@ pub fn parse_collection_contents(html: &str, collection_id: &str) -> CollectionC
             || ll.contains("created")
         {
             info.insert("posted_date".into(), Value::String(right));
-        } else if ll.contains("изменён") || ll.contains("updated") || ll.contains("changed") {
+        } else if ll.contains("изменён") || ll.contains("updated") || ll.contains("changed")
+        {
             info.insert("updated_date".into(), Value::String(right));
         }
     }
