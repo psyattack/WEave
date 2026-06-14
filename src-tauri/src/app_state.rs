@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use parking_lot::RwLock;
@@ -30,6 +31,11 @@ pub struct AppState {
     pub downloads: Arc<DownloadManager>,
     pub extracts: Arc<ExtractManager>,
     pub steam_webview: Arc<SteamWebview>,
+    /// Path to portable .NET Runtime directory (if needed).
+    /// None means use system .NET installation.
+    pub dotnet_root: Arc<Mutex<Option<PathBuf>>>,
+    /// Flag to ensure .NET Runtime check runs only once
+    dotnet_initialized: Arc<AtomicBool>,
 }
 
 impl AppState {
@@ -53,11 +59,7 @@ impl AppState {
         // The detected path is persisted so we don't have to re-detect on
         // every launch.
         let mut we_dir: Option<PathBuf> = settings.get_directory().map(PathBuf::from);
-        if we_dir
-            .as_ref()
-            .map(|p| !p.exists())
-            .unwrap_or(true)
-        {
+        if we_dir.as_ref().map(|p| !p.exists()).unwrap_or(true) {
             if let Some(detected) = WallpaperEngineClient::detect_installation() {
                 settings.set_directory(&detected.to_string_lossy());
                 we_dir = Some(detected);
@@ -97,7 +99,38 @@ impl AppState {
             downloads: Arc::new(downloads),
             extracts: Arc::new(extracts),
             steam_webview: Arc::new(steam_webview),
+            dotnet_root: Arc::new(Mutex::new(None)),
+            dotnet_initialized: Arc::new(AtomicBool::new(false)),
         })
+    }
+
+    /// Initialize .NET Runtime check in background. Call this after state is created.
+    pub fn init_dotnet_runtime(&self) {
+        let app = self.app_handle.clone();
+        let dotnet_root = self.dotnet_root.clone();
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async move {
+                match crate::dotnet_runtime::ensure_dotnet_runtime(&app).await {
+                    Ok(path) => {
+                        *dotnet_root.lock() = path;
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to ensure .NET Runtime: {}", e);
+                    }
+                }
+            });
+        });
+    }
+
+    /// Initialize .NET Runtime check manually (for frontend-triggered init)
+    pub fn init_dotnet_runtime_async(&self) {
+        // Check if already initialized to prevent duplicate runs
+        if self.dotnet_initialized.swap(true, Ordering::SeqCst) {
+            log::debug!("dotnet_init already called, skipping duplicate initialization");
+            return;
+        }
+        self.init_dotnet_runtime();
     }
 }
 

@@ -43,6 +43,7 @@ impl ExtractManager {
         we_directory: PathBuf,
         output_dir: PathBuf,
         repkg_path: PathBuf,
+        dotnet_root: Option<PathBuf>,
     ) -> anyhow::Result<()> {
         let source = we_directory
             .join("projects")
@@ -99,6 +100,11 @@ impl ExtractManager {
             .stderr(Stdio::piped())
             .kill_on_drop(true);
 
+        // Set DOTNET_ROOT if portable runtime is needed
+        if let Some(dotnet_root) = dotnet_root {
+            cmd.env("DOTNET_ROOT", dotnet_root);
+        }
+
         #[cfg(windows)]
         {
             const CREATE_NO_WINDOW: u32 = 0x0800_0000;
@@ -147,11 +153,7 @@ impl ExtractManager {
                 }
             }
 
-            let exit_ok = child
-                .wait()
-                .await
-                .map(|s| s.success())
-                .unwrap_or(false);
+            let exit_ok = child.wait().await.map(|s| s.success()).unwrap_or(false);
 
             // Same defensive check as the download manager: if the plugin
             // wrote the output folder we treat it as success even if it
@@ -172,7 +174,11 @@ impl ExtractManager {
                 pubfileid: pubfileid.clone(),
                 status: status_text,
                 account: String::new(),
-                phase: if success { Phase::Completed } else { Phase::Failed },
+                phase: if success {
+                    Phase::Completed
+                } else {
+                    Phase::Failed
+                },
                 progress: if success { Some(100.0) } else { None },
             };
             app.emit("extract://status", &status).ok();
@@ -202,9 +208,7 @@ fn dir_has_files(dir: &std::path::Path) -> bool {
         if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
             return true;
         }
-        if entry.file_type().map(|t| t.is_dir()).unwrap_or(false)
-            && dir_has_files(&entry.path())
-        {
+        if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) && dir_has_files(&entry.path()) {
             return true;
         }
     }
