@@ -292,23 +292,6 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                     </div>
                   </Row>
                 </Section>
-
-                <Section title={t("settings.debug") || "Debug"}>
-                  <Row
-                    label={t("settings.parser_log") || "Parser log"}
-                    description={
-                      t("settings.parser_log_hint") ||
-                      "Inspect raw HTML/JSON returned by the Steam parser"
-                    }
-                  >
-                    <button
-                      className="btn-ghost text-xs"
-                      onClick={() => setDebugOpen(true)}
-                    >
-                      {t("buttons.open") || "Open"}
-                    </button>
-                  </Row>
-                </Section>
               </div>
             ),
           },
@@ -323,9 +306,9 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                   </p>
                   <p className="text-xs text-muted">
                     {t("settings.steam_session_description") ||
-                      "Log in to Steam so authenticated Workshop browsing (age-gated items, personal subscriptions, following lists) works the same as in a browser."}
+                      "Log in to Steam so authenticated Workshop browsing (age-gated items) works the same as in a browser."}
                   </p>
-                  <SteamSessionRow />
+                  <SteamSessionRow onOpenParser={() => setDebugOpen(true)} />
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wide text-subtle">
@@ -433,7 +416,7 @@ interface SteamAccountInfo {
   profile_url: string;
 }
 
-function SteamSessionRow() {
+function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
   const { t } = useTranslation();
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [account, setAccount] = useState<SteamAccountInfo | null>(null);
@@ -535,17 +518,24 @@ function SteamSessionRow() {
             </span>
           )}
         </div>
-        <button
-          className="btn-outline"
-          onClick={openLogin}
-          disabled={busy || !inTauri}
-        >
-          {busy
-            ? t("settings.waiting_for_login") || "Waiting for login…"
-            : loggedIn
-              ? t("settings.reopen_steam") || "Re-open Steam"
-              : t("settings.open_steam_login") || "Open Steam login"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="btn-outline"
+            onClick={openLogin}
+            disabled={busy || !inTauri}
+          >
+            {busy
+              ? t("settings.waiting_for_login") || "Waiting for login…"
+              : t("settings.open_parser") || "Open Parser"}
+          </button>
+          <button
+            className="btn-outline"
+            onClick={onOpenParser}
+            disabled={!inTauri}
+          >
+            {t("settings.parser_logs") || "Parser Logs"}
+          </button>
+        </div>
       </div>
       {loggedIn && !account && (
         <div className="text-[11px] text-warning">
