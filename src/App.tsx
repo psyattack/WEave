@@ -16,6 +16,7 @@ import LegalDialog from "@/components/dialogs/LegalDialog";
 import TasksDrawer from "@/components/tasks/TasksDrawer";
 import ToastStack from "@/components/common/ToastStack";
 import DotnetProgressOverlay from "@/components/common/DotnetProgressOverlay";
+import MetadataInitDialog from "@/components/common/MetadataInitDialog";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useApplyTheme } from "@/hooks/useTheme";
 import { useProductionProtection } from "@/hooks/useProductionProtection";
@@ -140,6 +141,7 @@ export default function App() {
       />
       <ToastStack />
       <DotnetProgressOverlay />
+      <MetadataInitDialog />
     </div>
   );
 }

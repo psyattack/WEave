@@ -52,6 +52,16 @@ export default {
     collapse_sidebar: "Свернуть",
     expand_sidebar: "Развернуть боковую панель",
     theme: "Сменить тему",
+    init_metadata: "Инициализировать метаданные для всех установленных обоев",
+  },
+  metadata_init: {
+    initializing: "Инициализация метаданных",
+    complete: "Завершено",
+    error: "Ошибка",
+    fetching: "Получение метаданных для установленных обоев...",
+    error_message: "Не удалось инициализировать метаданные",
+    rate_limit_error:
+      "Превышен лимит запросов. Попробуйте снова через несколько минут.",
   },
   labels: {
     wallpapers_filtered: "Показано {{filtered}} из {{total}} обоев",

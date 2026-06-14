@@ -12,7 +12,6 @@ import { changeLanguageTo } from "@/hooks/useBootstrap";
 import { persistTheme } from "@/hooks/useTheme";
 import { inTauri, invoke, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
-import { triggerGlobalRefresh } from "@/stores/refresh";
 import { ThemeCode, useAppStore } from "@/stores/app";
 import { useConfirm } from "@/hooks/useConfirm";
 
@@ -206,51 +205,6 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                       path="settings.general.behavior.auto_apply_last_downloaded"
                       fallback={false}
                     />
-                  </Row>
-                  <Row
-                    label={
-                      t("settings.auto_init_metadata") || "Auto init metadata"
-                    }
-                    description={
-                      t("settings.auto_init_metadata_hint") ||
-                      "Automatically fetch metadata for installed wallpapers on startup"
-                    }
-                  >
-                    <SettingSwitch
-                      path="settings.general.behavior.auto_init_metadata"
-                      fallback={true}
-                    />
-                  </Row>
-                  <Row
-                    label={
-                      t("settings.run_metadata_init") || "Initialize metadata"
-                    }
-                    description={
-                      t("settings.metadata_init_hint") ||
-                      "Fetch and cache Workshop metadata for every locally installed wallpaper"
-                    }
-                  >
-                    <button
-                      className="btn-outline text-xs"
-                      disabled={!inTauri}
-                      onClick={async () => {
-                        if (!inTauri) return;
-                        const count = await tryInvoke<number>(
-                          "app_init_metadata",
-                          undefined,
-                          0,
-                        );
-                        pushToast(
-                          t("labels.metadata_initialized", {
-                            count: count ?? 0,
-                          }),
-                          "success",
-                        );
-                        triggerGlobalRefresh();
-                      }}
-                    >
-                      {t("settings.initialize_now") || "Initialize now"}
-                    </button>
                   </Row>
                 </Section>
 

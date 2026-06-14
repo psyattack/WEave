@@ -52,6 +52,15 @@ export default {
     collapse_sidebar: "Collapse",
     expand_sidebar: "Expand sidebar",
     theme: "Switch theme",
+    init_metadata: "Initialize metadata for all installed wallpapers",
+  },
+  metadata_init: {
+    initializing: "Initializing Metadata",
+    complete: "Complete",
+    error: "Error",
+    fetching: "Fetching metadata for installed wallpapers...",
+    error_message: "Failed to initialize metadata",
+    rate_limit_error: "Rate limit exceeded. Please try again in a few minutes.",
   },
   labels: {
     wallpapers_filtered: "Showing {{filtered}} of {{total}} wallpapers",

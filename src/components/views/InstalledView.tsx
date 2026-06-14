@@ -5,6 +5,7 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   Copy,
+  Database,
   Filter,
   FolderOpen,
   Package,
@@ -44,6 +45,8 @@ import {
 } from "@/lib/filterConfig";
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
+import { useMetadataInitStore } from "@/stores/metadata-init";
+import { triggerGlobalRefresh } from "@/stores/refresh";
 
 interface InstalledMetadata {
   tags?: unknown[];
@@ -347,6 +350,70 @@ export default function InstalledView() {
     pushToast(t("messages.id_copied"), "success");
   };
 
+  const handleInitMetadata = async () => {
+    if (!inTauri) return;
+    const setStatus = useMetadataInitStore.getState().setStatus;
+
+    setStatus({
+      phase: "initializing",
+      message:
+        t("metadata_init.fetching") ||
+        "Fetching metadata for installed wallpapers...",
+      progress: 0,
+      total: items.length,
+    });
+
+    // Listen for progress events
+    const { listen } = await import("@tauri-apps/api/event");
+    const unlisten = await listen<{ current: number; total: number }>(
+      "metadata-init-progress",
+      (event) => {
+        setStatus({
+          phase: "initializing",
+          message:
+            t("metadata_init.fetching") ||
+            "Fetching metadata for installed wallpapers...",
+          progress: event.payload.current,
+          total: event.payload.total,
+        });
+      },
+    );
+
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const count = await invoke<number>("app_init_metadata");
+
+      setStatus({
+        phase: "complete",
+        message:
+          t("labels.metadata_initialized", { count: count ?? 0 }) ||
+          `Initialized ${count ?? 0} wallpapers`,
+        progress: count ?? 0,
+        total: items.length,
+      });
+
+      triggerGlobalRefresh();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const isRateLimit =
+        errorMessage.includes("429") ||
+        errorMessage.toLowerCase().includes("rate limit");
+
+      setStatus({
+        phase: "error",
+        message: isRateLimit
+          ? t("metadata_init.rate_limit_error") ||
+            "Rate limit exceeded. Please try again in a few minutes."
+          : t("metadata_init.error_message") || "Failed to initialize metadata",
+        progress: null,
+        total: null,
+      });
+    } finally {
+      unlisten();
+    }
+  };
+
   // Tristate cycle — idle → include → exclude → idle — matches the
   // Workshop / Collections FilterBar, so clicking a chip twice switches it
   // from "only show items with this tag" to "hide items with this tag",
@@ -492,6 +559,23 @@ export default function InstalledView() {
             onValueChange={(v) => setResolution(v)}
             options={resolutionOptions}
           />
+          <Tooltip
+            content={
+              t("tooltips.init_metadata") ||
+              "Initialize metadata for all installed wallpapers"
+            }
+            side="bottom"
+          >
+            <button
+              type="button"
+              onClick={handleInitMetadata}
+              disabled={!inTauri || items.length === 0}
+              className="btn-icon"
+              aria-label={t("settings.initialize_now") || "Initialize metadata"}
+            >
+              <Database className="h-5 w-5" />
+            </button>
+          </Tooltip>
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
