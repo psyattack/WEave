@@ -1,14 +1,15 @@
 pub mod accounts;
 pub mod app;
 pub mod config;
+pub mod dotnet;
 pub mod download;
 pub mod extract;
 pub mod i18n;
 pub mod image;
 pub mod metadata;
+pub mod steam;
 pub mod translator;
 pub mod updater;
-pub mod steam;
 pub mod we;
 pub mod workshop;
 

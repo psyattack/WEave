@@ -7,6 +7,7 @@ pub mod app_state;
 pub mod commands;
 pub mod config;
 pub mod constants;
+pub mod dotnet_runtime;
 pub mod download;
 pub mod extract;
 pub mod i18n;
@@ -40,6 +41,8 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .setup(|app| {
             let state = AppState::initialize(app.handle().clone())?;
+            // Don't start .NET Runtime check here - let frontend trigger it
+            // state.init_dotnet_runtime();
             app.manage(Arc::new(state));
             Ok(())
         })
@@ -105,6 +108,8 @@ pub fn run() {
             commands::steam::steam_is_logged_in,
             commands::steam::steam_current_account,
             commands::steam::steam_auto_login,
+            commands::dotnet::dotnet_get_root,
+            commands::dotnet::dotnet_init,
         ]);
 
     builder

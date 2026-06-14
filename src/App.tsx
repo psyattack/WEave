@@ -14,6 +14,7 @@ import InfoDialog from "@/components/dialogs/InfoDialog";
 import UpdateDialog from "@/components/dialogs/UpdateDialog";
 import TasksDrawer from "@/components/tasks/TasksDrawer";
 import ToastStack from "@/components/common/ToastStack";
+import DotnetProgressOverlay from "@/components/common/DotnetProgressOverlay";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useApplyTheme } from "@/hooks/useTheme";
 import { useProductionProtection } from "@/hooks/useProductionProtection";
@@ -119,6 +120,7 @@ export default function App() {
       <UpdateDialog open={updateOpen} onOpenChange={setUpdateOpen} />
       <TasksDrawer open={tasksOpen} onOpenChange={setTasksOpen} />
       <ToastStack />
+      <DotnetProgressOverlay />
     </div>
   );
 }

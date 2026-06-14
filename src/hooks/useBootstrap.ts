@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 
 import { loadTranslations } from "@/lib/i18n";
@@ -11,6 +11,8 @@ import i18n from "@/lib/i18n";
 import { maybeMinimize } from "@/lib/window";
 
 export function useBootstrap() {
+  const dotnetInitialized = useRef(false);
+
   useEffect(() => {
     void (async () => {
       if (!inTauri) {
@@ -90,6 +92,13 @@ export function useBootstrap() {
       // Auto-init metadata for installed wallpapers if enabled.
       void maybeAutoInitMetadata();
 
+      // Initialize .NET Runtime check after all event listeners are set up
+      // Only call once to prevent duplicate initialization
+      if (!dotnetInitialized.current) {
+        dotnetInitialized.current = true;
+        void invoke("dotnet_init").catch(() => undefined);
+      }
+
       // Persist window state on close if enabled.
       void registerWindowStatePersistence();
 
@@ -98,6 +107,19 @@ export function useBootstrap() {
       void useInstalledStore.getState().refresh();
 
       await Promise.all([
+        listen<{
+          phase: string;
+          message: string;
+          progress?: number | null;
+        }>("dotnet://status", (event) => {
+          void import("@/stores/dotnet").then(({ useDotnetStore }) => {
+            useDotnetStore.getState().setStatus({
+              phase: event.payload.phase as any,
+              message: event.payload.message,
+              progress: event.payload.progress ?? null,
+            });
+          });
+        }),
         listen<{
           pubfileid: string;
           status: string;

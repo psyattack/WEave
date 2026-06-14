@@ -16,9 +16,8 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::Mutex as AsyncMutex;
 
-static PROGRESS_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(\d{1,3}(?:[.,]\d+)?)\s*%").expect("progress regex")
-});
+static PROGRESS_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(\d{1,3}(?:[.,]\d+)?)\s*%").expect("progress regex"));
 
 use crate::accounts::AccountCredentials;
 use crate::constants::STEAM_APP_ID;
@@ -76,6 +75,7 @@ impl DownloadManager {
         credentials: AccountCredentials,
         we_directory: PathBuf,
         plugin_path: PathBuf,
+        dotnet_root: Option<PathBuf>,
     ) -> anyhow::Result<()> {
         if self.tasks.lock().contains_key(pubfileid) {
             return Ok(());
@@ -118,6 +118,11 @@ impl DownloadManager {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true);
+
+        // Set DOTNET_ROOT if portable runtime is needed
+        if let Some(dotnet_root) = dotnet_root {
+            cmd.env("DOTNET_ROOT", dotnet_root);
+        }
 
         #[cfg(windows)]
         {
@@ -203,7 +208,11 @@ impl DownloadManager {
             let has_output = dir_has_files(output_dir);
             let success = exit_ok || has_output;
 
-            let phase = if success { Phase::Completed } else { Phase::Failed };
+            let phase = if success {
+                Phase::Completed
+            } else {
+                Phase::Failed
+            };
             let status_text = if success {
                 "Completed".to_string()
             } else if !stderr_tail.is_empty() {
@@ -289,9 +298,7 @@ fn dir_has_files(dir: &std::path::Path) -> bool {
         if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
             return true;
         }
-        if entry.file_type().map(|t| t.is_dir()).unwrap_or(false)
-            && dir_has_files(&entry.path())
-        {
+        if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) && dir_has_files(&entry.path()) {
             return true;
         }
     }

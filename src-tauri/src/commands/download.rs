@@ -16,8 +16,10 @@ pub async fn download_start(
         return Err("Wallpaper Engine directory is not configured".into());
     };
     let exe = plugin_paths::depot_downloader()?;
-    let index = account_index.unwrap_or_else(|| state.settings.read().get_account_number() as usize);
+    let index =
+        account_index.unwrap_or_else(|| state.settings.read().get_account_number() as usize);
     let credentials = state.accounts.credentials(index);
+    let dotnet_root = state.dotnet_root.lock().clone();
     state
         .downloads
         .start(
@@ -25,16 +27,14 @@ pub async fn download_start(
             credentials,
             PathBuf::from(we_directory),
             exe,
+            dotnet_root,
         )
         .await
         .map_err(map_err)
 }
 
 #[command]
-pub async fn download_cancel(
-    state: AppStateHandle<'_>,
-    pubfileid: String,
-) -> Result<bool, String> {
+pub async fn download_cancel(state: AppStateHandle<'_>, pubfileid: String) -> Result<bool, String> {
     let we_directory = state
         .settings
         .read()

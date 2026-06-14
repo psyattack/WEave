@@ -16,6 +16,7 @@ pub async fn extract_start(
         return Err("Wallpaper Engine directory is not configured".into());
     };
     let exe = plugin_paths::repkg()?;
+    let dotnet_root = state.dotnet_root.lock().clone();
     state
         .extracts
         .start(
@@ -23,6 +24,7 @@ pub async fn extract_start(
             PathBuf::from(we_directory),
             PathBuf::from(output_dir),
             exe,
+            dotnet_root,
         )
         .await
         .map_err(map_err)
