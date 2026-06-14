@@ -1,6 +1,6 @@
 import { useTranslation } from "@/i18n/hooks";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Search, SortAsc, X } from "lucide-react";
+import { Filter, Search, SortAsc, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Select from "@/components/common/Select";
@@ -39,7 +39,6 @@ export default function FilterBar() {
   const resetFilters = useFiltersStore((s) => s.resetFilters);
   const showAdvanced = useFiltersStore((s) => s.showAdvanced);
   const toggleAdvanced = useFiltersStore((s) => s.toggleAdvanced);
-  const collapsed = useFiltersStore((s) => s.collapsed);
 
   // "Clear filters" should only be visible when something is actually set —
   // matches Installed's behaviour so the row stays calm at rest.
@@ -96,179 +95,168 @@ export default function FilterBar() {
     );
   };
 
+  const activeFiltersCount = [
+    filters.days !== DEFAULT_FILTERS.days && filters.sort === "trend",
+    filters.category !== DEFAULT_FILTERS.category,
+    filters.type_tag !== DEFAULT_FILTERS.type_tag,
+    filters.age_rating !== DEFAULT_FILTERS.age_rating,
+    filters.resolution !== DEFAULT_FILTERS.resolution,
+    filters.asset_type !== DEFAULT_FILTERS.asset_type,
+    filters.asset_genre !== DEFAULT_FILTERS.asset_genre,
+    filters.script_type !== DEFAULT_FILTERS.script_type,
+    filters.misc_tags.length > 0,
+    filters.genre_tags.length > 0,
+    filters.excluded_misc_tags.length > 0,
+    filters.excluded_genre_tags.length > 0,
+  ].filter(Boolean).length;
+
   return (
-    <>
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+    <div className="flex flex-col gap-2 px-4 py-3 pb-0">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          <input
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder={t("labels.search_placeholder")}
+            className="input pl-9"
+          />
+        </div>
+        <Select
+          value={filters.sort}
+          onValueChange={(v) => setFilters({ sort: v, page: 1 })}
+          options={sortOptions}
+          icon={<SortAsc className="h-4 w-4 text-muted" />}
+        />
+        {filters.sort === "trend" && (
+          <Select
+            value={filters.days}
+            onValueChange={(v) => setFilters({ days: v, page: 1 })}
+            options={timePeriodOptions}
+          />
+        )}
+        <Select
+          value={filters.category}
+          onValueChange={(v) => setFilters({ category: v, page: 1 })}
+          options={categoryOptions}
+        />
+        {filters.category !== "Asset" && (
+          <Select
+            value={filters.type_tag}
+            onValueChange={(v) => setFilters({ type_tag: v, page: 1 })}
+            options={typeOptions}
+          />
+        )}
+        {filters.category === "Wallpaper" && (
+          <Select
+            value={filters.resolution}
+            onValueChange={(v) => setFilters({ resolution: v, page: 1 })}
+            options={resolutionOptions}
+          />
+        )}
+        {filters.category === "Asset" && (
+          <>
+            <Select
+              value={filters.asset_type}
+              onValueChange={(v) => setFilters({ asset_type: v, page: 1 })}
+              options={assetTypeOptions}
+            />
+            <Select
+              value={filters.asset_genre}
+              onValueChange={(v) => setFilters({ asset_genre: v, page: 1 })}
+              options={assetGenreOptions}
+            />
+            <Select
+              value={filters.script_type}
+              onValueChange={(v) => setFilters({ script_type: v, page: 1 })}
+              options={scriptTypeOptions}
+            />
+          </>
+        )}
+        <Select
+          value={filters.age_rating}
+          onValueChange={(v) => setFilters({ age_rating: v, page: 1 })}
+          options={ageRatingOptions}
+        />
+        <button
+          onClick={toggleAdvanced}
+          className={cn(
+            "btn-icon relative",
+            showAdvanced && "bg-primary/10 text-primary",
+          )}
+          aria-expanded={showAdvanced}
+        >
+          <Filter className="h-5 w-5" />
+          {activeFiltersCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+        {hasActiveFilters && (
+          <button
+            onClick={resetFilters}
+            className="btn-icon"
+            aria-label={t("labels.clear")}
           >
-            <div
-              className={cn(
-                "flex flex-col gap-2 bg-surface/60 px-4 py-3",
-                !showAdvanced && "border-b border-border",
-              )}
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {showAdvanced && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-                  <input
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder={t("labels.search_placeholder")}
-                    className="input pl-9"
-                  />
-                </div>
-                <Select
-                  value={filters.sort}
-                  onValueChange={(v) => setFilters({ sort: v, page: 1 })}
-                  options={sortOptions}
-                  icon={<SortAsc className="h-4 w-4 text-muted" />}
-                />
-                {filters.sort === "trend" && (
-                  <Select
-                    value={filters.days}
-                    onValueChange={(v) => setFilters({ days: v, page: 1 })}
-                    options={timePeriodOptions}
-                  />
-                )}
-                <Select
-                  value={filters.category}
-                  onValueChange={(v) => setFilters({ category: v, page: 1 })}
-                  options={categoryOptions}
-                />
-                {filters.category !== "Asset" && (
-                  <Select
-                    value={filters.type_tag}
-                    onValueChange={(v) => setFilters({ type_tag: v, page: 1 })}
-                    options={typeOptions}
-                  />
-                )}
-                {filters.category === "Wallpaper" && (
-                  <Select
-                    value={filters.resolution}
-                    onValueChange={(v) =>
-                      setFilters({ resolution: v, page: 1 })
-                    }
-                    options={resolutionOptions}
-                  />
-                )}
-                {filters.category === "Asset" && (
-                  <>
-                    <Select
-                      value={filters.asset_type}
-                      onValueChange={(v) =>
-                        setFilters({ asset_type: v, page: 1 })
-                      }
-                      options={assetTypeOptions}
-                    />
-                    <Select
-                      value={filters.asset_genre}
-                      onValueChange={(v) =>
-                        setFilters({ asset_genre: v, page: 1 })
-                      }
-                      options={assetGenreOptions}
-                    />
-                    <Select
-                      value={filters.script_type}
-                      onValueChange={(v) =>
-                        setFilters({ script_type: v, page: 1 })
-                      }
-                      options={scriptTypeOptions}
-                    />
-                  </>
-                )}
-                <Select
-                  value={filters.age_rating}
-                  onValueChange={(v) => setFilters({ age_rating: v, page: 1 })}
-                  options={ageRatingOptions}
-                />
-                <button
-                  onClick={toggleAdvanced}
-                  className="btn-ghost text-xs"
-                  aria-expanded={showAdvanced}
-                >
-                  {showAdvanced ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                  {t(
-                    showAdvanced
-                      ? "labels.less_filters"
-                      : "labels.more_filters",
-                  )}
-                </button>
-                {hasActiveFilters && (
-                  <button onClick={resetFilters} className="btn-ghost text-xs">
-                    <X className="h-4 w-4" /> {t("labels.clear")}
-                  </button>
-                )}
-              </div>
-            </div>
-            <AnimatePresence>
-              {showAdvanced && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut" }}
-                  >
-                    <TagBlock
-                      title={t("labels.miscellaneous")}
-                      tags={MISC_TAGS}
-                      included={filters.misc_tags}
-                      excluded={filters.excluded_misc_tags}
-                      onToggleInclude={(tag) => toggleTag("misc_tags", tag)}
-                      onToggleExclude={(tag) => {
-                        const current = filters.excluded_misc_tags;
-                        const next = current.includes(tag)
-                          ? current.filter((t) => t !== tag)
-                          : [...current, tag];
-                        setFilters({ excluded_misc_tags: next, page: 1 });
-                      }}
-                      isFirst={true}
-                      isLast={false}
-                    />
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{
-                      duration: 0.2,
-                      ease: "easeInOut",
-                      delay: 0.05,
-                    }}
-                  >
-                    <TagBlock
-                      title={t("labels.genre")}
-                      tags={GENRE_TAGS}
-                      included={filters.genre_tags}
-                      excluded={filters.excluded_genre_tags}
-                      onToggleInclude={(tag) => toggleTag("genre_tags", tag)}
-                      onToggleExclude={(tag) => {
-                        const current = filters.excluded_genre_tags;
-                        const next = current.includes(tag)
-                          ? current.filter((t) => t !== tag)
-                          : [...current, tag];
-                        setFilters({ excluded_genre_tags: next, page: 1 });
-                      }}
-                      isFirst={false}
-                      isLast={true}
-                    />
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </motion.div>
+              <TagBlock
+                title={t("labels.miscellaneous")}
+                tags={MISC_TAGS}
+                included={filters.misc_tags}
+                excluded={filters.excluded_misc_tags}
+                onToggleInclude={(tag) => toggleTag("misc_tags", tag)}
+                onToggleExclude={(tag) => {
+                  const current = filters.excluded_misc_tags;
+                  const next = current.includes(tag)
+                    ? current.filter((t) => t !== tag)
+                    : [...current, tag];
+                  setFilters({ excluded_misc_tags: next, page: 1 });
+                }}
+                isFirst={true}
+                isLast={false}
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <TagBlock
+                title={t("labels.genre")}
+                tags={GENRE_TAGS}
+                included={filters.genre_tags}
+                excluded={filters.excluded_genre_tags}
+                onToggleInclude={(tag) => toggleTag("genre_tags", tag)}
+                onToggleExclude={(tag) => {
+                  const current = filters.excluded_genre_tags;
+                  const next = current.includes(tag)
+                    ? current.filter((t) => t !== tag)
+                    : [...current, tag];
+                  setFilters({ excluded_genre_tags: next, page: 1 });
+                }}
+                isFirst={false}
+                isLast={true}
+              />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
 
@@ -294,9 +282,9 @@ function TagBlock({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5 bg-surface/60 px-4 py-1",
+        "flex flex-wrap items-center gap-1.5 px-0 py-0",
         isFirst && "pt-1",
-        isLast && "pb-2 border-b border-border",
+        isLast && "pb-0",
       )}
     >
       <span className="text-[11px] uppercase tracking-wide text-subtle">

@@ -4,9 +4,8 @@ import { useTranslation } from "@/i18n/hooks";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
-  ChevronDown,
-  ChevronUp,
   Copy,
+  Filter,
   FolderOpen,
   Package,
   Play,
@@ -45,7 +44,6 @@ import {
 } from "@/lib/filterConfig";
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
-import { useFiltersStore } from "@/stores/filters";
 
 interface InstalledMetadata {
   tags?: unknown[];
@@ -72,7 +70,6 @@ export default function InstalledView() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selected, setSelected] = useState<InstalledWallpaper | null>(null);
   const [metaMap, setMetaMap] = useState<Record<string, InstalledMetadata>>({});
-  const collapsed = useFiltersStore((s) => s.collapsed);
 
   const refresh = async () => {
     if (!inTauri) {
@@ -415,177 +412,169 @@ export default function InstalledView() {
     }),
   }));
 
+  const activeFiltersCount = [
+    category !== "",
+    typeFilter !== "",
+    age !== "",
+    resolution !== "",
+    tagFilters.length > 0,
+    excludedTagFilters.length > 0,
+  ].filter(Boolean).length;
+
   return (
     <div className="flex h-full flex-col">
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+      <div className="flex flex-col gap-2 px-4 py-3 pb-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input pl-9"
+              placeholder={t("labels.search_placeholder")}
+            />
+          </div>
+          <Tooltip
+            content={
+              sortOrder === "asc"
+                ? t("tooltips.sort_asc") || "Ascending"
+                : t("tooltips.sort_desc") || "Descending"
+            }
+            side="bottom"
           >
-            <div
+            <button
+              type="button"
+              onClick={() =>
+                setSortOrder((o) => (o === "asc" ? "desc" : "asc"))
+              }
               className={cn(
-                "flex flex-col gap-2 bg-surface/60 px-4 py-3",
-                !showAdvanced && "border-b border-border",
+                "flex h-[38px] items-center gap-2 rounded-md bg-surface-sunken border border-border px-3 py-2 text-sm outline-none hover:border-border-strong transition-colors",
               )}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative min-w-[220px] flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="input pl-9"
-                    placeholder={t("labels.search_placeholder")}
-                  />
-                </div>
-                <Tooltip
-                  content={
-                    sortOrder === "asc"
-                      ? t("tooltips.sort_asc") || "Ascending"
-                      : t("tooltips.sort_desc") || "Descending"
-                  }
-                  side="bottom"
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSortOrder((o) => (o === "asc" ? "desc" : "asc"))
-                    }
-                    className={cn(
-                      "flex h-[38px] items-center gap-2 rounded-md bg-surface-sunken border border-border px-3 py-2 text-sm outline-none hover:border-border-strong transition-colors",
-                    )}
-                  >
-                    <motion.span
-                      key={sortOrder}
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      transition={{ duration: 0.18 }}
-                      className="inline-flex"
-                    >
-                      {sortOrder === "asc" ? (
-                        <ArrowUpAZ className="h-4 w-4" />
-                      ) : (
-                        <ArrowDownAZ className="h-4 w-4" />
-                      )}
-                    </motion.span>
-                  </button>
-                </Tooltip>
-                <Select
-                  value={sort}
-                  onValueChange={(v) => setSort(v as LocalSortKey)}
-                  options={sortOptions}
-                  icon={<SortAsc className="h-4 w-4 text-muted" />}
-                />
-                <Select
-                  value={category}
-                  onValueChange={(v) => setCategory(v)}
-                  options={categoryOptions}
-                />
-                <Select
-                  value={typeFilter}
-                  onValueChange={(v) => setTypeFilter(v)}
-                  options={typeOptions}
-                />
-                <Select
-                  value={age}
-                  onValueChange={(v) => setAge(v)}
-                  options={ageOptions}
-                />
-                <Select
-                  value={resolution}
-                  onValueChange={(v) => setResolution(v)}
-                  options={resolutionOptions}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowAdvanced((v) => !v)}
-                  className="btn-ghost text-xs"
-                  aria-expanded={showAdvanced}
-                  disabled={!hasAnyExtraTags}
-                >
-                  {showAdvanced ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                  {t(
-                    showAdvanced
-                      ? "labels.less_filters"
-                      : "labels.more_filters",
-                  )}
-                </button>
-                {hasActiveFilters && (
-                  <button
-                    type="button"
-                    className="btn-ghost text-xs"
-                    onClick={() => {
-                      setTagFilters([]);
-                      setExcludedTagFilters([]);
-                      setCategory("");
-                      setTypeFilter("");
-                      setAge("");
-                      setResolution("");
-                      setSearch("");
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                    {t("labels.clear")}
-                  </button>
+              <motion.span
+                key={sortOrder}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ duration: 0.18 }}
+                className="inline-flex"
+              >
+                {sortOrder === "asc" ? (
+                  <ArrowUpAZ className="h-4 w-4" />
+                ) : (
+                  <ArrowDownAZ className="h-4 w-4" />
                 )}
-              </div>
-            </div>
-            <AnimatePresence>
-              {showAdvanced && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut" }}
-                  >
-                    {visibleMiscTags.length > 0 && (
-                      <FilterChipsRow
-                        title={t("labels.miscellaneous") || "Miscellaneous"}
-                        keys={visibleMiscTags}
-                        active={tagFilters}
-                        excluded={excludedTagFilters}
-                        toggle={toggleTag}
-                        isFirst={true}
-                        isLast={visibleGenreTags.length === 0}
-                      />
-                    )}
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{
-                      duration: 0.2,
-                      ease: "easeInOut",
-                      delay: 0.05,
-                    }}
-                  >
-                    {visibleGenreTags.length > 0 && (
-                      <FilterChipsRow
-                        title={t("labels.genre") || "Genre"}
-                        keys={visibleGenreTags}
-                        active={tagFilters}
-                        excluded={excludedTagFilters}
-                        toggle={toggleTag}
-                        isFirst={visibleMiscTags.length === 0}
-                        isLast={true}
-                      />
-                    )}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.span>
+            </button>
+          </Tooltip>
+          <Select
+            value={sort}
+            onValueChange={(v) => setSort(v as LocalSortKey)}
+            options={sortOptions}
+            icon={<SortAsc className="h-4 w-4 text-muted" />}
+          />
+          <Select
+            value={category}
+            onValueChange={(v) => setCategory(v)}
+            options={categoryOptions}
+          />
+          <Select
+            value={typeFilter}
+            onValueChange={(v) => setTypeFilter(v)}
+            options={typeOptions}
+          />
+          <Select
+            value={age}
+            onValueChange={(v) => setAge(v)}
+            options={ageOptions}
+          />
+          <Select
+            value={resolution}
+            onValueChange={(v) => setResolution(v)}
+            options={resolutionOptions}
+          />
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className={cn(
+              "btn-icon relative",
+              showAdvanced && "bg-primary/10 text-primary",
+            )}
+            aria-expanded={showAdvanced}
+            disabled={!hasAnyExtraTags}
+          >
+            <Filter className="h-5 w-5" />
+            {activeFiltersCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="btn-icon"
+              onClick={() => {
+                setTagFilters([]);
+                setExcludedTagFilters([]);
+                setCategory("");
+                setTypeFilter("");
+                setAge("");
+                setResolution("");
+                setSearch("");
+              }}
+              aria-label={t("labels.clear")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {showAdvanced && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                {visibleMiscTags.length > 0 && (
+                  <FilterChipsRow
+                    title={t("labels.miscellaneous") || "Miscellaneous"}
+                    keys={visibleMiscTags}
+                    active={tagFilters}
+                    excluded={excludedTagFilters}
+                    toggle={toggleTag}
+                    isFirst={true}
+                    isLast={visibleGenreTags.length === 0}
+                  />
+                )}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{
+                  duration: 0.2,
+                  ease: "easeInOut",
+                }}
+              >
+                {visibleGenreTags.length > 0 && (
+                  <FilterChipsRow
+                    title={t("labels.genre") || "Genre"}
+                    keys={visibleGenreTags}
+                    active={tagFilters}
+                    excluded={excludedTagFilters}
+                    toggle={toggleTag}
+                    isFirst={visibleMiscTags.length === 0}
+                    isLast={true}
+                  />
+                )}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="flex-1 overflow-auto px-4 py-3">
         {loading ? (
@@ -753,9 +742,9 @@ function FilterChipsRow({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5 bg-surface/60 px-4 py-1",
+        "flex flex-wrap items-center gap-1.5 px-0 py-0",
         isFirst && "pt-1",
-        isLast && "pb-2 border-b border-border",
+        isLast && "pb-0",
       )}
     >
       <span className="text-[11px] uppercase tracking-wide text-subtle">

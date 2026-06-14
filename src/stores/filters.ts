@@ -62,7 +62,7 @@ interface FiltersState {
 export const useFiltersStore = create<FiltersState>((set, get) => ({
   filters: DEFAULT_FILTERS,
   showAdvanced: false,
-  collapsed: true,
+  collapsed: false,
   viewPages: {
     workshop: 1,
     collections: 1,
@@ -79,8 +79,7 @@ export const useFiltersStore = create<FiltersState>((set, get) => ({
       },
     })),
   resetFilters: () => set({ filters: DEFAULT_FILTERS }),
-  setPage: (page) =>
-    set((state) => ({ filters: { ...state.filters, page } })),
+  setPage: (page) => set((state) => ({ filters: { ...state.filters, page } })),
   setViewPage: (view, page, key) =>
     set((state) => {
       const newViewPages = { ...state.viewPages };
@@ -90,7 +89,11 @@ export const useFiltersStore = create<FiltersState>((set, get) => ({
       } else if (view === "collection" && key) {
         newViewPages.collection = new Map(state.viewPages.collection);
         newViewPages.collection.set(key, page);
-      } else if (view === "workshop" || view === "collections" || view === "installed") {
+      } else if (
+        view === "workshop" ||
+        view === "collections" ||
+        view === "installed"
+      ) {
         newViewPages[view] = page;
       }
       return { viewPages: newViewPages };
@@ -101,13 +104,15 @@ export const useFiltersStore = create<FiltersState>((set, get) => ({
       return state.viewPages.author.get(key) ?? 1;
     } else if (view === "collection" && key) {
       return state.viewPages.collection.get(key) ?? 1;
-    } else if (view === "workshop" || view === "collections" || view === "installed") {
+    } else if (
+      view === "workshop" ||
+      view === "collections" ||
+      view === "installed"
+    ) {
       return state.viewPages[view];
     }
     return 1;
   },
-  toggleAdvanced: () =>
-    set((state) => ({ showAdvanced: !state.showAdvanced })),
-  toggleCollapsed: () =>
-    set((state) => ({ collapsed: !state.collapsed })),
+  toggleAdvanced: () => set((state) => ({ showAdvanced: !state.showAdvanced })),
+  toggleCollapsed: () => set((state) => ({ collapsed: !state.collapsed })),
 }));
