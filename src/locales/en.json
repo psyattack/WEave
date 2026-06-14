@@ -43,6 +43,8 @@
     "sort_order": "Toggle sort order",
     "sort_asc": "Ascending",
     "sort_desc": "Descending",
+    "cancel_task": "Cancel task",
+    "clear_history": "Clear history",
     "collapse_sidebar": "Collapse",
     "expand_sidebar": "Expand sidebar"
   },
@@ -58,6 +60,8 @@
     "no_tasks": "No active tasks",
     "download_prefix": "Download: {id}",
     "extract_prefix": "Extract: {id}",
+    "task_cancelled": "Cancelled by user",
+    "tasks_history": "History",
     "minimize_on_apply": "Minimize on Apply",
     "page": "Page",
     "of": "of {total}",

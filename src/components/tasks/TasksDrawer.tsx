@@ -6,9 +6,11 @@ import {
   Download,
   FileArchive,
   Loader2,
+  MinusCircle,
   X,
   XCircle,
 } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 
 import Drawer from "@/components/common/Drawer";
 import PreviewImage from "@/components/common/PreviewImage";
@@ -33,7 +35,13 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
   const handleCancel = async (task: TaskStatus) => {
     if (!inTauri) return;
     if (task.kind === "download") {
-      await tryInvoke("download_cancel", { pubfileid: task.pubfileid });
+      try {
+        await invoke("download_cancel", {
+          pubfileid: task.pubfileid,
+        });
+      } catch (err) {
+        console.error("download_cancel error:", err);
+      }
     }
   };
 
@@ -122,14 +130,21 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                   <TaskPreview pubfileid={task.pubfileid} small />
                   {task.phase === "completed" ? (
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                  ) : task.phase === "cancelled" ? (
+                    <MinusCircle className="h-4 w-4 shrink-0 text-warning" />
                   ) : (
                     <XCircle className="h-4 w-4 shrink-0 text-danger" />
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-foreground">
-                      {task.kind}: {task.pubfileid}
+                      {task.kind.charAt(0).toUpperCase() + task.kind.slice(1)}:{" "}
+                      {task.pubfileid}
                     </div>
-                    <div className="truncate">{task.status}</div>
+                    <div className="truncate">
+                      {task.phase === "cancelled"
+                        ? t("labels.task_cancelled")
+                        : task.status}
+                    </div>
                   </div>
                 </div>
               ))}
