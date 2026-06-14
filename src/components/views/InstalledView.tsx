@@ -544,7 +544,7 @@ export default function InstalledView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-col gap-2 px-4 py-3 pb-0">
+      <div className="flex flex-col gap-2 px-4 py-3 pb-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
@@ -763,7 +763,7 @@ export default function InstalledView() {
                   transition={{ duration: 0.18 }}
                   onClick={() => setSelected(item)}
                   className={cn(
-                    "card card-hover group overflow-hidden cursor-pointer",
+                    "card card-hover group overflow-hidden cursor-pointer relative",
                     selected?.pubfileid === item.pubfileid &&
                       "ring-2 ring-primary/70",
                   )}
@@ -773,9 +773,21 @@ export default function InstalledView() {
                       key={item.preview}
                       src={item.preview}
                       alt={item.title}
-                      className="h-full w-full scale-[1.02] object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                      className="h-full w-full scale-[1.02] object-cover transition-all duration-700 ease-out group-hover:scale-[1.15] group-hover:brightness-75"
                     />
-                    <div className="absolute right-2 top-2 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+
+                    {/* Градиентный оверлей для читаемости текста */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-90" />
+
+                    {/* Размер файла слева сверху */}
+                    <div className="absolute left-2 top-1.5 z-[2]">
+                      <span className="inline-flex items-center rounded-full bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur-sm ring-1 ring-white/20">
+                        {formatBytes(item.size_bytes)}
+                      </span>
+                    </div>
+
+                    {/* Быстрые действия */}
+                    <div className="absolute right-2 top-2 z-[2] flex flex-col gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
                       <IconBtn
                         onClick={(e) => {
                           e.stopPropagation();
@@ -824,34 +836,33 @@ export default function InstalledView() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </IconBtn>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-0.5 px-2.5 py-2">
-                    <h3
-                      className="line-clamp-1 text-[13px] font-semibold leading-tight"
-                      title={item.title}
-                    >
-                      {item.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-[11px] text-muted">
-                      {(() => {
-                        const author =
-                          (
-                            metaMap[item.pubfileid] as
-                              | { author?: string }
-                              | undefined
-                          )?.author || "";
-                        return (
-                          <span
-                            className="truncate"
-                            title={author || undefined}
-                          >
-                            {author || "—"}
-                          </span>
-                        );
-                      })()}
-                      <span className="shrink-0">
-                        {formatBytes(item.size_bytes)}
-                      </span>
+
+                    {/* Название и автор поверх изображения */}
+                    <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12 transition-all duration-300">
+                      <h3
+                        className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg transition-all duration-300 group-hover:translate-y-[-2px]"
+                        title={item.title}
+                      >
+                        {item.title}
+                      </h3>
+                      <div className="flex items-center gap-2 text-[10px] transition-all duration-300 group-hover:translate-y-[-2px]">
+                        {(() => {
+                          const author =
+                            (
+                              metaMap[item.pubfileid] as
+                                | { author?: string }
+                                | undefined
+                            )?.author || "";
+                          return (
+                            <span
+                              className="line-clamp-1 flex-1 font-medium text-white/90 drop-shadow-md"
+                              title={author || undefined}
+                            >
+                              {author || "—"}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </motion.article>
@@ -956,9 +967,9 @@ function IconBtn({
       disabled={disabled}
       aria-label={tooltip}
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-foreground shadow ring-1 ring-border backdrop-blur transition-colors",
-        disabled && "opacity-40 cursor-not-allowed",
-        kind === "danger" && "text-danger",
+        "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
+        disabled && "opacity-40 cursor-not-allowed hover:scale-100",
+        kind === "danger" && "text-danger hover:bg-danger/80 hover:text-white",
       )}
     >
       {children}
