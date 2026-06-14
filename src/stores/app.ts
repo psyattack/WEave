@@ -15,6 +15,7 @@ interface AppState {
   accountIndex: number;
   accounts: { index: number; username: string; is_custom: boolean }[];
   sidebarCollapsed: boolean;
+  legalAccepted: boolean;
   setReady: (v: boolean) => void;
   setLanguage: (lang: string) => void;
   setTheme: (theme: ThemeCode) => void;
@@ -27,6 +28,7 @@ interface AppState {
   ) => void;
   setSidebarCollapsed: (v: boolean) => void;
   toggleSidebar: () => void;
+  setLegalAccepted: (v: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -44,6 +46,7 @@ export const useAppStore = create<AppState>()(
       accountIndex: 3,
       accounts: [],
       sidebarCollapsed: false,
+      legalAccepted: false,
       setReady: (v) => set({ ready: v }),
       setLanguage: (language) => set({ language }),
       setTheme: (theme) => {
@@ -60,6 +63,7 @@ export const useAppStore = create<AppState>()(
       setAccounts: (accounts) => set({ accounts }),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
+      setLegalAccepted: (legalAccepted) => set({ legalAccepted }),
     }),
     {
       name: "weave.ui",
@@ -69,6 +73,7 @@ export const useAppStore = create<AppState>()(
         theme: state.theme,
         language: state.language,
         accent: state.accent,
+        legalAccepted: state.legalAccepted,
       }),
     },
   ),

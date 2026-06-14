@@ -32,6 +32,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCheckUpdates?: () => void;
+  onOpenLegal?: () => void;
 }
 
 const TOOLS: { label: string; url: string }[] = [
@@ -48,6 +49,7 @@ export default function InfoDialog({
   open,
   onOpenChange,
   onCheckUpdates,
+  onOpenLegal,
 }: Props) {
   const { t } = useTranslation();
   const [version, setVersion] = useState<string>("");
@@ -135,17 +137,13 @@ export default function InfoDialog({
       <div className="flex flex-col items-center gap-3 text-center">
         <AppIcon className="h-32 w-32" />
         <div className="space-y-1">
-          <div className="text-lg font-semibold">
-            {t("info.app_full_name")}
-          </div>
+          <div className="text-lg font-semibold">{t("info.app_full_name")}</div>
           <div className="text-xs text-muted">
             {t("info.version_label")}{" "}
             <span className="text-foreground">{version || "—"}</span>
           </div>
         </div>
-        <p className="text-sm text-muted">
-          {t("info.description")}
-        </p>
+        <p className="text-sm text-muted">{t("info.description")}</p>
         <p className="text-xs text-subtle">
           {t("info.developed")} —{" "}
           <button
@@ -200,6 +198,18 @@ export default function InfoDialog({
             ) : (
               <ChevronDown className="h-3.5 w-3.5" />
             )}
+          </button>
+          <button
+            className="btn-outline"
+            onClick={() => {
+              if (onOpenLegal) {
+                onOpenChange(false);
+                onOpenLegal();
+              }
+            }}
+          >
+            <BookOpen className="h-4 w-4" />
+            {t("buttons.legal")}
           </button>
         </div>
 
@@ -277,7 +287,9 @@ export default function InfoDialog({
                 </div>
                 {selectedRelease.published_at && (
                   <div className="mb-2 text-[10px] uppercase tracking-wide text-subtle">
-                    {new Date(selectedRelease.published_at).toLocaleDateString()}
+                    {new Date(
+                      selectedRelease.published_at,
+                    ).toLocaleDateString()}
                   </div>
                 )}
                 <Markdown source={selectedRelease.body || ""} />
