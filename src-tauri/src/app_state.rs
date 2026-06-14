@@ -73,18 +73,8 @@ impl AppState {
         let downloads = DownloadManager::new(app_handle.clone());
         let extracts = ExtractManager::new(app_handle.clone());
 
-        let cookies_file = steam_webview_dir.join("cookies.json");
-        let workshop_for_persist = workshop.clone();
-        let persist: crate::workshop::webview::CookiePersistFn = Arc::new(move |cookies| {
-            workshop_for_persist.save_cookies(cookies);
-        });
-        let steam_webview = SteamWebview::new(
-            app_handle.clone(),
-            steam_webview_dir,
-            workshop.cookie_jar(),
-            cookies_file,
-            Some(persist),
-        );
+        let steam_webview =
+            SteamWebview::new(app_handle.clone(), steam_webview_dir, workshop.cookie_jar());
 
         Ok(Self {
             app_handle,
@@ -102,6 +92,25 @@ impl AppState {
             dotnet_root: Arc::new(Mutex::new(None)),
             dotnet_initialized: Arc::new(AtomicBool::new(false)),
         })
+    }
+
+    /// Sync cookies from WebView2 storage into reqwest jar on startup.
+    /// This ensures the Workshop client has authentication cookies from
+    /// previous sessions without needing to wait for an explicit login.
+    pub fn init_cookies(&self) {
+        let steam_webview = self.steam_webview.clone();
+        let workshop = self.workshop.clone();
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async move {
+                if let Ok(n) = steam_webview.sync_cookies().await {
+                    if n > 0 {
+                        log::info!("Synced {} cookies from WebView2 on startup", n);
+                        workshop.clear_caches();
+                    }
+                }
+            });
+        });
     }
 
     /// Initialize .NET Runtime check in background. Call this after state is created.

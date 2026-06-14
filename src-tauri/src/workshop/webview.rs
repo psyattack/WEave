@@ -23,35 +23,24 @@ use tokio::sync::Mutex;
 use tokio::time::sleep;
 
 pub const LABEL: &str = "steam-webview";
-const STEAM_LOGIN_URL: &str = "https://steamcommunity.com/login/home/?goto=workshop%2Fbrowse%2F%3Fappid%3D431960";
+const STEAM_LOGIN_URL: &str =
+    "https://steamcommunity.com/login/home/?goto=workshop%2Fbrowse%2F%3Fappid%3D431960";
 const STEAM_HOME_URL: &str = "https://steamcommunity.com/workshop/browse/?appid=431960";
-
-pub type CookiePersistFn = Arc<dyn Fn(&[(String, String, String, String)]) + Send + Sync>;
 
 pub struct SteamWebview {
     app: AppHandle,
     data_dir: PathBuf,
     jar: Arc<Jar>,
-    cookies_file: PathBuf,
-    persist: Option<CookiePersistFn>,
     lock: Mutex<()>,
 }
 
 impl SteamWebview {
-    pub fn new(
-        app: AppHandle,
-        data_dir: PathBuf,
-        jar: Arc<Jar>,
-        cookies_file: PathBuf,
-        persist: Option<CookiePersistFn>,
-    ) -> Self {
+    pub fn new(app: AppHandle, data_dir: PathBuf, jar: Arc<Jar>) -> Self {
         std::fs::create_dir_all(&data_dir).ok();
         Self {
             app,
             data_dir,
             jar,
-            cookies_file,
-            persist,
             lock: Mutex::new(()),
         }
     }
@@ -100,8 +89,8 @@ impl SteamWebview {
     }
 
     /// Pull all `steamcommunity.com` cookies from the webview and load them
-    /// into our reqwest jar. Also writes them to `cookies.json` so that they
-    /// survive across restarts (Python-style persistence).
+    /// into our reqwest jar. WebView2 persists cookies automatically, so no
+    /// additional file storage is needed.
     pub async fn sync_cookies(&self) -> Result<usize, String> {
         let _g = self.lock.lock().await;
         self.ensure_window().map_err(|e| e.to_string())?;
@@ -116,7 +105,6 @@ impl SteamWebview {
             .parse::<url::Url>()
             .map_err(|e| e.to_string())?;
         let mut n = 0;
-        let mut persisted: Vec<(String, String, String, String)> = Vec::new();
         for c in cookies {
             let domain = c.domain().unwrap_or("steamcommunity.com").to_string();
             if !(domain.ends_with("steamcommunity.com") || domain.ends_with("steampowered.com")) {
@@ -135,34 +123,6 @@ impl SteamWebview {
                 };
                 self.jar.set_cookies(&mut values.iter(), target);
                 n += 1;
-            }
-            persisted.push((name, value, domain, path));
-        }
-        if let Some(persist) = &self.persist {
-            (persist)(&persisted);
-        } else if !persisted.is_empty() {
-            // Fallback: write straight to cookies_file.
-            #[derive(serde::Serialize)]
-            struct C<'a> {
-                name: &'a str,
-                value: &'a str,
-                domain: &'a str,
-                path: &'a str,
-            }
-            let out: Vec<C> = persisted
-                .iter()
-                .map(|(n, v, d, p)| C {
-                    name: n,
-                    value: v,
-                    domain: d,
-                    path: p,
-                })
-                .collect();
-            if let Ok(json) = serde_json::to_vec_pretty(&out) {
-                if let Some(parent) = self.cookies_file.parent() {
-                    std::fs::create_dir_all(parent).ok();
-                }
-                let _ = std::fs::write(&self.cookies_file, json);
             }
         }
         Ok(n)

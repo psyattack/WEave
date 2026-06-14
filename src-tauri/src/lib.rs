@@ -41,9 +41,12 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .setup(|app| {
             let state = AppState::initialize(app.handle().clone())?;
+            let arc_state = Arc::new(state);
+            // Sync cookies from WebView2 on startup so Workshop requests are authenticated
+            arc_state.init_cookies();
             // Don't start .NET Runtime check here - let frontend trigger it
-            // state.init_dotnet_runtime();
-            app.manage(Arc::new(state));
+            // arc_state.init_dotnet_runtime();
+            app.manage(arc_state);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
