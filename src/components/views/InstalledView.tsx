@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
@@ -55,7 +55,7 @@ interface InstalledMetadata {
 }
 
 export default function InstalledView() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { confirm, ConfirmDialog } = useConfirm();
   const weDirectory = useAppStore((s) => s.weDirectory);
   const [items, setItems] = useState<InstalledWallpaper[]>([]);
@@ -382,30 +382,37 @@ export default function InstalledView() {
   // Prepare options for Select components
   const sortOptions = LOCAL_SORT_KEYS.map((k) => ({
     value: k,
-    label: t(`filters.local_sort.${k}`, LOCAL_SORT_OPTIONS[k]),
+    label: i18n.t(`filters.local_sort.${k}`, {
+      defaultValue: LOCAL_SORT_OPTIONS[k],
+    }),
   }));
 
   const categoryOptions = CATEGORY_KEYS.map((k) => ({
     value: k,
-    label: t(`filters.category.${k || "empty"}`, CATEGORIES[k] ?? k),
+    label: i18n.t(`filters.category.${k || "empty"}`, {
+      defaultValue: CATEGORIES[k] ?? k,
+    }),
   }));
 
   const typeOptions = TYPE_KEYS.map((k) => ({
     value: k,
-    label: t(`filters.type.${k || "empty"}`, TYPES[k] ?? k),
+    label: i18n.t(`filters.type.${k || "empty"}`, {
+      defaultValue: TYPES[k] ?? k,
+    }),
   }));
 
   const ageOptions = AGE_RATING_KEYS.map((k) => ({
     value: k,
-    label: t(`filters.age_rating.${k || "empty"}`, AGE_RATINGS[k] ?? k),
+    label: i18n.t(`filters.age_rating.${k || "empty"}`, {
+      defaultValue: AGE_RATINGS[k] ?? k,
+    }),
   }));
 
   const resolutionOptions = RESOLUTION_KEYS.map((k) => ({
     value: k,
-    label: t(
-      `filters.resolution.${(k || "empty").replace(/ /g, "_")}`,
-      RESOLUTIONS[k] ?? k,
-    ),
+    label: i18n.t(`filters.resolution.${(k || "empty").replace(/ /g, "_")}`, {
+      defaultValue: RESOLUTIONS[k] ?? k,
+    }),
   }));
 
   return (

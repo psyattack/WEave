@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 
 import FilterBar from "@/components/workshop/FilterBar";
 import Pagination from "@/components/workshop/Pagination";

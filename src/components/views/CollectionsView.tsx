@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import { ArrowLeft, Info, Layers } from "lucide-react";
 
 import WorkshopCard from "@/components/workshop/WorkshopCard";

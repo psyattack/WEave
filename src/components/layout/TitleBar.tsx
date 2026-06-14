@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import { Maximize2, Minus, Square, X } from "lucide-react";
 
 import { inTauri, tryInvokeOk } from "@/lib/tauri";

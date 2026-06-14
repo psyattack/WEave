@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   CheckCircle2,

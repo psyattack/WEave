@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 
 import {
   FolderHeart,
@@ -27,11 +27,9 @@ const NAV: { key: NavKey; icon: typeof Globe; labelKey: string }[] = [
 ];
 
 export default function Sidebar({ current, onChange }: SidebarProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const toggle = useAppStore((s) => s.toggleSidebar);
-
-
 
   return (
     <aside
@@ -86,7 +84,7 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
                 />
               )}
               <Icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{t(item.labelKey)}</span>}
+              {!collapsed && <span>{i18n.t(item.labelKey as any)}</span>}
             </button>
           );
         })}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
 import { Trash2 } from "lucide-react";
 

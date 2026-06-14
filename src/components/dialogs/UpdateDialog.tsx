@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks";
 import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { openUrl as openExternal } from "@tauri-apps/plugin-opener";
 

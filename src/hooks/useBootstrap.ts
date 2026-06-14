@@ -1,13 +1,12 @@
 import { useEffect, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 
-import { loadTranslations } from "@/lib/i18n";
 import { invoke, inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { useAppStore, ThemeCode } from "@/stores/app";
 import { TaskPhase, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
 import { triggerGlobalRefresh } from "@/stores/refresh";
-import i18n from "@/lib/i18n";
+import i18n from "@/i18n";
 import { maybeMinimize } from "@/lib/window";
 
 export function useBootstrap() {
@@ -20,11 +19,6 @@ export function useBootstrap() {
         return;
       }
 
-      const translations = await tryInvoke<Record<string, unknown>>(
-        "i18n_get_translations",
-        undefined,
-        {},
-      );
       const config = await tryInvoke<Record<string, unknown>>("config_get_all");
       const availableLanguages = await tryInvoke<
         { code: string; label: string }[]
@@ -43,15 +37,14 @@ export function useBootstrap() {
         { index: number; username: string; is_custom: boolean }[]
       >("accounts_list", undefined, []);
 
-      if (translations) {
-        const language = getConfigValue<string>(
-          config,
-          ["settings", "general", "appearance", "language"],
-          "en",
-        );
-        loadTranslations(translations, language);
-        useAppStore.setState({ language });
-      }
+      // Set language from config
+      const language = getConfigValue<string>(
+        config,
+        ["settings", "general", "appearance", "language"],
+        "en",
+      );
+      void i18n.changeLanguage(language);
+      useAppStore.setState({ language });
 
       const appearance = getConfigValue<Record<string, unknown>>(
         config,
