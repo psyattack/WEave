@@ -162,7 +162,6 @@ fn default_settings() -> Value {
                 "minimize_on_apply": false,
                 "preload_next_page": true,
                 "auto_check_updates": true,
-                "auto_init_metadata": true,
                 "auto_apply_last_downloaded": false,
                 "skip_version": "",
                 "save_window_state": true,

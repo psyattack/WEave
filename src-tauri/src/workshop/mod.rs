@@ -277,6 +277,14 @@ impl WorkshopClient {
         let started = std::time::Instant::now();
         let resp = self.client.get(&url).send().await?;
         let status = resp.status().as_u16();
+
+        // Check for rate limit error
+        if status == 429 {
+            return Err(anyhow::anyhow!(
+                "Rate limit exceeded (429). Please try again later."
+            ));
+        }
+
         let html = resp.text().await?;
         let item = parser::parse_item_details(&html, pubfileid);
         debug::record(

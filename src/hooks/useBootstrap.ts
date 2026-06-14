@@ -5,7 +5,6 @@ import { invoke, inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { useAppStore, ThemeCode } from "@/stores/app";
 import { TaskPhase, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
-import { triggerGlobalRefresh } from "@/stores/refresh";
 import i18n from "@/i18n";
 import { maybeMinimize } from "@/lib/window";
 
@@ -81,9 +80,6 @@ export function useBootstrap() {
 
       // Auto-check for updates on startup if enabled.
       void maybeCheckForUpdates();
-
-      // Auto-init metadata for installed wallpapers if enabled.
-      void maybeAutoInitMetadata();
 
       // Initialize .NET Runtime check after all event listeners are set up
       // Only call once to prevent duplicate initialization
@@ -261,26 +257,6 @@ async function maybeCheckForUpdates() {
     const { useUpdaterStore } = await import("@/stores/updater");
     useUpdaterStore.getState().show(info);
   }
-}
-
-async function maybeAutoInitMetadata() {
-  if (!inTauri) return;
-  const enabled = await tryInvoke<boolean>(
-    "config_get",
-    { path: "settings.general.behavior.auto_init_metadata" },
-    true,
-  );
-  if (!enabled) return;
-  // Run in background so the UI is responsive immediately. When the batch
-  // finishes, pulse the global refresh counter so every view re-reads
-  // `metadata_get_all` — this is what keeps the Installed Misc/Genre
-  // filter chips in sync with whatever tags the batch just persisted.
-  setTimeout(() => {
-    void (async () => {
-      const count = await tryInvoke<number>("app_init_metadata", undefined, 0);
-      if ((count ?? 0) > 0) triggerGlobalRefresh();
-    })();
-  }, 5000);
 }
 
 async function maybeAutoApply(pubfileid: string) {

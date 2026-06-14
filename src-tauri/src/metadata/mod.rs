@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tauri::Emitter;
 
 use crate::app_state::AppState;
 
@@ -26,6 +27,12 @@ pub struct WallpaperMetadata {
     pub collections: serde_json::Value,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct MetadataInitProgress {
+    pub current: u32,
+    pub total: u32,
+}
+
 /// Iterate over installed wallpapers and, for any that don't yet have
 /// non-trivial metadata cached in the config file, fetch the workshop
 /// page and persist the parsed metadata. Mirrors the original Python
@@ -40,10 +47,12 @@ pub async fn batch_initialize_metadata(state: Arc<AppState>) -> anyhow::Result<u
         .filter(|id| !is_metadata_complete(&cached, id))
         .collect();
 
+    let total = pending.len() as u32;
     let mut count: u32 = 0;
-    for pubfileid in pending {
+
+    for (index, pubfileid) in pending.iter().enumerate() {
         let workshop = state.workshop.clone();
-        match workshop.item_details(&pubfileid).await {
+        match workshop.item_details(pubfileid).await {
             Ok(item) => {
                 let value = serde_json::to_value(WallpaperMetadata {
                     pubfileid: item.pubfileid.clone(),
@@ -69,10 +78,22 @@ pub async fn batch_initialize_metadata(state: Arc<AppState>) -> anyhow::Result<u
             }
             Err(err) => {
                 log::warn!("metadata batch: {pubfileid} fetch failed: {err:#}");
+                // If this is a rate limit error, propagate it to stop the batch
+                if err.to_string().contains("429") {
+                    return Err(err);
+                }
             }
         }
-        // Rate-limit the requests so we don't hammer the workshop.
-        tokio::time::sleep(Duration::from_millis(300)).await;
+
+        // Emit progress event
+        let current = (index + 1) as u32;
+        let _ = state.app_handle.emit(
+            "metadata-init-progress",
+            MetadataInitProgress { current, total },
+        );
+
+        // Increased rate-limit delay to avoid 429 errors from Steam
+        tokio::time::sleep(Duration::from_millis(800)).await;
     }
     Ok(count)
 }
