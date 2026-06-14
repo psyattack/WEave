@@ -4,6 +4,8 @@ import { useTranslation } from "@/i18n/hooks";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
+  Check,
+  CheckSquare,
   Copy,
   Database,
   Filter,
@@ -76,6 +78,8 @@ export default function InstalledView() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selected, setSelected] = useState<InstalledWallpaper | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   const [metaMap, setMetaMap] = useState<Record<string, InstalledMetadata>>({});
 
   const refresh = async () => {
@@ -344,6 +348,7 @@ export default function InstalledView() {
     if (ok) {
       pushToast(t("messages.wallpaper_deleted"), "success");
       await refresh();
+      triggerGlobalRefresh();
       setSelected(null);
     } else {
       // Backend may also catch the active-wallpaper case (race: user
@@ -354,6 +359,120 @@ export default function InstalledView() {
         "error",
       );
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    if (inTauri) {
+      const active = await tryInvoke<string[]>(
+        "we_active_pubfileids",
+        undefined,
+        [],
+      );
+      const activeInSelection = Array.from(selectedIds).filter((id) =>
+        (active ?? []).includes(id),
+      );
+      if (activeInSelection.length > 0) {
+        pushToast(
+          "Some wallpapers are currently active — switch first.",
+          "error",
+        );
+        return;
+      }
+    }
+
+    const confirmed = await confirm({
+      title: "Delete Wallpapers",
+      message: `Delete ${selectedIds.size} wallpapers?\n\nThe wallpaper folders will be removed from your Wallpaper Engine library permanently. This action cannot be undone.`,
+      confirmLabel: t("buttons.delete") || "Delete",
+      cancelLabel: t("buttons.cancel") || "Cancel",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    if (!inTauri) {
+      setItems((prev) => prev.filter((i) => !selectedIds.has(i.pubfileid)));
+      pushToast(`${selectedIds.size} wallpapers deleted`, "success");
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+      return;
+    }
+
+    let successCount = 0;
+    for (const pubfileid of selectedIds) {
+      const ok = await tryInvokeOk("we_delete_wallpaper", { pubfileid });
+      if (ok) successCount++;
+    }
+
+    pushToast(
+      `${successCount} wallpapers deleted`,
+      successCount > 0 ? "success" : "error",
+    );
+    await refresh();
+    triggerGlobalRefresh();
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+    setSelected(null);
+  };
+
+  const handleBulkExtract = async () => {
+    if (selectedIds.size === 0) return;
+
+    const selectedItems = items.filter((item) =>
+      selectedIds.has(item.pubfileid),
+    );
+    const withPkg = selectedItems.filter((item) => item.has_pkg);
+
+    if (withPkg.length === 0) {
+      pushToast("No PKG files available", "warning");
+      return;
+    }
+
+    if (!inTauri) {
+      pushToast(`Extracting ${withPkg.length} wallpapers`, "success");
+      return;
+    }
+
+    const folder = await openPath({ directory: true });
+    if (!folder || Array.isArray(folder)) return;
+
+    let successCount = 0;
+    for (const item of withPkg) {
+      const ok = await tryInvokeOk("extract_start", {
+        pubfileid: item.pubfileid,
+        outputDir: folder,
+      });
+      if (ok) successCount++;
+    }
+
+    pushToast(
+      `Extracting ${successCount} wallpapers`,
+      successCount > 0 ? "success" : "error",
+    );
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  };
+
+  const toggleSelection = (pubfileid: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(pubfileid)) {
+        next.delete(pubfileid);
+      } else {
+        next.add(pubfileid);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(filtered.map((item) => item.pubfileid)));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
   };
 
   const handleExtract = async (item: InstalledWallpaper) => {
@@ -613,6 +732,20 @@ export default function InstalledView() {
             onValueChange={(v) => setResolution(v)}
             options={resolutionOptions}
           />
+          {/* Кнопка множественной выборки */}
+          <Tooltip content="Select Multiple" side="bottom">
+            <button
+              type="button"
+              onClick={() => setSelectionMode((prev) => !prev)}
+              className={cn(
+                "btn-icon",
+                selectionMode && "bg-primary/10 text-primary",
+              )}
+              aria-label="Select multiple wallpapers"
+            >
+              <CheckSquare className="h-5 w-5" />
+            </button>
+          </Tooltip>
           <Tooltip
             content={
               t("tooltips.init_metadata") ||
@@ -738,6 +871,63 @@ export default function InstalledView() {
             </>
           )}
         </AnimatePresence>
+
+        {/* Панель управления выборкой */}
+        <AnimatePresence>
+          {selectionMode && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="flex flex-wrap items-center gap-2 rounded-md bg-surface-sunken/50 px-3 py-2 border border-border">
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <X className="h-4 w-4" />
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={selectAll}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <Check className="h-4 w-4" />
+                  Select All
+                </button>
+                <div className="flex items-center gap-2 rounded-md bg-surface px-3 py-1.5 text-sm font-medium">
+                  {`${selectedIds.size} selected`}
+                </div>
+                {selectedIds.size > 0 && (
+                  <>
+                    <div className="ml-auto flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleBulkExtract}
+                        className="btn-primary flex items-center gap-2 text-sm"
+                      >
+                        <Package className="h-4 w-4" />
+                        Extract
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBulkDelete}
+                        className="btn-danger flex items-center gap-2 text-sm"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex-1 overflow-auto px-4 py-3">
@@ -761,11 +951,21 @@ export default function InstalledView() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.18 }}
-                  onClick={() => setSelected(item)}
+                  onClick={() => {
+                    if (selectionMode) {
+                      toggleSelection(item.pubfileid);
+                    } else {
+                      setSelected(item);
+                    }
+                  }}
                   className={cn(
                     "card card-hover group overflow-hidden cursor-pointer relative",
                     selected?.pubfileid === item.pubfileid &&
+                      !selectionMode &&
                       "ring-2 ring-primary/70",
+                    selectionMode &&
+                      selectedIds.has(item.pubfileid) &&
+                      "ring-2 ring-primary",
                   )}
                 >
                   <div className="relative aspect-square overflow-hidden bg-surface-sunken">
@@ -779,63 +979,88 @@ export default function InstalledView() {
                     {/* Градиентный оверлей для читаемости текста */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-90" />
 
-                    {/* Размер файла слева сверху */}
-                    <div className="absolute left-2 top-1.5 z-[2]">
+                    {/* Чекбокс для множественной выборки */}
+                    {selectionMode && (
+                      <div className="absolute left-2 top-2 z-[3]">
+                        <div
+                          className={cn(
+                            "flex h-5 w-5 items-center justify-center rounded border-2 transition-all",
+                            selectedIds.has(item.pubfileid)
+                              ? "bg-primary border-primary"
+                              : "bg-black/40 border-white/40 backdrop-blur-sm",
+                          )}
+                        >
+                          {selectedIds.has(item.pubfileid) && (
+                            <Check className="h-3.5 w-3.5 text-white" />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Размер файла */}
+                    <div
+                      className={cn(
+                        "absolute top-1.5 z-[2] transition-all",
+                        selectionMode ? "left-9" : "left-2",
+                      )}
+                    >
                       <span className="inline-flex items-center rounded-full bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur-sm ring-1 ring-white/20">
                         {formatBytes(item.size_bytes)}
                       </span>
                     </div>
 
                     {/* Быстрые действия */}
-                    <div className="absolute right-2 top-2 z-[2] flex flex-col gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
-                      <IconBtn
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleApply(item);
-                        }}
-                        tooltip={t("tooltips.install_wallpaper")}
-                      >
-                        <Play className="h-3.5 w-3.5" />
-                      </IconBtn>
-                      <IconBtn
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExtract(item);
-                        }}
-                        tooltip={t("tooltips.extract_wallpaper")}
-                        disabled={!item.has_pkg}
-                      >
-                        <Package className="h-3.5 w-3.5" />
-                      </IconBtn>
-                      <IconBtn
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenFolder(item);
-                        }}
-                        tooltip={t("tooltips.open_folder")}
-                      >
-                        <FolderOpen className="h-3.5 w-3.5" />
-                      </IconBtn>
-                      <IconBtn
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyId(item);
-                        }}
-                        tooltip={t("buttons.copy_id")}
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                      </IconBtn>
-                      <IconBtn
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(item);
-                        }}
-                        tooltip={t("tooltips.delete_wallpaper")}
-                        kind="danger"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </IconBtn>
-                    </div>
+                    {!selectionMode && (
+                      <div className="absolute right-2 top-2 z-[2] flex flex-col gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
+                        <IconBtn
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApply(item);
+                          }}
+                          tooltip={t("tooltips.install_wallpaper")}
+                        >
+                          <Play className="h-3.5 w-3.5" />
+                        </IconBtn>
+                        <IconBtn
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExtract(item);
+                          }}
+                          tooltip={t("tooltips.extract_wallpaper")}
+                          disabled={!item.has_pkg}
+                        >
+                          <Package className="h-3.5 w-3.5" />
+                        </IconBtn>
+                        <IconBtn
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenFolder(item);
+                          }}
+                          tooltip={t("tooltips.open_folder")}
+                        >
+                          <FolderOpen className="h-3.5 w-3.5" />
+                        </IconBtn>
+                        <IconBtn
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyId(item);
+                          }}
+                          tooltip={t("buttons.copy_id")}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </IconBtn>
+                        <IconBtn
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item);
+                          }}
+                          tooltip={t("tooltips.delete_wallpaper")}
+                          kind="danger"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </IconBtn>
+                      </div>
+                    )}
 
                     {/* Название и автор поверх изображения */}
                     <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12 transition-all duration-300">
