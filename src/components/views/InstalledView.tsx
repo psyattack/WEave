@@ -981,7 +981,7 @@ export default function InstalledView() {
 
                     {/* Чекбокс для множественной выборки */}
                     {selectionMode && (
-                      <div className="absolute left-2 top-2 z-[3]">
+                      <div className="absolute right-2 top-2 z-[3]">
                         <div
                           className={cn(
                             "flex h-5 w-5 items-center justify-center rounded border-2 transition-all",
@@ -998,12 +998,7 @@ export default function InstalledView() {
                     )}
 
                     {/* Размер файла */}
-                    <div
-                      className={cn(
-                        "absolute top-1.5 z-[2] transition-all",
-                        selectionMode ? "left-9" : "left-2",
-                      )}
-                    >
+                    <div className="absolute left-2 top-1.5 z-[2]">
                       <span className="inline-flex items-center rounded-full bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur-sm ring-1 ring-white/20">
                         {formatBytes(item.size_bytes)}
                       </span>
@@ -1011,54 +1006,56 @@ export default function InstalledView() {
 
                     {/* Быстрые действия */}
                     {!selectionMode && (
-                      <div className="absolute right-2 top-2 z-[2] flex flex-col gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
-                        <IconBtn
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApply(item);
-                          }}
-                          tooltip={t("tooltips.install_wallpaper")}
-                        >
-                          <Play className="h-3.5 w-3.5" />
-                        </IconBtn>
-                        <IconBtn
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExtract(item);
-                          }}
-                          tooltip={t("tooltips.extract_wallpaper")}
-                          disabled={!item.has_pkg}
-                        >
-                          <Package className="h-3.5 w-3.5" />
-                        </IconBtn>
-                        <IconBtn
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenFolder(item);
-                          }}
-                          tooltip={t("tooltips.open_folder")}
-                        >
-                          <FolderOpen className="h-3.5 w-3.5" />
-                        </IconBtn>
-                        <IconBtn
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyId(item);
-                          }}
-                          tooltip={t("buttons.copy_id")}
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </IconBtn>
-                        <IconBtn
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(item);
-                          }}
-                          tooltip={t("tooltips.delete_wallpaper")}
-                          kind="danger"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </IconBtn>
+                      <div className="absolute inset-y-0 right-0 z-[2] flex items-center pr-2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
+                        <div className="flex flex-col gap-[0.375rem]">
+                          <IconBtn
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApply(item);
+                            }}
+                            tooltip={t("tooltips.install_wallpaper")}
+                          >
+                            <Play className="h-[1em] w-[1em]" />
+                          </IconBtn>
+                          <IconBtn
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExtract(item);
+                            }}
+                            tooltip={t("tooltips.extract_wallpaper")}
+                            disabled={!item.has_pkg}
+                          >
+                            <Package className="h-[1em] w-[1em]" />
+                          </IconBtn>
+                          <IconBtn
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenFolder(item);
+                            }}
+                            tooltip={t("tooltips.open_folder")}
+                          >
+                            <FolderOpen className="h-[1em] w-[1em]" />
+                          </IconBtn>
+                          <IconBtn
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyId(item);
+                            }}
+                            tooltip={t("buttons.copy_id")}
+                          >
+                            <Copy className="h-[1em] w-[1em]" />
+                          </IconBtn>
+                          <IconBtn
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(item);
+                            }}
+                            tooltip={t("tooltips.delete_wallpaper")}
+                            kind="danger"
+                          >
+                            <Trash2 className="h-[1em] w-[1em]" />
+                          </IconBtn>
+                        </div>
                       </div>
                     )}
 
@@ -1192,7 +1189,7 @@ function IconBtn({
       disabled={disabled}
       aria-label={tooltip}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
+        "inline-flex aspect-square w-[clamp(1.75rem,8cqw,2rem)] items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
         disabled && "opacity-40 cursor-not-allowed hover:scale-100",
         kind === "danger" && "text-danger hover:bg-danger/80 hover:text-white",
       )}

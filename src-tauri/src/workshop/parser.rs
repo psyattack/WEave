@@ -430,11 +430,14 @@ fn unescape_json_string(s: &str) -> String {
 fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
     // Приоритет 1: ищем паттерн с многоточием и последним числом в пагинации
     // Паттерн: <div>...</div><div class="...Panel" tabindex="0" role="button">1,000</div>
+    // ВАЖНО: ищем ПОСЛЕДНЕЕ совпадение, так как троеточий может быть несколько
     let re_ellipsis_last = Regex::new(
         r#"<div>\.\.\.</div><div[^>]*class="[^"]*Panel[^"]*"[^>]*tabindex="0"[^>]*role="button"[^>]*>\s*([\d,]+)\s*</div>"#
     ).unwrap();
 
-    if let Some(cap) = re_ellipsis_last.captures(html) {
+    // Находим ВСЕ совпадения и берём последнее
+    let last_match = re_ellipsis_last.captures_iter(html).last();
+    if let Some(cap) = last_match {
         if let Ok(max) = cap[1].replace(',', "").parse::<u32>() {
             // Пытаемся определить общее количество элементов из текста
             let re_total = Regex::new(
