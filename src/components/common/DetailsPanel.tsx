@@ -31,7 +31,6 @@ import { maybeMinimize } from "@/lib/window";
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
 import { groupTags, parseRatingStars, workshopUrl } from "@/lib/workshop";
-import { triggerGlobalRefresh } from "@/stores/refresh";
 
 /**
  * One unified details drawer used by both the Workshop view and the
@@ -204,6 +203,8 @@ export default function DetailsPanel(props: Props) {
   const openAuthor = useNavStore((s) => s.openAuthor);
   const openCollection = useNavStore((s) => s.openCollection);
   const refreshInstalled = useInstalledStore((s) => s.refresh);
+  const removeOptimistic = useInstalledStore((s) => s.removeOptimistic);
+  const addOptimistic = useInstalledStore((s) => s.addOptimistic);
   // If a workshop item is already on disk we promote the panel to a
   // mixed Workshop+Installed view (extra Apply/Folder/Delete buttons,
   // Installed timestamp in the meta grid). Same panel works in every
@@ -411,6 +412,8 @@ export default function DetailsPanel(props: Props) {
             showInstalledActions={showInstalledActions}
             openWorkshopPage={openWorkshopPage}
             refreshInstalled={refreshInstalled}
+            removeOptimistic={removeOptimistic}
+            addOptimistic={addOptimistic}
           />
 
           <MetaGrid rows={datesAndStats} />
@@ -556,6 +559,8 @@ function ActionRow(
     showInstalledActions: boolean;
     openWorkshopPage: () => Promise<void>;
     refreshInstalled: () => Promise<void>;
+    removeOptimistic: (pubfileid: string) => void;
+    addOptimistic: (pubfileid: string, wallpaper: InstalledWallpaper) => void;
   },
 ) {
   const { t } = useTranslation();
@@ -613,21 +618,20 @@ function ActionRow(
   };
   const overlayDelete = async () => {
     if (!installedHandle) return;
-    // Block deleting a wallpaper Wallpaper Engine is currently painting —
-    // otherwise we hit file locks mid-delete and the library ends up in a
-    // bad state.
-    const active = await tryInvoke<string[]>(
-      "we_active_pubfileids",
-      undefined,
-      [],
-    );
-    if ((active ?? []).includes(installedHandle.pubfileid)) {
-      pushToast(
-        t("messages.cannot_delete_active_single") ||
-          "Wallpaper is currently active — switch first.",
-        "error",
+    if (inTauri) {
+      const active = await tryInvoke<string[]>(
+        "we_active_pubfileids",
+        undefined,
+        [],
       );
-      return;
+      if ((active ?? []).includes(installedHandle.pubfileid)) {
+        pushToast(
+          t("messages.cannot_delete_active_single") ||
+            "Wallpaper is currently active — switch first.",
+          "error",
+        );
+        return;
+      }
     }
     const confirmed = await confirm({
       title: t("tooltips.delete_wallpaper") || "Delete Wallpaper",
@@ -639,15 +643,21 @@ function ActionRow(
       variant: "danger",
     });
     if (!confirmed) return;
+
+    // Optimistic UI update
+    props.removeOptimistic(installedHandle.pubfileid);
+    props.onClose();
+
     const ok = await tryInvokeOk("we_delete_wallpaper", {
       pubfileid: installedHandle.pubfileid,
     });
+
     if (ok) {
       pushToast(t("messages.deleted") || "Deleted", "success");
       void props.refreshInstalled();
-      triggerGlobalRefresh();
-      props.onClose();
     } else {
+      // Rollback on error
+      props.addOptimistic(installedHandle.pubfileid, installedHandle);
       pushToast(
         t("messages.cannot_delete_active_single") ||
           t("messages.delete_failed") ||

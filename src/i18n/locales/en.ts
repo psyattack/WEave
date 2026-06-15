@@ -96,6 +96,7 @@ export default {
     remove_account_question: "Remove account {{user}}?",
     collection_badge: "Collection",
     downloading: "Downloading…",
+    deleting: "Deleting…",
     detected_ids: "{{count}} IDs detected",
     started_n_downloads: "Started {{count}} download(s)",
     current_version: "Current",
@@ -112,6 +113,8 @@ export default {
     selected_count: "{{count}} selected",
     extract_selected: "Extract",
     delete_selected: "Delete",
+    download_prefix: "Download",
+    extract_prefix: "Extract",
   },
   messages: {
     download_started: "Download started!",

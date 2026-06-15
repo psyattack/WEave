@@ -23,6 +23,8 @@ import PreviewImage from "@/components/common/PreviewImage";
 import DetailsPanel from "@/components/common/DetailsPanel";
 import Select from "@/components/common/Select";
 import { useAppStore } from "@/stores/app";
+import { useInstalledStore } from "@/stores/installed";
+import { useTasksStore } from "@/stores/tasks";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { pushToast } from "@/stores/toasts";
@@ -49,7 +51,6 @@ import {
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
 import { useMetadataInitStore } from "@/stores/metadata-init";
-import { triggerGlobalRefresh } from "@/stores/refresh";
 
 interface InstalledMetadata {
   tags?: unknown[];
@@ -62,6 +63,8 @@ export default function InstalledView() {
   const { t, i18n } = useTranslation();
   const { confirm, ConfirmDialog } = useConfirm();
   const weDirectory = useAppStore((s) => s.weDirectory);
+  const refreshInstalledGlobal = useInstalledStore((s) => s.refresh);
+  const installedUpdateCounter = useInstalledStore((s) => s.updateCounter);
   const [items, setItems] = useState<InstalledWallpaper[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -82,6 +85,7 @@ export default function InstalledView() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [metaMap, setMetaMap] = useState<Record<string, InstalledMetadata>>({});
+  const downloadTasks = useTasksStore((s) => s.tasks);
 
   const refresh = async () => {
     if (!inTauri) {
@@ -103,6 +107,8 @@ export default function InstalledView() {
     );
     setMetaMap(meta ?? {});
     setLoading(false);
+    // Note: We don't call refreshInstalledGlobal() here to avoid infinite loop
+    // The global store is updated separately by useBootstrap on download completion
   };
 
   useEffect(() => {
@@ -114,6 +120,13 @@ export default function InstalledView() {
     if (refreshCounter === 0) return;
     void refresh();
   }, [refreshCounter, weDirectory]);
+
+  // Sync with global installed store - refresh when new items are downloaded
+  useEffect(() => {
+    if (installedUpdateCounter > 0) {
+      void refresh();
+    }
+  }, [installedUpdateCounter]);
 
   // Re-fetch cached metadata (without re-scanning disk) whenever the
   // details drawer closes — so tags pulled via workshop_get_item while the
@@ -196,7 +209,22 @@ export default function InstalledView() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+
+    // Filter out wallpapers that are currently being downloaded
+    const downloadingIds = new Set(
+      Object.entries(downloadTasks)
+        .filter(
+          ([key, task]) =>
+            key.startsWith("download:") &&
+            (task.phase === "starting" || task.phase === "running"),
+        )
+        .map(([key]) => key.replace("download:", "")),
+    );
+
     let result = items.filter((item) => {
+      // Exclude items that are currently downloading
+      if (downloadingIds.has(item.pubfileid)) return false;
+
       if (q) {
         const inTitle = item.title.toLowerCase().includes(q);
         const inId = item.pubfileid.includes(q);
@@ -289,6 +317,7 @@ export default function InstalledView() {
     tagsFor,
     metaFor,
     metaMap,
+    downloadTasks,
   ]);
 
   const handleApply = async (item: InstalledWallpaper) => {
@@ -338,20 +367,30 @@ export default function InstalledView() {
       variant: "danger",
     });
     if (!confirmed) return;
+
+    // Optimistic UI update - remove immediately from list
+    const previousItems = items;
+    setItems((prev) => prev.filter((i) => i.pubfileid !== item.pubfileid));
+    setSelected(null);
+
     if (!inTauri) {
-      setItems((prev) => prev.filter((i) => i.pubfileid !== item.pubfileid));
       pushToast(t("messages.wallpaper_deleted"), "success");
       return;
     }
+
     const ok = await tryInvokeOk("we_delete_wallpaper", {
       pubfileid: item.pubfileid,
     });
+
     if (ok) {
       pushToast(t("messages.wallpaper_deleted"), "success");
-      await refresh();
-      triggerGlobalRefresh();
-      setSelected(null);
+      // Refresh local state
+      void refresh();
+      // Update global store to sync with other views
+      void refreshInstalledGlobal();
     } else {
+      // Rollback on error
+      setItems(previousItems);
       // Backend may also catch the active-wallpaper case (race: user
       // applied the wallpaper between our check and the delete call).
       pushToast(
@@ -394,32 +433,42 @@ export default function InstalledView() {
     });
     if (!confirmed) return;
 
+    // Optimistic UI update - remove immediately from list
+    const previousItems = items;
+    const toDelete = selectedIds;
+    setItems((prev) => prev.filter((i) => !toDelete.has(i.pubfileid)));
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+    setSelected(null);
+
     if (!inTauri) {
-      setItems((prev) => prev.filter((i) => !selectedIds.has(i.pubfileid)));
       pushToast(
-        t("messages.bulk_delete_success", { count: selectedIds.size }),
+        t("messages.bulk_delete_success", { count: toDelete.size }),
         "success",
       );
-      setSelectedIds(new Set());
-      setSelectionMode(false);
       return;
     }
 
     let successCount = 0;
-    for (const pubfileid of selectedIds) {
+    for (const pubfileid of toDelete) {
       const ok = await tryInvokeOk("we_delete_wallpaper", { pubfileid });
       if (ok) successCount++;
     }
 
-    pushToast(
-      t("messages.bulk_delete_success", { count: successCount }),
-      successCount > 0 ? "success" : "error",
-    );
-    await refresh();
-    triggerGlobalRefresh();
-    setSelectedIds(new Set());
-    setSelectionMode(false);
-    setSelected(null);
+    if (successCount > 0) {
+      pushToast(
+        t("messages.bulk_delete_success", { count: successCount }),
+        "success",
+      );
+      // Refresh local state
+      void refresh();
+      // Update global store to sync with other views
+      void refreshInstalledGlobal();
+    } else {
+      // Rollback on complete failure
+      setItems(previousItems);
+      pushToast(t("messages.bulk_delete_success", { count: 0 }), "error");
+    }
   };
 
   const handleBulkExtract = async () => {
@@ -557,7 +606,8 @@ export default function InstalledView() {
         total: items.length,
       });
 
-      triggerGlobalRefresh();
+      // Refresh installed data to get new metadata
+      void refresh();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -1073,14 +1123,14 @@ export default function InstalledView() {
                     )}
 
                     {/* Название и автор поверх изображения */}
-                    <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12 transition-all duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12">
                       <h3
-                        className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg transition-all duration-300 group-hover:translate-y-[-2px]"
+                        className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg"
                         title={item.title}
                       >
                         {item.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-[10px] transition-all duration-300 group-hover:translate-y-[-2px]">
+                      <div className="flex items-center gap-2 text-[10px]">
                         {(() => {
                           const author =
                             (

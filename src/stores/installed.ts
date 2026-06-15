@@ -15,19 +15,27 @@ import type { InstalledWallpaper } from "@/types/workshop";
 interface InstalledState {
   byId: Record<string, InstalledWallpaper>;
   ready: boolean;
+  updateCounter: number;
   refresh: () => Promise<void>;
   setAll: (items: InstalledWallpaper[]) => void;
   isInstalled: (pubfileid: string) => boolean;
   get: (pubfileid: string) => InstalledWallpaper | undefined;
+  addOptimistic: (pubfileid: string, wallpaper: InstalledWallpaper) => void;
+  removeOptimistic: (pubfileid: string) => void;
 }
 
 export const useInstalledStore = create<InstalledState>((set, get) => ({
   byId: {},
   ready: false,
+  updateCounter: 0,
   setAll: (items) => {
     const byId: Record<string, InstalledWallpaper> = {};
     for (const w of items) byId[w.pubfileid] = w;
-    set({ byId, ready: true });
+    set((state) => ({
+      byId,
+      ready: true,
+      updateCounter: state.updateCounter + 1,
+    }));
   },
   refresh: async () => {
     if (!inTauri) {
@@ -43,4 +51,15 @@ export const useInstalledStore = create<InstalledState>((set, get) => ({
   },
   isInstalled: (pubfileid) => Boolean(get().byId[pubfileid]),
   get: (pubfileid) => get().byId[pubfileid],
+  addOptimistic: (pubfileid, wallpaper) => {
+    set((state) => ({
+      byId: { ...state.byId, [pubfileid]: wallpaper },
+    }));
+  },
+  removeOptimistic: (pubfileid) => {
+    set((state) => {
+      const { [pubfileid]: _, ...rest } = state.byId;
+      return { byId: rest };
+    });
+  },
 }));
