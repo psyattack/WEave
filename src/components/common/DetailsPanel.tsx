@@ -31,6 +31,7 @@ import { maybeMinimize } from "@/lib/window";
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
 import { groupTags, parseRatingStars, workshopUrl } from "@/lib/workshop";
+import { translateTagCategory, translateTagValue } from "@/lib/filterConfig";
 
 /**
  * One unified details drawer used by both the Workshop view and the
@@ -441,7 +442,7 @@ export default function DetailsPanel(props: Props) {
               {groupedTags.map((g) => (
                 <div key={g.category}>
                   <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-subtle">
-                    {g.category}
+                    {translateTagCategory(g.category, i18n)}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {g.values.map((v, i) => (
@@ -449,7 +450,7 @@ export default function DetailsPanel(props: Props) {
                         key={`${v}-${i}`}
                         className="chip !py-0 text-[11px]"
                       >
-                        {v}
+                        {translateTagValue(v, g.category, i18n)}
                       </span>
                     ))}
                   </div>

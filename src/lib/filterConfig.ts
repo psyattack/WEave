@@ -285,3 +285,68 @@ export function translateTag(
 ): string {
   return i18n.t(`${i18nPrefix}.${tag}`, { defaultValue: tag });
 }
+
+/**
+ * Maps Steam Workshop tag-category labels (as scraped by the Rust parser)
+ * to the `filters.*` i18n prefix that holds translations for their values.
+ */
+const TAG_CATEGORY_PREFIX: Record<string, string> = {
+  Genre: "filters.genre_tags",
+  Miscellaneous: "filters.misc_tags",
+  Misc: "filters.misc_tags",
+  Type: "filters.type",
+  Category: "filters.category",
+  Resolution: "filters.resolution",
+  "Age Rating": "filters.age_rating",
+  "Asset Type": "filters.asset_type",
+  "Asset Genre": "filters.asset_genre",
+  "Script Type": "filters.script_type",
+};
+
+/**
+ * Prefixes to probe when a tag has no known category (e.g. installed
+ * wallpapers expose flat string tags without a category label).
+ */
+const FALLBACK_TAG_PREFIXES = [
+  "filters.genre_tags",
+  "filters.misc_tags",
+  "filters.type",
+  "filters.resolution",
+  "filters.age_rating",
+  "filters.asset_type",
+  "filters.asset_genre",
+  "filters.script_type",
+  "filters.category",
+] as const;
+
+function tagKeyForPrefix(value: string, prefix: string): string {
+  // Resolution keys store spaces as underscores ("1920_x_1080").
+  return prefix === "filters.resolution" ? value.replace(/ /g, "_") : value;
+}
+
+/**
+ * Translates a single tag *value*, given the category it belongs to. When the
+ * category is unknown we probe the common filter prefixes so flat installed
+ * tags still get localized. Falls back to the original value when no match.
+ */
+export function translateTagValue(
+  value: string,
+  category: string,
+  i18n: any,
+): string {
+  const known = TAG_CATEGORY_PREFIX[category];
+  const prefixes = known ? [known] : FALLBACK_TAG_PREFIXES;
+  for (const prefix of prefixes) {
+    const full = `${prefix}.${tagKeyForPrefix(value, prefix)}`;
+    if (i18n.exists(full)) return i18n.t(full);
+  }
+  return value;
+}
+
+/**
+ * Translates a tag *category* header (e.g. "Genre", "Age Rating") using the
+ * `tag_categories.*` namespace. Falls back to the original label.
+ */
+export function translateTagCategory(category: string, i18n: any): string {
+  return i18n.t(`tag_categories.${category}`, { defaultValue: category });
+}
