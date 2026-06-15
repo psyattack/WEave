@@ -50,7 +50,13 @@ export default function AuthorView() {
   }, [profileUrl, currentPage, filters.page, setPage]);
 
   const key = useMemo(
-    () => JSON.stringify({ u: profileUrl, t: tab, p: filters.page, s: filters.sort }),
+    () =>
+      JSON.stringify({
+        u: profileUrl,
+        t: tab,
+        p: filters.page,
+        s: filters.sort,
+      }),
     [profileUrl, tab, filters.page, filters.sort],
   );
 
@@ -59,7 +65,7 @@ export default function AuthorView() {
   useEffect(() => {
     // Reset scroll to top when page changes
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [filters.page]);
 
@@ -119,10 +125,12 @@ export default function AuthorView() {
       pubfileid: item.pubfileid,
       accountIndex,
     });
-    pushToast(
-      ok ? t("messages.download_started") : t("messages.error"),
-      ok ? "success" : "error",
-    );
+
+    if (ok) {
+      pushToast(t("messages.download_started"), "success");
+    } else {
+      pushToast(t("messages.error"), "error");
+    }
   };
 
   const items = page?.items ?? [];

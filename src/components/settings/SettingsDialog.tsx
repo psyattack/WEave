@@ -97,7 +97,6 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                       }))}
                       onValueChange={(v) => {
                         void changeLanguageTo(v);
-                        void persist("settings.general.appearance.language", v);
                       }}
                     />
                   </Row>

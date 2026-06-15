@@ -129,10 +129,12 @@ export default function WorkshopView() {
       pubfileid: item.pubfileid,
       accountIndex,
     });
-    pushToast(
-      ok ? t("messages.download_started") : t("messages.error"),
-      ok ? "success" : "error",
-    );
+
+    if (ok) {
+      pushToast(t("messages.download_started"), "success");
+    } else {
+      pushToast(t("messages.error"), "error");
+    }
   };
 
   return (

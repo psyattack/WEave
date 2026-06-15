@@ -83,8 +83,8 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                             task.kind === "download"
                               ? "labels.download_prefix"
                               : "labels.extract_prefix",
-                            { id: task.pubfileid },
                           )}
+                          : {task.pubfileid}
                         </div>
                         <button
                           className="btn-icon"

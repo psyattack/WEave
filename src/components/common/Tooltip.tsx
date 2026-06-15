@@ -66,10 +66,6 @@ export function Tooltip({
           break;
       }
 
-      // Store original centered position for arrow
-      const originalX = x;
-      const originalY = y;
-
       // Keep tooltip within viewport
       const padding = 8;
       x = Math.max(

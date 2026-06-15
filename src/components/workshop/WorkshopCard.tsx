@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import {
@@ -23,7 +24,6 @@ import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/useConfirm";
-import { triggerGlobalRefresh } from "@/stores/refresh";
 
 interface Props {
   item: WorkshopItem;
@@ -43,6 +43,18 @@ export default function WorkshopCard({
   const { confirm, ConfirmDialog } = useConfirm();
   const installed = useInstalledStore((s) => s.byId[item.pubfileid]);
   const refreshInstalled = useInstalledStore((s) => s.refresh);
+  const addOptimistic = useInstalledStore((s) => s.addOptimistic);
+  const removeOptimistic = useInstalledStore((s) => s.removeOptimistic);
+
+  // Local deletion state for smooth UI transition
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Reset isDeleting when item is no longer installed
+  useEffect(() => {
+    if (isDeleting && !installed) {
+      setIsDeleting(false);
+    }
+  }, [isDeleting, installed]);
   const downloadTask = useTasksStore(
     (s) => s.tasks[`download:${item.pubfileid}`],
   );
@@ -122,18 +134,31 @@ export default function WorkshopCard({
       variant: "danger",
     });
     if (!confirmed) return;
+
+    // Optimistic UI update
+    setIsDeleting(true);
+    removeOptimistic(inst.pubfileid);
+
     if (!inTauri) {
       pushToast(t("messages.wallpaper_deleted"), "success");
+      setIsDeleting(false);
       return;
     }
+
     const ok = await tryInvokeOk("we_delete_wallpaper", {
       pubfileid: inst.pubfileid,
     });
+
     if (ok) {
       pushToast(t("messages.wallpaper_deleted"), "success");
-      await refreshInstalled();
-      triggerGlobalRefresh();
+      // Refresh in background to sync state across all views
+      void refreshInstalled();
+      // State will update when refreshInstalled completes
+      // isDeleting will remain true until the card re-renders without installed status
     } else {
+      // Rollback on error
+      setIsDeleting(false);
+      addOptimistic(inst.pubfileid, inst);
       pushToast(
         t("messages.cannot_delete_active_single") ||
           "Wallpaper is currently active — switch first.",
@@ -156,7 +181,7 @@ export default function WorkshopCard({
         transition={{ duration: 0.18 }}
         className={cn(
           "card card-hover group relative flex flex-col overflow-hidden",
-          isDownloading && "pointer-events-none",
+          (isDownloading || isDeleting) && "pointer-events-none",
         )}
       >
         <div
@@ -223,6 +248,16 @@ export default function WorkshopCard({
             </div>
           )}
 
+          {/* Active-deletion overlay */}
+          {isDeleting && (
+            <div className="pointer-events-none absolute inset-0 z-[3] flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-sm">
+              <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/20 border-t-danger shadow-lg" />
+              <div className="text-sm font-bold text-white drop-shadow-lg">
+                {t("labels.deleting") || "Deleting…"}
+              </div>
+            </div>
+          )}
+
           {/* Installed: quick actions */}
           {installed && !item.is_collection && !isDownloading && (
             <div className="pointer-events-none absolute inset-y-0 right-0 z-[2] flex items-center pr-2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
@@ -280,32 +315,32 @@ export default function WorkshopCard({
 
           {/* Non-installed: centered hover overlay with Install + Details. */}
           {!(installed && !item.is_collection) && !isDownloading && (
-            <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center opacity-0 transition-all duration-300 group-hover:opacity-100">
-              <div className="pointer-events-auto flex items-center gap-2 translate-y-3 transition-transform duration-300 group-hover:translate-y-0">
-                {!hideDownload && !item.is_collection && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDownload(item);
-                    }}
-                    disabled={isDownloading}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground backdrop-blur-sm ring-2 ring-white/20 transition-all duration-200 hover:scale-105",
-                      isDownloading && "cursor-not-allowed opacity-60",
-                    )}
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    {t("labels.install")}
-                  </button>
-                )}
+            <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
+              <div className="pointer-events-auto flex items-center gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload(item);
+                  }}
+                  disabled={isDownloading}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground backdrop-blur-sm ring-2 ring-white/20 transition-all duration-200 hover:scale-105",
+                    isDownloading && "cursor-not-allowed opacity-60",
+                    (hideDownload || item.is_collection) &&
+                      "invisible w-0 px-0 gap-0 opacity-0 pointer-events-none",
+                  )}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t("labels.install")}
+                </button>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onOpen(item);
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md ring-1 ring-white/30 transition-all duration-200 hover:scale-105 hover:bg-white/20"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white shadow-lg ring-1 ring-white/30 transition-all duration-200 hover:scale-105 hover:bg-white/30"
                 >
                   <Eye className="h-3.5 w-3.5" />
                   {t("labels.details")}
@@ -315,28 +350,30 @@ export default function WorkshopCard({
           )}
 
           {/* Название и автор поверх изображения */}
-          <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12 transition-all duration-300">
-            <h3
-              className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg transition-all duration-300 group-hover:translate-y-[-2px]"
-              title={item.title}
-            >
-              {item.title || "—"}
-            </h3>
-            <div className="flex items-center gap-2 text-[10px] transition-all duration-300 group-hover:translate-y-[-2px]">
-              <span
-                className="line-clamp-1 flex-1 font-medium text-white/90 drop-shadow-md"
-                title={item.author || ""}
+          {!isDownloading && (
+            <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12">
+              <h3
+                className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg"
+                title={item.title}
               >
-                {item.author || "—"}
-              </span>
-              {item.num_ratings && (
-                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/40 px-1.5 py-0.5 font-semibold text-warning backdrop-blur-sm ring-1 ring-white/20">
-                  <Star className="h-2.5 w-2.5 fill-current" />
-                  {item.num_ratings}
+                {item.title || "—"}
+              </h3>
+              <div className="flex items-center gap-2 text-[10px]">
+                <span
+                  className="line-clamp-1 flex-1 font-medium text-white/90 drop-shadow-md"
+                  title={item.author || ""}
+                >
+                  {item.author || "—"}
                 </span>
-              )}
+                {item.num_ratings && (
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/40 px-1.5 py-0.5 font-semibold text-warning backdrop-blur-sm ring-1 ring-white/20">
+                    <Star className="h-2.5 w-2.5 fill-current" />
+                    {item.num_ratings}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </motion.article>
       <ConfirmDialog />

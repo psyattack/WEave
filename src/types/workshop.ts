@@ -43,3 +43,13 @@ export interface InstalledWallpaper {
   size_bytes: number;
   installed_ts: number;
 }
+
+/**
+ * Extract tag strings from RawTag union type
+ */
+export function extractTags(tags: RawTag[] | undefined): string[] {
+  if (!tags) return [];
+  return tags
+    .map((t) => (typeof t === "string" ? t : t.tag || ""))
+    .filter(Boolean);
+}

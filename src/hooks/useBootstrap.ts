@@ -30,7 +30,7 @@ export function useBootstrap() {
       const accountIndex = await tryInvoke<number>(
         "config_get",
         { path: "settings.account.account.account_number" },
-        3,
+        0,
       );
       const accounts = await tryInvoke<
         { index: number; username: string; is_custom: boolean }[]
@@ -39,22 +39,22 @@ export function useBootstrap() {
       // Set language from config
       const language = getConfigValue<string>(
         config,
-        ["settings", "general", "appearance", "language"],
+        ["general", "appearance", "language"],
         "en",
       );
       void i18n.changeLanguage(language);
-      useAppStore.setState({ language });
 
       const appearance = getConfigValue<Record<string, unknown>>(
         config,
-        ["settings", "general", "appearance"],
+        ["general", "appearance"],
         {},
       );
       const patch: Record<string, unknown> = {
         weDirectory: weDirectory ?? "",
         availableLanguages: availableLanguages ?? [],
-        accountIndex: typeof accountIndex === "number" ? accountIndex : 3,
+        accountIndex: typeof accountIndex === "number" ? accountIndex : 0,
         accounts: accounts ?? [],
+        language: language,
         ready: true,
       };
       // Only override persisted theme/accent when the backing config has an
@@ -149,9 +149,6 @@ export function useBootstrap() {
             // installed indicators, and fetch workshop metadata for
             // the new item so it's cached for future use.
             void useInstalledStore.getState().refresh();
-            void import("@/stores/refresh").then(({ triggerGlobalRefresh }) => {
-              triggerGlobalRefresh();
-            });
             void (async () => {
               await tryInvoke(
                 "workshop_get_item",
@@ -232,6 +229,10 @@ export async function changeLanguageTo(code: string) {
   useAppStore.setState({ language: code });
   await i18n.changeLanguage(code);
   if (inTauri) {
+    await invoke<void>("config_set", {
+      path: "settings.general.appearance.language",
+      value: code,
+    }).catch(() => undefined);
     await invoke<void>("i18n_set_language", { language: code }).catch(
       () => undefined,
     );
@@ -303,9 +304,15 @@ async function registerWindowStatePersistence() {
         true,
       );
       if (!enabled) return;
-      const [size, pos, maximized] = await Promise.all([
+
+      // Don't save if window is minimized (positions are -32000)
+      const pos = await win.outerPosition();
+      if (pos.x < -30000 || pos.y < -30000) {
+        return;
+      }
+
+      const [size, maximized] = await Promise.all([
         win.outerSize(),
-        win.outerPosition(),
         win.isMaximized(),
       ]);
       void invoke("app_save_window_geometry", {
@@ -316,17 +323,20 @@ async function registerWindowStatePersistence() {
           height: size.height,
           is_maximized: Boolean(maximized),
         },
-      }).catch(() => undefined);
+      });
     };
 
-    await win.onCloseRequested(async () => {
-      await save();
-    });
-    // Also save periodically while the user is using the app, so an
-    // unexpected crash doesn't lose geometry entirely.
-    setInterval(() => {
-      void save();
-    }, 60_000);
+    // Save periodically when window state changes
+    let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+    const debouncedSave = () => {
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        void save();
+      }, 500);
+    };
+
+    await win.onResized(() => debouncedSave());
+    await win.onMoved(() => debouncedSave());
   } catch (err) {
     console.warn("window state persistence setup failed", err);
   }

@@ -1,6 +1,6 @@
 {
   "productName": "WEave",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "identifier": "com.weave.app",
   "build": {
     "beforeDevCommand": "npm run dev",
