@@ -49,6 +49,7 @@ export default {
     collapse_sidebar: "Collapse",
     theme: "Switch theme",
     init_metadata: "Initialize metadata for all installed wallpapers",
+    select_multiple: "Select Multiple",
   },
   metadata_init: {
     initializing: "Initializing Metadata",
@@ -106,6 +107,11 @@ export default {
     collection_info: "Collection info",
     install: "Install",
     details: "Details",
+    clear_selection: "Clear",
+    select_all: "Select All",
+    selected_count: "{{count}} selected",
+    extract_selected: "Extract",
+    delete_selected: "Delete",
   },
   messages: {
     download_started: "Download started!",
@@ -134,6 +140,12 @@ export default {
     copied: "Copied",
     wallpaper_applied: "Wallpaper applied",
     delete_failed: "Delete failed",
+    confirm_bulk_delete:
+      "Delete {{count}} wallpaper(s)?\n\nThis action cannot be undone.",
+    bulk_delete_with_active:
+      "{{count}} of the selected wallpapers are currently active.\n\nPlease switch to a different wallpaper first, then try again.",
+    bulk_extract_success: "Successfully extracted {{count}} wallpaper(s)",
+    bulk_delete_success: "Successfully deleted {{count}} wallpaper(s)",
   },
   dialog: {
     tasks: "Tasks",
