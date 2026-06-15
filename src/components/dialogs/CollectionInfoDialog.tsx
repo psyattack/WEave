@@ -16,6 +16,7 @@ import Dialog from "@/components/common/Dialog";
 import PreviewImage from "@/components/common/PreviewImage";
 import { useNavStore } from "@/stores/nav";
 import { inTauri } from "@/lib/tauri";
+import { translateTagCategory, translateTagValue } from "@/lib/filterConfig";
 import type { CollectionContents } from "@/components/views/CollectionsView";
 
 interface Props {
@@ -35,7 +36,7 @@ export default function CollectionInfoDialog({
   onClose,
   collection,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const openAuthor = useNavStore((s) => s.openAuthor);
 
   if (!collection) return null;
@@ -119,7 +120,9 @@ export default function CollectionInfoDialog({
           {ratingStars > 0 && (
             <div className="flex items-center gap-2">
               <Star className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Rating:</span>
+              <span className="text-subtle">
+                {t("collection_stats.rating")}:
+              </span>
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -141,7 +144,7 @@ export default function CollectionInfoDialog({
           {/* Items Count */}
           <div className="flex items-center gap-2">
             <Package className="h-3.5 w-3.5 text-subtle" />
-            <span className="text-subtle">Items:</span>
+            <span className="text-subtle">{t("collection_stats.items")}:</span>
             <span className="font-semibold text-foreground">
               {collection.items.length}
             </span>
@@ -151,7 +154,9 @@ export default function CollectionInfoDialog({
           {info.unique_visitors && (
             <div className="flex items-center gap-2">
               <Eye className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Visitors:</span>
+              <span className="text-subtle">
+                {t("collection_stats.visitors")}:
+              </span>
               <span className="text-foreground">{info.unique_visitors}</span>
             </div>
           )}
@@ -159,7 +164,9 @@ export default function CollectionInfoDialog({
           {info.subscribers && (
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Subscribers:</span>
+              <span className="text-subtle">
+                {t("collection_stats.subscribers")}:
+              </span>
               <span className="text-foreground">{info.subscribers}</span>
             </div>
           )}
@@ -168,7 +175,9 @@ export default function CollectionInfoDialog({
           {info.favorited && (
             <div className="flex items-center gap-2">
               <Heart className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Favorited:</span>
+              <span className="text-subtle">
+                {t("collection_stats.favorited")}:
+              </span>
               <span className="text-foreground">{info.favorited}</span>
             </div>
           )}
@@ -176,7 +185,9 @@ export default function CollectionInfoDialog({
           {info.total_favorited && info.total_favorited !== info.favorited && (
             <div className="flex items-center gap-2">
               <Heart className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Total:</span>
+              <span className="text-subtle">
+                {t("collection_stats.total")}:
+              </span>
               <span className="text-foreground">{info.total_favorited}</span>
             </div>
           )}
@@ -185,7 +196,9 @@ export default function CollectionInfoDialog({
           {info.posted_date && (
             <div className="flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Posted:</span>
+              <span className="text-subtle">
+                {t("collection_stats.posted")}:
+              </span>
               <span className="text-foreground">{info.posted_date}</span>
             </div>
           )}
@@ -193,7 +206,9 @@ export default function CollectionInfoDialog({
           {info.updated_date && (
             <div className="flex items-center gap-2">
               <RefreshCw className="h-3.5 w-3.5 text-subtle" />
-              <span className="text-subtle">Updated:</span>
+              <span className="text-subtle">
+                {t("collection_stats.updated")}:
+              </span>
               <span className="text-foreground">{info.updated_date}</span>
             </div>
           )}
@@ -233,14 +248,14 @@ export default function CollectionInfoDialog({
                     className="flex flex-wrap items-center gap-1"
                   >
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-subtle">
-                      {tagKey}:
+                      {translateTagCategory(tagKey, i18n)}:
                     </span>
                     {values.map((v, i) => (
                       <span
                         key={`${v}-${i}`}
                         className="chip !py-0 text-[11px]"
                       >
-                        {v}
+                        {translateTagValue(v, tagKey, i18n)}
                       </span>
                     ))}
                   </div>
