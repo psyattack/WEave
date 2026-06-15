@@ -108,7 +108,22 @@ impl WEaveLogger {
 
 impl log::Log for WEaveLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= log::max_level()
+        if metadata.level() > log::max_level() {
+            return false;
+        }
+
+        let target = metadata.target();
+
+        // Filter out noisy debug targets
+        if target.starts_with("selectors::matching") ||
+           target.starts_with("html5ever::tokenizer") ||
+           target.starts_with("html5ever::tree_builder") ||
+           target.contains("parse") ||
+           target.contains("parser") {
+            return false;
+        }
+
+        true
     }
 
     fn log(&self, record: &Record) {

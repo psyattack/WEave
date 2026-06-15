@@ -28,10 +28,7 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 <details open>
 <summary><b>🌐 Workshop Browser</b></summary>
 
-- Advanced search with keyword filtering and date ranges
-- Sort by trending, popular, or recent
-- Multi-criteria filtering (category, type, age rating, resolution, tags)
-- **Tristate filtering** (include/exclude/idle) for all filter types
+- Full support for filters and sorting
 - Image preview with lazy loading and caching
 - Detailed item view with ratings, descriptions, and author info
 - Collections and related collections support
@@ -49,7 +46,6 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 - Batch download from IDs/URLs
 - Queue management with status tracking
 - Optional auto-apply after download
-- **Cancelled status** for user-initiated cancellations
 
 </details>
 
@@ -57,10 +53,8 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 <summary><b>🖼️ Installed Wallpapers</b></summary>
 
 - View all installed wallpapers from Wallpaper Engine
-- Local filtering and sorting (date, title, size, type)
+- Local filtering and sorting
 - **Multi-select mode with batch operations** (delete, extract)
-- **Author filter** with tristate support
-- Tag-based filtering with include/exclude
 - Apply wallpapers to specific monitors
 - Active wallpaper detection
 - Open folders in Explorer
@@ -73,7 +67,6 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 
 - Auto-detect WE installation
 - Apply wallpapers to monitors
-- Launch Wallpaper Engine
 - Read current configuration
 - Detect active wallpapers across monitors
 
@@ -82,28 +75,9 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 <details>
 <summary><b>🎨 Customization</b></summary>
 
-- 5 built-in themes (Dark, Light, Nord, Monokai, Solarized)
+- 5 built-in themes
 - 10 accent colors
 - Multi-language support (English, Russian)
-- **Type-safe TypeScript i18n system**
-
-</details>
-
-<details>
-<summary><b>🔧 Additional Features</b></summary>
-
-- **Automatic .NET Runtime 9 download** with progress UI
-- **Legal agreement dialog** on first run
-- **Comprehensive logging system** with rotating file logs
-- **84 comprehensive tests** (35 Rust + 49 TypeScript)
-- Steam authentication with WebView2 native persistence
-- Encrypted account storage (PBKDF2 + AES-256-GCM)
-- Metadata caching with manual initialization
-- Auto-update checker via GitHub releases
-- Task management with history
-- Image caching with LRU
-- Single instance enforcement
-- Persistent window geometry
 
 </details>
 
@@ -123,8 +97,6 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 1. Download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave-tauri/releases)
 2. Extract the archive
 3. Run `weave.exe`
-4. Accept the legal agreement on first launch
-5. If .NET 9 Runtime is missing, it will be downloaded automatically
 
 > **Note:** WEave will auto-download a portable .NET 9.0.17 runtime if no system .NET 8/9/10 is detected.
 
@@ -149,7 +121,7 @@ git clone https://github.com/psyattack/weave-tauri.git
 cd weave-tauri
 
 # Download required tools to plugins/ directory:
-# - DepotDownloaderMod: https://github.com/mmvanheusden/DepotDownloaderMod/releases
+# - DepotDownloaderMod: https://github.com/SteamAutoCracks/DepotDownloaderMod/releases
 # - RePKG: https://github.com/notscuffed/repkg/releases
 
 # Install dependencies
@@ -174,7 +146,7 @@ cd src-tauri && cargo test  # Backend tests
 
 1. **Launch WEave** and accept the legal agreement (first run)
 2. **Configure** Wallpaper Engine path in Settings (auto-detected)
-3. **Select** a Steam account for downloads
+3. **Select** a Steam account for downloads (if the current one doesn't work)
 4. **Browse** Workshop tab to discover wallpapers
 5. **Install** wallpapers with one click
 6. **Manage** installed wallpapers in the Installed tab

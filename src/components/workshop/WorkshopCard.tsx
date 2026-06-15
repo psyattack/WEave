@@ -225,8 +225,8 @@ export default function WorkshopCard({
 
           {/* Installed: quick actions */}
           {installed && !item.is_collection && !isDownloading && (
-            <div className="pointer-events-none absolute right-2 top-2 z-[2] flex flex-col gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
-              <div className="pointer-events-auto flex flex-col gap-1.5">
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-[2] flex items-center pr-2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
+              <div className="pointer-events-auto flex flex-col gap-[0.375rem]">
                 <QuickIcon
                   onClick={(e) => {
                     e.stopPropagation();
@@ -234,7 +234,7 @@ export default function WorkshopCard({
                   }}
                   tooltip={t("tooltips.install_wallpaper")}
                 >
-                  <Play className="h-3.5 w-3.5" />
+                  <Play className="h-[1em] w-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -244,7 +244,7 @@ export default function WorkshopCard({
                   tooltip={t("tooltips.extract_wallpaper")}
                   disabled={!installed.has_pkg}
                 >
-                  <Package className="h-3.5 w-3.5" />
+                  <Package className="h-[1em] w-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -253,7 +253,7 @@ export default function WorkshopCard({
                   }}
                   tooltip={t("tooltips.open_folder")}
                 >
-                  <FolderOpen className="h-3.5 w-3.5" />
+                  <FolderOpen className="h-[1em] w-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -262,7 +262,7 @@ export default function WorkshopCard({
                   }}
                   tooltip={t("buttons.copy_id")}
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-[1em] w-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -272,7 +272,7 @@ export default function WorkshopCard({
                   tooltip={t("tooltips.delete_wallpaper")}
                   danger
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-[1em] w-[1em]" />
                 </QuickIcon>
               </div>
             </div>
@@ -364,7 +364,7 @@ function QuickIcon({
       disabled={disabled}
       aria-label={tooltip}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
+        "inline-flex aspect-square w-[clamp(1.75rem,8cqw,2rem)] items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
         disabled && "opacity-40 cursor-not-allowed hover:scale-100",
         danger && "text-danger hover:bg-danger/80 hover:text-white",
       )}
