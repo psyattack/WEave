@@ -250,3 +250,38 @@ export function toSelectOptions<T extends string>(
 ): { value: T; label: string }[] {
   return keys.map((value) => ({ value, label: labels[value] }));
 }
+
+/**
+ * Translates select options using i18n.
+ * @param keys - Array of option keys
+ * @param labels - Fallback labels for each key
+ * @param i18nPrefix - i18n key prefix (e.g., "filters.category")
+ * @param i18n - i18n instance with .t() method
+ */
+export function toSelectOptionsI18n<T extends string>(
+  keys: readonly T[],
+  labels: Record<T, string>,
+  i18nPrefix: string,
+  i18n: any,
+): { value: T; label: string }[] {
+  return keys.map((value) => ({
+    value,
+    label: i18n.t(`${i18nPrefix}.${value || "empty"}`, {
+      defaultValue: labels[value],
+    }),
+  }));
+}
+
+/**
+ * Translates a tag using i18n.
+ * @param tag - Tag to translate
+ * @param i18nPrefix - i18n key prefix (e.g., "filters.misc_tags")
+ * @param i18n - i18n instance with .t() method
+ */
+export function translateTag(
+  tag: string,
+  i18nPrefix: string,
+  i18n: any,
+): string {
+  return i18n.t(`${i18nPrefix}.${tag}`, { defaultValue: tag });
+}

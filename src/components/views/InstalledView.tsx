@@ -44,6 +44,7 @@ import {
   MISC_TAG_KEYS,
   GENRE_TAG_KEYS,
   type LocalSortKey,
+  translateTag,
 } from "@/lib/filterConfig";
 import { useConfirm } from "@/hooks/useConfirm";
 import { Tooltip } from "@/components/common/Tooltip";
@@ -375,7 +376,9 @@ export default function InstalledView() {
       );
       if (activeInSelection.length > 0) {
         pushToast(
-          "Some wallpapers are currently active — switch first.",
+          t("messages.bulk_delete_with_active", {
+            count: activeInSelection.length,
+          }),
           "error",
         );
         return;
@@ -383,8 +386,8 @@ export default function InstalledView() {
     }
 
     const confirmed = await confirm({
-      title: "Delete Wallpapers",
-      message: `Delete ${selectedIds.size} wallpapers?\n\nThe wallpaper folders will be removed from your Wallpaper Engine library permanently. This action cannot be undone.`,
+      title: t("buttons.delete"),
+      message: t("messages.confirm_bulk_delete", { count: selectedIds.size }),
       confirmLabel: t("buttons.delete") || "Delete",
       cancelLabel: t("buttons.cancel") || "Cancel",
       variant: "danger",
@@ -393,7 +396,10 @@ export default function InstalledView() {
 
     if (!inTauri) {
       setItems((prev) => prev.filter((i) => !selectedIds.has(i.pubfileid)));
-      pushToast(`${selectedIds.size} wallpapers deleted`, "success");
+      pushToast(
+        t("messages.bulk_delete_success", { count: selectedIds.size }),
+        "success",
+      );
       setSelectedIds(new Set());
       setSelectionMode(false);
       return;
@@ -406,7 +412,7 @@ export default function InstalledView() {
     }
 
     pushToast(
-      `${successCount} wallpapers deleted`,
+      t("messages.bulk_delete_success", { count: successCount }),
       successCount > 0 ? "success" : "error",
     );
     await refresh();
@@ -425,12 +431,15 @@ export default function InstalledView() {
     const withPkg = selectedItems.filter((item) => item.has_pkg);
 
     if (withPkg.length === 0) {
-      pushToast("No PKG files available", "warning");
+      pushToast(t("messages.no_pkg_file"), "warning");
       return;
     }
 
     if (!inTauri) {
-      pushToast(`Extracting ${withPkg.length} wallpapers`, "success");
+      pushToast(
+        t("messages.bulk_extract_success", { count: withPkg.length }),
+        "success",
+      );
       return;
     }
 
@@ -447,7 +456,7 @@ export default function InstalledView() {
     }
 
     pushToast(
-      `Extracting ${successCount} wallpapers`,
+      t("messages.bulk_extract_success", { count: successCount }),
       successCount > 0 ? "success" : "error",
     );
     setSelectedIds(new Set());
@@ -733,7 +742,7 @@ export default function InstalledView() {
             options={resolutionOptions}
           />
           {/* Кнопка множественной выборки */}
-          <Tooltip content="Select Multiple" side="bottom">
+          <Tooltip content={t("tooltips.select_multiple")} side="bottom">
             <button
               type="button"
               onClick={() => setSelectionMode((prev) => !prev)}
@@ -741,7 +750,7 @@ export default function InstalledView() {
                 "btn-icon",
                 selectionMode && "bg-primary/10 text-primary",
               )}
-              aria-label="Select multiple wallpapers"
+              aria-label={t("tooltips.select_multiple")}
             >
               <CheckSquare className="h-5 w-5" />
             </button>
@@ -841,6 +850,8 @@ export default function InstalledView() {
                     toggle={toggleTag}
                     isFirst={visibleAuthors.length === 0}
                     isLast={visibleGenreTags.length === 0}
+                    i18n={i18n}
+                    i18nPrefix="filters.misc_tags"
                   />
                 )}
               </motion.div>
@@ -865,6 +876,8 @@ export default function InstalledView() {
                       visibleMiscTags.length === 0
                     }
                     isLast={true}
+                    i18n={i18n}
+                    i18nPrefix="filters.genre_tags"
                   />
                 )}
               </motion.div>
@@ -889,7 +902,7 @@ export default function InstalledView() {
                   className="btn-secondary flex items-center gap-2 text-sm"
                 >
                   <X className="h-4 w-4" />
-                  Clear
+                  {t("labels.clear_selection")}
                 </button>
                 <button
                   type="button"
@@ -897,10 +910,10 @@ export default function InstalledView() {
                   className="btn-secondary flex items-center gap-2 text-sm"
                 >
                   <Check className="h-4 w-4" />
-                  Select All
+                  {t("labels.select_all")}
                 </button>
                 <div className="flex items-center gap-2 rounded-md bg-surface px-3 py-1.5 text-sm font-medium">
-                  {`${selectedIds.size} selected`}
+                  {t("labels.selected_count", { count: selectedIds.size })}
                 </div>
                 {selectedIds.size > 0 && (
                   <>
@@ -911,7 +924,7 @@ export default function InstalledView() {
                         className="btn-primary flex items-center gap-2 text-sm"
                       >
                         <Package className="h-4 w-4" />
-                        Extract
+                        {t("labels.extract_selected")}
                       </button>
                       <button
                         type="button"
@@ -919,7 +932,7 @@ export default function InstalledView() {
                         className="btn-danger flex items-center gap-2 text-sm"
                       >
                         <Trash2 className="h-4 w-4" />
-                        Delete
+                        {t("labels.delete_selected")}
                       </button>
                     </div>
                   </>
@@ -1127,6 +1140,8 @@ function FilterChipsRow({
   toggle,
   isFirst,
   isLast,
+  i18n,
+  i18nPrefix,
 }: {
   title: string;
   keys: readonly string[];
@@ -1135,6 +1150,8 @@ function FilterChipsRow({
   toggle: (k: string) => void;
   isFirst?: boolean;
   isLast?: boolean;
+  i18n?: any;
+  i18nPrefix?: string;
 }) {
   return (
     <div
@@ -1150,6 +1167,8 @@ function FilterChipsRow({
       {keys.map((k) => {
         const isIncluded = active.includes(k);
         const isExcluded = excluded.includes(k);
+        const displayKey =
+          i18n && i18nPrefix ? translateTag(k, i18nPrefix, i18n) : k;
         return (
           <button
             key={k}
@@ -1162,7 +1181,7 @@ function FilterChipsRow({
                 "border-danger/60 bg-danger/10 text-danger line-through",
             )}
           >
-            {k}
+            {displayKey}
           </button>
         );
       })}

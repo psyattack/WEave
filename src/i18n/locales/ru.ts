@@ -49,6 +49,7 @@ export default {
     collapse_sidebar: "Свернуть",
     theme: "Сменить тему",
     init_metadata: "Инициализировать метаданные для всех установленных обоев",
+    select_multiple: "Множественная выборка",
   },
   metadata_init: {
     initializing: "Инициализация метаданных",
@@ -107,6 +108,11 @@ export default {
     collection_info: "Информация о коллекции",
     install: "Установить",
     details: "Подробнее",
+    clear_selection: "Очистить",
+    select_all: "Выбрать все",
+    selected_count: "Выбрано: {{count}}",
+    extract_selected: "Извлечь",
+    delete_selected: "Удалить",
   },
   messages: {
     download_started: "Загрузка началась!",
@@ -135,6 +141,12 @@ export default {
     copied: "Скопировано",
     wallpaper_applied: "Обои применены",
     delete_failed: "Не удалось удалить",
+    confirm_bulk_delete:
+      "Удалить {{count}} обоев?\n\nЭто действие нельзя отменить.",
+    bulk_delete_with_active:
+      "{{count}} из выбранных обоев сейчас используются.\n\nСначала смените обои на другие, затем попробуйте снова.",
+    bulk_extract_success: "Успешно извлечено {{count}} обоев",
+    bulk_delete_success: "Успешно удалено {{count}} обоев",
   },
   dialog: {
     tasks: "Задачи",

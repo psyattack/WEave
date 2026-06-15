@@ -25,7 +25,8 @@ import {
   TIME_PERIODS,
   TYPE_KEYS,
   TYPES,
-  toSelectOptions,
+  toSelectOptionsI18n,
+  translateTag,
 } from "@/lib/filterConfig";
 import { cn } from "@/lib/utils";
 import { DEFAULT_FILTERS, useFiltersStore } from "@/stores/filters";
@@ -33,7 +34,7 @@ import { DEFAULT_FILTERS, useFiltersStore } from "@/stores/filters";
 type TagListKey = "misc_tags" | "genre_tags";
 
 export default function FilterBar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const resetFilters = useFiltersStore((s) => s.resetFilters);
@@ -60,15 +61,60 @@ export default function FilterBar() {
     filters.required_flags.length > 0;
 
   const [searchValue, setSearchValue] = useState(filters.search);
-  const sortOptions = toSelectOptions(SORT_KEYS, SORT_OPTIONS);
-  const timePeriodOptions = toSelectOptions(TIME_PERIOD_KEYS, TIME_PERIODS);
-  const categoryOptions = toSelectOptions(CATEGORY_KEYS, CATEGORIES);
-  const typeOptions = toSelectOptions(TYPE_KEYS, TYPES);
-  const ageRatingOptions = toSelectOptions(AGE_RATING_KEYS, AGE_RATINGS);
-  const resolutionOptions = toSelectOptions(RESOLUTION_KEYS, RESOLUTIONS);
-  const assetTypeOptions = toSelectOptions(ASSET_TYPE_KEYS, ASSET_TYPES);
-  const assetGenreOptions = toSelectOptions(ASSET_GENRE_KEYS, ASSET_GENRES);
-  const scriptTypeOptions = toSelectOptions(SCRIPT_TYPE_KEYS, SCRIPT_TYPES);
+  const sortOptions = toSelectOptionsI18n(
+    SORT_KEYS,
+    SORT_OPTIONS,
+    "filters.sort",
+    i18n,
+  );
+  const timePeriodOptions = toSelectOptionsI18n(
+    TIME_PERIOD_KEYS,
+    TIME_PERIODS,
+    "filters.time_period",
+    i18n,
+  );
+  const categoryOptions = toSelectOptionsI18n(
+    CATEGORY_KEYS,
+    CATEGORIES,
+    "filters.category",
+    i18n,
+  );
+  const typeOptions = toSelectOptionsI18n(
+    TYPE_KEYS,
+    TYPES,
+    "filters.type",
+    i18n,
+  );
+  const ageRatingOptions = toSelectOptionsI18n(
+    AGE_RATING_KEYS,
+    AGE_RATINGS,
+    "filters.age_rating",
+    i18n,
+  );
+  const resolutionOptions = RESOLUTION_KEYS.map((k) => ({
+    value: k,
+    label: i18n.t(`filters.resolution.${(k || "empty").replace(/ /g, "_")}`, {
+      defaultValue: RESOLUTIONS[k] ?? k,
+    }),
+  }));
+  const assetTypeOptions = toSelectOptionsI18n(
+    ASSET_TYPE_KEYS,
+    ASSET_TYPES,
+    "filters.asset_type",
+    i18n,
+  );
+  const assetGenreOptions = ASSET_GENRE_KEYS.map((k) => ({
+    value: k,
+    label: i18n.t(`filters.asset_genre.${(k || "empty").replace(/ /g, "_")}`, {
+      defaultValue: ASSET_GENRES[k] ?? k,
+    }),
+  }));
+  const scriptTypeOptions = SCRIPT_TYPE_KEYS.map((k) => ({
+    value: k,
+    label: i18n.t(`filters.script_type.${(k || "empty").replace(/ /g, "_")}`, {
+      defaultValue: SCRIPT_TYPES[k] ?? k,
+    }),
+  }));
 
   useEffect(() => {
     setSearchValue(filters.search);
@@ -228,6 +274,8 @@ export default function FilterBar() {
                 }}
                 isFirst={true}
                 isLast={false}
+                i18n={i18n}
+                i18nPrefix="filters.misc_tags"
               />
             </motion.div>
             <motion.div
@@ -251,6 +299,8 @@ export default function FilterBar() {
                 }}
                 isFirst={false}
                 isLast={true}
+                i18n={i18n}
+                i18nPrefix="filters.genre_tags"
               />
             </motion.div>
           </>
@@ -269,6 +319,8 @@ function TagBlock({
   onToggleExclude,
   isFirst,
   isLast,
+  i18n,
+  i18nPrefix,
 }: {
   title: string;
   tags: string[];
@@ -278,6 +330,8 @@ function TagBlock({
   onToggleExclude: (tag: string) => void;
   isFirst?: boolean;
   isLast?: boolean;
+  i18n?: any;
+  i18nPrefix?: string;
 }) {
   return (
     <div
@@ -293,6 +347,8 @@ function TagBlock({
       {tags.map((tag) => {
         const isIncluded = included.includes(tag);
         const isExcluded = excluded.includes(tag);
+        const displayTag =
+          i18n && i18nPrefix ? translateTag(tag, i18nPrefix, i18n) : tag;
         return (
           <button
             key={tag}
@@ -314,7 +370,7 @@ function TagBlock({
                 "border-danger/60 bg-danger/10 text-danger line-through",
             )}
           >
-            {tag}
+            {displayTag}
           </button>
         );
       })}
