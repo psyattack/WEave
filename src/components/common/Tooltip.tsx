@@ -9,10 +9,16 @@ interface TooltipProps {
   delay?: number;
 }
 
-export function Tooltip({ children, content, side = "top", delay = 50 }: TooltipProps) {
+export function Tooltip({
+  children,
+  content,
+  side = "top",
+  delay = 50,
+}: TooltipProps) {
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(true);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [arrowOffset, setArrowOffset] = useState<number | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<number>();
@@ -60,12 +66,33 @@ export function Tooltip({ children, content, side = "top", delay = 50 }: Tooltip
           break;
       }
 
+      // Store original centered position for arrow
+      const originalX = x;
+      const originalY = y;
+
       // Keep tooltip within viewport
       const padding = 8;
-      x = Math.max(padding, Math.min(x, window.innerWidth - tooltipRect.width - padding));
-      y = Math.max(padding, Math.min(y, window.innerHeight - tooltipRect.height - padding));
+      x = Math.max(
+        padding,
+        Math.min(x, window.innerWidth - tooltipRect.width - padding),
+      );
+      y = Math.max(
+        padding,
+        Math.min(y, window.innerHeight - tooltipRect.height - padding),
+      );
+
+      // Calculate arrow offset based on position adjustment
+      let offset: number | null = null;
+      if (side === "top" || side === "bottom") {
+        const triggerCenter = triggerRect.left + triggerRect.width / 2;
+        offset = triggerCenter - x;
+      } else if (side === "left" || side === "right") {
+        const triggerCenter = triggerRect.top + triggerRect.height / 2;
+        offset = triggerCenter - y;
+      }
 
       setPosition({ x, y });
+      setArrowOffset(offset);
     }
   }, [visible, side]);
 
@@ -92,72 +119,89 @@ export function Tooltip({ children, content, side = "top", delay = 50 }: Tooltip
         {children}
       </div>
 
-      {mounted && createPortal(
-        <AnimatePresence>
-          {visible && (
-            <motion.div
-              ref={tooltipRef}
-              initial={{ opacity: 0, scale: 0.92, y: side === "top" ? 4 : side === "bottom" ? -4 : 0 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed z-[99999] pointer-events-none"
-              style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-              }}
-            >
-              <div className="relative">
-                <div className="rounded-md bg-surface-raised/95 border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-sm">
-                  {content}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {visible && (
+              <motion.div
+                ref={tooltipRef}
+                initial={{
+                  opacity: 0,
+                  scale: 0.92,
+                  y: side === "top" ? 4 : side === "bottom" ? -4 : 0,
+                }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed z-[99999] pointer-events-none"
+                style={{
+                  left: `${position.x}px`,
+                  top: `${position.y}px`,
+                }}
+              >
+                <div className="relative">
+                  <div className="rounded-md bg-surface-raised/95 border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-sm">
+                    {content}
+                  </div>
+                  <div
+                    className="absolute w-2 h-2 bg-surface-raised/95 border-border-strong"
+                    style={{
+                      ...(side === "top" && {
+                        bottom: "-4px",
+                        left: arrowOffset !== null ? `${arrowOffset}px` : "50%",
+                        transform:
+                          arrowOffset !== null
+                            ? "translateX(-50%) rotate(45deg)"
+                            : "translateX(-50%) rotate(45deg)",
+                        borderRight: "1px solid rgb(var(--border-strong))",
+                        borderBottom: "1px solid rgb(var(--border-strong))",
+                        borderLeft: "none",
+                        borderTop: "none",
+                      }),
+                      ...(side === "bottom" && {
+                        top: "-4px",
+                        left: arrowOffset !== null ? `${arrowOffset}px` : "50%",
+                        transform:
+                          arrowOffset !== null
+                            ? "translateX(-50%) rotate(45deg)"
+                            : "translateX(-50%) rotate(45deg)",
+                        borderLeft: "1px solid rgb(var(--border-strong))",
+                        borderTop: "1px solid rgb(var(--border-strong))",
+                        borderRight: "none",
+                        borderBottom: "none",
+                      }),
+                      ...(side === "left" && {
+                        right: "-4px",
+                        top: arrowOffset !== null ? `${arrowOffset}px` : "50%",
+                        transform:
+                          arrowOffset !== null
+                            ? "translateY(-50%) rotate(45deg)"
+                            : "translateY(-50%) rotate(45deg)",
+                        borderTop: "1px solid rgb(var(--border-strong))",
+                        borderRight: "1px solid rgb(var(--border-strong))",
+                        borderLeft: "none",
+                        borderBottom: "none",
+                      }),
+                      ...(side === "right" && {
+                        left: "-4px",
+                        top: arrowOffset !== null ? `${arrowOffset}px` : "50%",
+                        transform:
+                          arrowOffset !== null
+                            ? "translateY(-50%) rotate(45deg)"
+                            : "translateY(-50%) rotate(45deg)",
+                        borderBottom: "1px solid rgb(var(--border-strong))",
+                        borderLeft: "1px solid rgb(var(--border-strong))",
+                        borderRight: "none",
+                        borderTop: "none",
+                      }),
+                    }}
+                  />
                 </div>
-                <div
-                  className="absolute w-2 h-2 bg-surface-raised/95 border-border-strong"
-                  style={{
-                    ...(side === "top" && {
-                      bottom: "-4px",
-                      left: "50%",
-                      transform: "translateX(-50%) rotate(45deg)",
-                      borderRight: "1px solid rgb(var(--border-strong))",
-                      borderBottom: "1px solid rgb(var(--border-strong))",
-                      borderLeft: "none",
-                      borderTop: "none",
-                    }),
-                    ...(side === "bottom" && {
-                      top: "-4px",
-                      left: "50%",
-                      transform: "translateX(-50%) rotate(45deg)",
-                      borderLeft: "1px solid rgb(var(--border-strong))",
-                      borderTop: "1px solid rgb(var(--border-strong))",
-                      borderRight: "none",
-                      borderBottom: "none",
-                    }),
-                    ...(side === "left" && {
-                      right: "-4px",
-                      top: "50%",
-                      transform: "translateY(-50%) rotate(45deg)",
-                      borderTop: "1px solid rgb(var(--border-strong))",
-                      borderRight: "1px solid rgb(var(--border-strong))",
-                      borderLeft: "none",
-                      borderBottom: "none",
-                    }),
-                    ...(side === "right" && {
-                      left: "-4px",
-                      top: "50%",
-                      transform: "translateY(-50%) rotate(45deg)",
-                      borderBottom: "1px solid rgb(var(--border-strong))",
-                      borderLeft: "1px solid rgb(var(--border-strong))",
-                      borderRight: "none",
-                      borderTop: "none",
-                    }),
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
     </>
   );
 }
