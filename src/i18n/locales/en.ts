@@ -46,10 +46,17 @@ export default {
     sort_desc: "Descending",
     cancel_task: "Cancel task",
     clear_history: "Clear history",
-    collapse_sidebar: "Collapse",
+    collapse_sidebar: "Collapse Bar",
     theme: "Switch theme",
     init_metadata: "Initialize metadata for all installed wallpapers",
     select_multiple: "Select Multiple",
+  },
+  steam_status: {
+    logging_in: "Signing Steam",
+    signed_in: "Signed in",
+    unknown_account: "Account unknown",
+    error: "Sign-in failed",
+    title: "Steam parser",
   },
   metadata_init: {
     initializing: "Initializing Metadata",

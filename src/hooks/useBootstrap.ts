@@ -5,6 +5,7 @@ import { invoke, inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { useAppStore, ThemeCode } from "@/stores/app";
 import { TaskPhase, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
+import { useSteamSessionStore, SteamAccountInfo } from "@/stores/steam-session";
 import i18n from "@/i18n";
 import { maybeMinimize } from "@/lib/window";
 
@@ -64,16 +65,18 @@ export function useBootstrap() {
       if (appearance.accent) patch.accent = appearance.accent as string;
       useAppStore.setState(patch);
 
-      // Fire-and-forget: sign the hidden Steam webview into the dedicated
-      // parser account (weworkshopmanager2) on startup so 18+ content is
-      // visible and the scraper has a valid session. `accountIndex: null`
-      // tells the backend to use the parser credentials rather than the
-      // currently-selected download account. If login requires Steam Guard
-      // or the password is stale this simply returns false — the user can
-      // still log in manually via Settings → Steam web session.
-      void tryInvoke<boolean>("steam_auto_login", {
-        accountIndex: null,
-      });
+      // Sign the hidden Steam webview into the dedicated parser account
+      // (weworkshopmanager2) on startup so 18+ content is visible and the
+      // scraper has a valid session. `accountIndex: null` tells the backend
+      // to use the parser credentials rather than the currently-selected
+      // download account. If login requires Steam Guard or the password is
+      // stale this simply returns false — the user can still log in manually
+      // via Settings → Steam web session.
+      //
+      // We drive the sidebar status section from this lifecycle: spinner
+      // while in flight, then signed-in / unknown-account / error once it
+      // settles. Kept fire-and-forget so it never blocks the rest of boot.
+      void syncSteamSession();
 
       // Restore saved window geometry if the feature is on.
       void invoke("app_restore_window_geometry").catch(() => undefined);
@@ -246,6 +249,55 @@ interface UpdateInfo {
   release_notes: string;
   html_url: string;
   error: string | null;
+}
+
+/**
+ * Run the parser auto-login and reflect every stage into the Steam-session
+ * store so the sidebar status section can render a spinner / signed-in /
+ * unknown-account / error state. Pure UI plumbing — the actual session and
+ * cookie handling stays in the backend.
+ */
+async function syncSteamSession() {
+  const session = useSteamSessionStore.getState();
+  if (!inTauri) {
+    session.setPhase("idle");
+    return;
+  }
+  session.setLoggingIn();
+  try {
+    // `accountIndex: null` → use the dedicated parser credentials. Returns
+    // false when login couldn't be completed (stale password, Steam Guard
+    // prompt, no credentials configured, …).
+    const ok = await tryInvoke<boolean>(
+      "steam_auto_login",
+      { accountIndex: null },
+      false,
+    );
+    if (!ok) {
+      // Auto-login itself failed; but a session from a previous run may have
+      // been restored from disk, so double-check before flagging an error.
+      const loggedIn = await tryInvoke<boolean>(
+        "steam_is_logged_in",
+        undefined,
+        false,
+      );
+      if (!loggedIn) {
+        session.setError();
+        return;
+      }
+    }
+    // Ask Steam itself who we're signed in as. A null result means the
+    // session is attached but Steam didn't resolve a concrete account — the
+    // store maps that to the "unknown" state.
+    const info = await tryInvoke<SteamAccountInfo | null>(
+      "steam_current_account",
+      undefined,
+      null,
+    );
+    session.setLoggedIn(info ?? null);
+  } catch {
+    session.setError();
+  }
 }
 
 async function maybeCheckForUpdates() {

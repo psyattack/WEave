@@ -1,16 +1,25 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
+import type { TranslationKey } from "@/i18n/types";
 
 import {
+  AlertCircle,
+  CheckCircle2,
   FolderHeart,
   Globe,
+  HelpCircle,
   Layers,
+  Loader2,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app";
+import {
+  useSteamSessionStore,
+  SteamSessionPhase,
+} from "@/stores/steam-session";
 import AppIcon from "@/assets/icon.svg?react";
 
 export type NavKey = "workshop" | "collections" | "installed";
@@ -91,6 +100,8 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
       </nav>
 
       <div className="mt-auto flex flex-col gap-2">
+        <SteamSessionStatus collapsed={collapsed} />
+
         <button
           type="button"
           onClick={toggle}
@@ -108,5 +119,107 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
         </button>
       </div>
     </aside>
+  );
+}
+
+interface StatusVisuals {
+  Icon: typeof Globe;
+  spin: boolean;
+  /** Tailwind text-color class for the icon. */
+  tone: string;
+  /** Tailwind background/border accent for the dot in collapsed mode. */
+  dotTone: string;
+  labelKey: TranslationKey;
+}
+
+function visualsFor(phase: SteamSessionPhase): StatusVisuals | null {
+  switch (phase) {
+    case "logging-in":
+      return {
+        Icon: Loader2,
+        spin: true,
+        tone: "text-primary",
+        dotTone: "bg-primary",
+        labelKey: "steam_status.logging_in",
+      };
+    case "logged-in":
+      return {
+        Icon: CheckCircle2,
+        spin: false,
+        tone: "text-success",
+        dotTone: "bg-success",
+        labelKey: "steam_status.signed_in",
+      };
+    case "unknown":
+      return {
+        Icon: HelpCircle,
+        spin: false,
+        tone: "text-warning",
+        dotTone: "bg-warning",
+        labelKey: "steam_status.unknown_account",
+      };
+    case "error":
+      return {
+        Icon: AlertCircle,
+        spin: false,
+        tone: "text-danger",
+        dotTone: "bg-danger",
+        labelKey: "steam_status.error",
+      };
+    // `idle` (nothing happened yet / non-Tauri) renders nothing.
+    default:
+      return null;
+  }
+}
+
+/**
+ * Compact Steam parser login status shown just above the Collapse button.
+ * When the sidebar is collapsed it shrinks to an icon-only badge (matching
+ * every other left-menu item), exposing the textual status through `title`.
+ */
+function SteamSessionStatus({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation();
+  const phase = useSteamSessionStore((s) => s.phase);
+  const account = useSteamSessionStore((s) => s.account);
+
+  const visuals = visualsFor(phase);
+  if (!visuals) return null;
+
+  const { Icon, spin, tone, dotTone, labelKey } = visuals;
+  const label = t(labelKey);
+  const accountName =
+    account?.persona_name?.trim() || account?.account_name?.trim() || "";
+  // For the signed-in state we prefer to show who we're signed in as.
+  const text = phase === "logged-in" && accountName ? accountName : label;
+  const tooltip =
+    phase === "logged-in" && accountName
+      ? `${label} \u00b7 ${accountName}`
+      : label;
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      title={`${t("steam_status.title")}: ${tooltip}`}
+      className={cn(
+        "flex items-center gap-2 rounded-md border border-border bg-surface-sunken px-2 py-1.5 text-[11px]",
+        collapsed ? "relative justify-center" : "justify-start",
+      )}
+    >
+      <Icon className={cn("h-4 w-4 shrink-0", tone, spin && "animate-spin")} />
+      {collapsed ? (
+        // Tiny state dot in the corner reinforces the phase when only the
+        // icon is visible (and keeps error/unknown legible at a glance).
+        <span
+          className={cn(
+            "absolute right-1 top-1 h-1.5 w-1.5 rounded-full",
+            dotTone,
+            spin && "animate-pulse",
+          )}
+        />
+      ) : (
+        <span className={cn("truncate", tone)}>{text}</span>
+      )}
+    </div>
   );
 }

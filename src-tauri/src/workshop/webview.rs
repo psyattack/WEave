@@ -50,9 +50,12 @@ impl SteamWebview {
     }
 
     /// Create (if missing) and return the hidden Steam webview. Idempotent.
-    fn ensure_window(&self) -> Result<(), tauri::Error> {
+    /// Returns `true` when a new window was created on this call, `false`
+    /// when it already existed — callers use this to know whether they
+    /// should give WebView2 a moment to restore the persisted cookie jar.
+    fn ensure_window(&self) -> Result<bool, tauri::Error> {
         if self.app.get_webview_window(LABEL).is_some() {
-            return Ok(());
+            return Ok(false);
         }
         let url = WebviewUrl::External(STEAM_LOGIN_URL.parse().expect("valid url"));
         WebviewWindowBuilder::new(&self.app, LABEL, url)
@@ -64,7 +67,7 @@ impl SteamWebview {
             .inner_size(1000.0, 720.0)
             .resizable(true)
             .build()?;
-        Ok(())
+        Ok(true)
     }
 
     /// Show the webview window so the user can interact with Steam's login
@@ -130,16 +133,33 @@ impl SteamWebview {
 
     /// True if the webview believes it's logged in (i.e. has a
     /// `steamLoginSecure` cookie).
+    ///
+    /// Ensures the hidden webview window exists before reading cookies.
+    /// Without this, calling `is_logged_in` before the window has been
+    /// created (e.g. opening Settings shortly after startup, before the
+    /// background `init_cookies` thread has instantiated the window) always
+    /// returned `false` even though a valid session was persisted on disk by
+    /// WebView2 — which is why the status flipped to "Signed in" only after
+    /// the user pressed "Open Parser" and incidentally created the window.
     pub async fn is_logged_in(&self) -> bool {
-        let Some(w) = self.app.get_webview_window(LABEL) else {
-            return false;
+        let _g = self.lock.lock().await;
+        let created = match self.ensure_window() {
+            Ok(created) => created,
+            Err(_) => return false,
         };
-        let Ok(cookies) = w.cookies() else {
-            return false;
-        };
-        cookies
-            .iter()
-            .any(|c| c.name() == "steamLoginSecure" && !c.value().is_empty())
+        // When we just created the window, WebView2 needs a brief moment to
+        // restore the persisted cookie jar from disk before they're readable.
+        // Poll a few times so a freshly-created window doesn't report a stale
+        // "logged out" before the session cookie has been rehydrated.
+        if created {
+            for _ in 0..20 {
+                if self.is_logged_in_inner() {
+                    return true;
+                }
+                sleep(Duration::from_millis(150)).await;
+            }
+        }
+        self.is_logged_in_inner()
     }
 
     /// Drive the hidden webview through Steam's login form using the given
