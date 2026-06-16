@@ -46,10 +46,17 @@ export default {
     sort_desc: "По убыванию",
     cancel_task: "Отменить задачу",
     clear_history: "Очистить историю",
-    collapse_sidebar: "Свернуть",
+    collapse_sidebar: "Свернуть Бар",
     theme: "Сменить тему",
     init_metadata: "Инициализировать метаданные для всех установленных обоев",
     select_multiple: "Множественная выборка",
+  },
+  steam_status: {
+    logging_in: "Вход в Steam…",
+    signed_in: "Вход выполнен",
+    unknown_account: "Аккаунт неизвестен",
+    error: "Ошибка входа",
+    title: "Парсер Steam",
   },
   metadata_init: {
     initializing: "Инициализация метаданных",
