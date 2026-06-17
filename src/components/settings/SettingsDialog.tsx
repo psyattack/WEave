@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, AlertTriangle } from "lucide-react";
 
 import Dialog from "@/components/common/Dialog";
 import Tabs from "@/components/common/Tabs";
@@ -583,6 +583,12 @@ function CustomAccountsSection() {
         {t("settings.custom_accounts_description") ||
           "Encrypted on disk with a machine-bound key (PBKDF2 + AES-256-GCM)."}
       </p>
+      <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+        <AlertTriangle className="h-4 w-4 shrink-0" />
+        <span>
+          {t("settings.steam_guard_warning") || "Steam Guard must be disabled"}
+        </span>
+      </div>
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex-1 min-w-[160px]">
           <label className="block text-xs text-subtle mb-1">

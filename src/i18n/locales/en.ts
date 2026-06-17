@@ -214,6 +214,7 @@ export default {
     account_exists: "This account already exists",
     confirm_remove_account: "Remove this account?",
     initialize_now: "Initialize Now",
+    steam_guard_warning: "Steam Guard must be disabled",
   },
   info: {
     description:

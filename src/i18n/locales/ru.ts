@@ -215,6 +215,7 @@ export default {
     account_exists: "Аккаунт уже существует",
     confirm_remove_account: "Удалить этот аккаунт?",
     initialize_now: "Инициализировать сейчас",
+    steam_guard_warning: "Steam Guard должен быть отключен",
   },
   info: {
     description:
