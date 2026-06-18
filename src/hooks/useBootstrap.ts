@@ -6,7 +6,7 @@ import { useAppStore, ThemeCode } from "@/stores/app";
 import { TaskPhase, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
 import { useSteamSessionStore, SteamAccountInfo } from "@/stores/steam-session";
-import i18n from "@/i18n";
+import i18n, { SupportedLanguage } from "@/i18n";
 import { maybeMinimize } from "@/lib/window";
 
 export function useBootstrap() {
@@ -37,13 +37,22 @@ export function useBootstrap() {
         { index: number; username: string; is_custom: boolean }[]
       >("accounts_list", undefined, []);
 
-      // Set language from config
-      const language = getConfigValue<string>(
+      // Set language from config — auto-detect on first launch
+      const savedLanguage = getConfigValue<string | null>(
         config,
         ["general", "appearance", "language"],
-        "en",
+        null,
       );
+      const language = savedLanguage ?? detectSystemLanguage();
       void i18n.changeLanguage(language);
+
+      // Persist auto-detected language to backend config on first launch
+      if (!savedLanguage && inTauri) {
+        void invoke("config_set", {
+          path: "settings.general.appearance.language",
+          value: language,
+        }).catch(() => undefined);
+      }
 
       const appearance = getConfigValue<Record<string, unknown>>(
         config,
@@ -212,6 +221,22 @@ export function useBootstrap() {
       ]);
     })();
   }, []);
+}
+
+/**
+ * Auto-detect the best matching language from the system/browser locale.
+ * Falls back to "en" when no supported language matches.
+ */
+function detectSystemLanguage(): SupportedLanguage {
+  const browserLang =
+    navigator.language ?? navigator.languages?.[0] ?? undefined;
+  if (!browserLang) return "en";
+  // navigator.language is typically "ru", "en-US", "en-GB", etc.
+  const code = browserLang.split(/[-_]/)[0]?.toLowerCase();
+  const supported: SupportedLanguage[] = ["en", "ru"];
+  return supported.includes(code as SupportedLanguage)
+    ? (code as SupportedLanguage)
+    : "en";
 }
 
 function getConfigValue<T>(

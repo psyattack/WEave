@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { Image as ImageIcon } from "lucide-react";
 
@@ -63,19 +62,15 @@ export default function PreviewImage({
   }
 
   return (
-    <motion.img
+    <img
       src={resolved}
       alt={alt ?? ""}
-      loading="lazy"
       draggable={false}
       onError={() => {
         setFailed(true);
       }}
-      initial={{ opacity: 0, scale: 1.02 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.25 }}
       className={cn(
-        "h-full w-full",
+        "h-full w-full animate-fade-in",
         fit === "cover" ? "object-cover" : "object-contain",
         className,
       )}
