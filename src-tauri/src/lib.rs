@@ -7,14 +7,15 @@ pub mod app_state;
 pub mod commands;
 pub mod config;
 pub mod constants;
-pub mod dotnet_runtime;
 pub mod download;
 pub mod errors;
 pub mod extract;
 pub mod i18n;
 pub mod logger;
 pub mod metadata;
+pub mod plugin_manager;
 pub mod plugin_paths;
+pub mod runtime;
 pub mod translator;
 pub mod updater;
 pub mod we_client;
@@ -129,6 +130,7 @@ pub fn run() {
             commands::steam::steam_auto_login,
             commands::dotnet::dotnet_get_root,
             commands::dotnet::dotnet_init,
+            commands::plugins::plugins_init,
             commands::logging::log_frontend_message,
         ]);
 

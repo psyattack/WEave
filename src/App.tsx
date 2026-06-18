@@ -15,7 +15,7 @@ import UpdateDialog from "@/components/dialogs/UpdateDialog";
 import LegalDialog from "@/components/dialogs/LegalDialog";
 import TasksDrawer from "@/components/tasks/TasksDrawer";
 import ToastStack from "@/components/common/ToastStack";
-import DotnetProgressOverlay from "@/components/common/DotnetProgressOverlay";
+import SetupOverlay from "@/components/common/SetupOverlay";
 import MetadataInitDialog from "@/components/common/MetadataInitDialog";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useApplyTheme } from "@/hooks/useTheme";
@@ -140,7 +140,7 @@ export default function App() {
         onAccept={() => setLegalAccepted(true)}
       />
       <ToastStack />
-      <DotnetProgressOverlay />
+      <SetupOverlay />
       <MetadataInitDialog />
     </div>
   );

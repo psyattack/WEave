@@ -1,8 +1,9 @@
 //! .NET Runtime management for DepotDownloaderMod and RePKG plugins.
 //!
 //! Checks if .NET 8/9/10 is installed in the system. If not found, downloads
-//! the portable .NET 9.0.17 runtime, extracts it to `plugins/dotnet/`, and
-//! returns the path to set as DOTNET_ROOT environment variable.
+//! the portable .NET 9.0.17 runtime, extracts it to the shared app data
+//! directory (`dotnet/`), and returns the path to set as DOTNET_ROOT
+//! environment variable.
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -34,7 +35,14 @@ pub enum DotnetPhase {
 /// Returns the path to use for DOTNET_ROOT. If .NET 8/9/10 is installed in
 /// the system, returns None (use system runtime). Otherwise, ensures the
 /// portable runtime is downloaded and returns its path.
-pub async fn ensure_dotnet_runtime(app: &AppHandle) -> anyhow::Result<Option<PathBuf>> {
+///
+/// # Arguments
+/// * `app` - Tauri app handle for emitting events
+/// * `app_data_dir` - The shared app data directory (e.g., %LOCALAPPDATA%\com.weave.app)
+pub async fn ensure_dotnet_runtime(
+    app: &AppHandle,
+    app_data_dir: &std::path::Path,
+) -> anyhow::Result<Option<PathBuf>> {
     // Check if .NET 8, 9, or 10 is installed in the system
     if is_dotnet_installed()? {
         log::info!(".NET Runtime 8/9/10 found in system, using system installation");
@@ -44,9 +52,8 @@ pub async fn ensure_dotnet_runtime(app: &AppHandle) -> anyhow::Result<Option<Pat
 
     log::info!(".NET Runtime 8/9/10 not found in system, will use portable version");
 
-    // Get the plugins directory
-    let plugins_dir = find_plugins_directory()?;
-    let dotnet_dir = plugins_dir.join("dotnet");
+    // Get the dotnet directory inside the shared app data directory
+    let dotnet_dir = app_data_dir.join("dotnet");
 
     // Check if we already have the portable runtime
     if is_portable_runtime_valid(&dotnet_dir) {
@@ -72,7 +79,7 @@ pub async fn ensure_dotnet_runtime(app: &AppHandle) -> anyhow::Result<Option<Pat
         DOTNET_RUNTIME_VERSION
     );
 
-    let result = download_and_extract_runtime(&plugins_dir, app).await;
+    let result = download_and_extract_runtime(app_data_dir, app).await;
 
     match result {
         Ok(_) => {
@@ -148,44 +155,16 @@ fn is_portable_runtime_valid(dotnet_dir: &std::path::Path) -> bool {
     dotnet_exe.exists()
 }
 
-/// Finds the plugins directory by walking up from the current executable.
-fn find_plugins_directory() -> anyhow::Result<PathBuf> {
-    let exe = std::env::current_exe()?;
-    let mut cur = exe.as_path();
-
-    // Walk up at most 6 levels looking for a `plugins/` directory
-    for _ in 0..6 {
-        if let Some(parent) = cur.parent() {
-            let plugins_candidate = parent.join("plugins");
-            if plugins_candidate.exists() || parent.join("DepotDownloaderMod").exists() {
-                return Ok(plugins_candidate);
-            }
-            cur = parent;
-        } else {
-            break;
-        }
-    }
-
-    // Fallback: create plugins directory next to executable
-    if let Some(parent) = exe.parent() {
-        let plugins = parent.join("plugins");
-        std::fs::create_dir_all(&plugins)?;
-        return Ok(plugins);
-    }
-
-    anyhow::bail!("Could not determine plugins directory")
-}
-
-/// Downloads the .NET Runtime ZIP and extracts it to `plugins/dotnet/`.
+/// Downloads the .NET Runtime ZIP and extracts it to the shared app data directory.
 async fn download_and_extract_runtime(
-    plugins_dir: &std::path::Path,
+    app_data_dir: &std::path::Path,
     app: &AppHandle,
 ) -> anyhow::Result<()> {
-    let zip_path = plugins_dir.join("dotnet-runtime.zip");
-    let dotnet_dir = plugins_dir.join("dotnet");
+    let zip_path = app_data_dir.join("dotnet-runtime.zip");
+    let dotnet_dir = app_data_dir.join("dotnet");
 
-    // Create plugins directory if it doesn't exist
-    std::fs::create_dir_all(plugins_dir)?;
+    // Create app data directory if it doesn't exist
+    std::fs::create_dir_all(app_data_dir)?;
 
     // Download the runtime
     emit_status(

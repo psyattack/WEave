@@ -269,7 +269,7 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                   </p>
                   <p className="text-xs text-muted">
                     {t("settings.download_account_description") ||
-                      "Pick a Steam account used for downloading via DepotDownloaderMod. Custom credentials can be added below."}
+                      "Pick a Steam account used for downloading. Custom credentials can be added below."}
                   </p>
                   <div className="divide-y divide-border rounded-md border border-border bg-surface-sunken">
                     {state.accounts.map((a) => (
@@ -581,7 +581,7 @@ function CustomAccountsSection() {
       </p>
       <p className="text-xs text-muted">
         {t("settings.custom_accounts_description") ||
-          "Encrypted on disk with a machine-bound key (PBKDF2 + AES-256-GCM)."}
+          "Encrypted on disk with a machine-bound key."}
       </p>
       <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
         <AlertTriangle className="h-4 w-4 shrink-0" />
