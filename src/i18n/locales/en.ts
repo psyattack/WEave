@@ -160,7 +160,7 @@ export default {
   dialog: {
     tasks: "Tasks",
     about: "About",
-    legal: "Legal",
+    legal: "Terms & Legal",
   },
   settings: {
     general: "General",
@@ -203,8 +203,7 @@ export default {
     parser_log: "Parser Logs",
     steam_account_unknown: "Unknown",
     custom_accounts: "Custom accounts",
-    custom_accounts_description:
-      "Encrypted on disk with a machine-bound key.",
+    custom_accounts_description: "Encrypted on disk with a machine-bound key.",
     username: "Username",
     password: "Password",
     add_account_button: "Add",
@@ -234,50 +233,24 @@ export default {
     clear: "Clear",
   },
   legal: {
-    main_tab: "Main",
     disclaimer_tab: "Disclaimer",
     license_tab: "License",
     opensource_title: "Open Source Software",
     opensource_message:
-      "WEave is free and open-source software distributed under the MIT License.",
-    scam_warning_title: "Beware of Scams",
-    scam_warning_message:
-      "WEave is and always will be completely free. Anyone selling this software or asking for payment is scamming you.",
-    summary_title: "Summary",
-    summary_point_1: "WEave is not affiliated with Valve or Wallpaper Engine",
-    summary_point_2: "Use at your own risk",
-    summary_point_3: "No warranty provided",
-    summary_point_4: "Requires Wallpaper Engine to apply wallpapers",
-    summary_point_5: "You must own Wallpaper Engine on Steam",
-    third_party_notice:
-      "This software uses third-party libraries. See the License tab for details.",
-    disclaimer_title: "Disclaimer",
+      "WEave is free and open-source software that has always been and will remain free.",
     no_affiliation_title: "No Affiliation",
     no_affiliation_text:
       "WEave is an independent project and is not affiliated with, endorsed by, or sponsored by Valve Corporation or Kristjan Skutta (creator of Wallpaper Engine).",
-    no_warranty_title: "No Warranty",
-    no_warranty_text:
-      'This software is provided "as is" without warranty of any kind, either expressed or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose.',
     use_at_risk_title: "Use at Your Own Risk",
     use_at_risk_text:
-      "You use this software at your own risk. The developers are not responsible for any damage, data loss, or other issues that may arise from using this software.",
-    not_responsible_title: "Not Responsible For",
-    not_responsible_point_1: "Damage to your system or files",
-    not_responsible_point_2: "Steam account issues or bans",
-    not_responsible_point_3:
-      "Copyright violations by workshop content creators",
-    not_responsible_point_4:
-      "Content downloaded from Steam Workshop (quality, appropriateness, etc.)",
-    not_responsible_point_5: "Any third-party software or services used",
-    age_requirement_title: "Age Requirement",
-    age_requirement_text:
-      "You must be 13 years or older to use Steam. WEave respects Steam's age requirements.",
-    compliance_title: "Compliance with Steam",
-    compliance_text:
-      "Users are responsible for complying with Steam's Terms of Service and Subscriber Agreement when using this software to interact with Steam Workshop.",
+      'This software is provided "as is" without warranty of any kind. The developers are not responsible for any damage, data loss, or other issues that may arise from using this software.',
+    steam_responsibility_title: "Steam Account Responsibility",
+    steam_responsibility_text:
+      "Users are solely responsible for complying with Steam's Terms of Service and Subscriber Agreement. WEave does not guarantee against Steam account restrictions or bans resulting from its use.",
+    workshop_content_title: "Third-party Content",
+    workshop_content_text:
+      "WEave does not control, endorse, or assume responsibility for any content downloaded from the Steam Workshop. Users are solely responsible for the content they download and use.",
     dependencies_title: "Dependencies",
-    dependencies_text:
-      "WEave requires Wallpaper Engine to be installed on your system to apply wallpapers. You must own a legitimate copy of Wallpaper Engine on Steam.",
     accept_terms: "I understand and accept these terms",
     accept_explanation:
       "By using WEave, you acknowledge that you have read and understood this disclaimer.",

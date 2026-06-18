@@ -62,9 +62,6 @@ pub fn parse_browse(html: &str, current_page: u32) -> WorkshopPage {
         if it.title.is_empty() {
             it.title = format!("Wallpaper {}", it.pubfileid);
         }
-        if !it.preview_url.is_empty() {
-            it.preview_url = upscale_preview(&it.preview_url);
-        }
     }
 
     let (total_pages, total_items) = parse_pagination(html, &items);
@@ -491,14 +488,6 @@ fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
 fn extract_pubfileid(href: &str) -> Option<String> {
     let re = Regex::new(r#"[?&]id=(\d+)"#).unwrap();
     re.captures(href).map(|c| c[1].to_string())
-}
-
-fn upscale_preview(src: &str) -> String {
-    // Steam serves thumbs at imw=288&imh=288. Replace with a larger size when
-    // hinted via the `ima=fit` letterbox template so the UI has crisp
-    // previews.
-    src.replace("imw=288", "imw=512")
-        .replace("imh=288", "imh=512")
 }
 
 fn inner_text(el: ElementRef<'_>) -> String {
@@ -1035,7 +1024,7 @@ mod tests {
         assert_eq!(page.items.len(), 2);
         assert_eq!(page.items[0].pubfileid, "111");
         assert_eq!(page.items[0].title, "Title A");
-        assert!(page.items[0].preview_url.contains("imw=512"));
+        assert!(page.items[0].preview_url.contains("imw=288"));
         assert_eq!(page.items[0].author, "Author One");
         assert_eq!(page.items[1].pubfileid, "222");
         assert_eq!(page.items[1].author, "Author Two");

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
-import { AlertTriangle, BookOpen, Shield, FileText } from "lucide-react";
+import { AlertTriangle, BookOpen, FileText } from "lucide-react";
 
 import Dialog from "@/components/common/Dialog";
 import Markdown from "@/components/common/Markdown";
@@ -29,8 +29,8 @@ export default function LegalDialog({
   onAccept,
 }: Props) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"main" | "license" | "disclaimer">(
-    "main",
+  const [activeTab, setActiveTab] = useState<"disclaimer" | "license">(
+    "disclaimer",
   );
   const [accepted, setAccepted] = useState(false);
 
@@ -85,17 +85,6 @@ export default function LegalDialog({
         <div className="flex gap-1 border-b border-border">
           <button
             className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm transition-colors ${
-              activeTab === "main"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted hover:text-foreground"
-            }`}
-            onClick={() => setActiveTab("main")}
-          >
-            <Shield className="h-4 w-4" />
-            {t("legal.main_tab")}
-          </button>
-          <button
-            className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm transition-colors ${
               activeTab === "disclaimer"
                 ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-foreground"
@@ -120,7 +109,23 @@ export default function LegalDialog({
 
         {/* Content Area */}
         <div className="min-h-[400px] max-h-[500px] overflow-auto rounded-md border border-border bg-surface-sunken p-4">
-          {activeTab === "main" && (
+          {activeTab === "disclaimer" && (
+            <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
+              <h3>{t("legal.no_affiliation_title")}</h3>
+              <p className="text-sm">{t("legal.no_affiliation_text")}</p>
+
+              <h3>{t("legal.use_at_risk_title")}</h3>
+              <p className="text-sm">{t("legal.use_at_risk_text")}</p>
+
+              <h3>{t("legal.steam_responsibility_title")}</h3>
+              <p className="text-sm">{t("legal.steam_responsibility_text")}</p>
+
+              <h3>{t("legal.workshop_content_title")}</h3>
+              <p className="text-sm">{t("legal.workshop_content_text")}</p>
+            </div>
+          )}
+
+          {activeTab === "license" && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <div className="mb-6 flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-4">
                 <BookOpen className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
@@ -134,69 +139,9 @@ export default function LegalDialog({
                 </div>
               </div>
 
-              <div className="mb-6 flex items-start gap-3 rounded-md border border-danger/30 bg-danger/5 p-4">
-                <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-danger" />
-                <div>
-                  <h3 className="mb-1 mt-0 text-base font-semibold text-danger">
-                    {t("legal.scam_warning_title")}
-                  </h3>
-                  <p className="mb-0 text-sm text-foreground">
-                    {t("legal.scam_warning_message")}
-                  </p>
-                </div>
-              </div>
-
-              <h3>{t("legal.summary_title")}</h3>
-              <ul className="space-y-1 text-sm">
-                <li>{t("legal.summary_point_1")}</li>
-                <li>{t("legal.summary_point_2")}</li>
-                <li>{t("legal.summary_point_3")}</li>
-                <li>{t("legal.summary_point_4")}</li>
-                <li>{t("legal.summary_point_5")}</li>
-              </ul>
-
-              <p className="mt-4 text-xs text-muted">
-                {t("legal.third_party_notice")}
-              </p>
-            </div>
-          )}
-
-          {activeTab === "disclaimer" && (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <h2>{t("legal.disclaimer_title")}</h2>
-
-              <h3>{t("legal.no_affiliation_title")}</h3>
-              <p className="text-sm">{t("legal.no_affiliation_text")}</p>
-
-              <h3>{t("legal.no_warranty_title")}</h3>
-              <p className="text-sm">{t("legal.no_warranty_text")}</p>
-
-              <h3>{t("legal.use_at_risk_title")}</h3>
-              <p className="text-sm">{t("legal.use_at_risk_text")}</p>
-
-              <h3>{t("legal.not_responsible_title")}</h3>
-              <ul className="space-y-1 text-sm">
-                <li>{t("legal.not_responsible_point_1")}</li>
-                <li>{t("legal.not_responsible_point_2")}</li>
-                <li>{t("legal.not_responsible_point_3")}</li>
-                <li>{t("legal.not_responsible_point_4")}</li>
-                <li>{t("legal.not_responsible_point_5")}</li>
-              </ul>
-
-              <h3>{t("legal.age_requirement_title")}</h3>
-              <p className="text-sm">{t("legal.age_requirement_text")}</p>
-
-              <h3>{t("legal.compliance_title")}</h3>
-              <p className="text-sm">{t("legal.compliance_text")}</p>
-            </div>
-          )}
-
-          {activeTab === "license" && (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
               <Markdown source={MIT_LICENSE} />
 
               <h3 className="mt-6">{t("legal.dependencies_title")}</h3>
-              <p className="text-sm">{t("legal.dependencies_text")}</p>
 
               <div className="mt-4 grid gap-2 text-xs">
                 <div className="rounded border border-border bg-surface p-2">
@@ -217,9 +162,7 @@ export default function LegalDialog({
         </div>
 
         {requireAccept && (
-          <p className="text-xs text-muted">
-            {t("legal.accept_explanation")}
-          </p>
+          <p className="text-xs text-muted">{t("legal.accept_explanation")}</p>
         )}
       </div>
     </Dialog>

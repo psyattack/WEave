@@ -171,7 +171,6 @@ fn default_settings() -> Value {
         },
         "general": {
             "appearance": {
-                "language": "en",
                 "theme": "dark",
                 "accent": "indigo"
             },
