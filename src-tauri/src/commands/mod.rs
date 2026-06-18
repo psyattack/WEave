@@ -8,6 +8,7 @@ pub mod i18n;
 pub mod image;
 pub mod logging;
 pub mod metadata;
+pub mod plugins;
 pub mod steam;
 pub mod translator;
 pub mod updater;

@@ -90,15 +90,15 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 #### Prerequisites
 - **Windows 10/11** (x64)
 - **Wallpaper Engine** (installed)
-- **.NET Runtime** (auto-downloaded if missing)
+- **.NET Runtime 8/9/10** (auto-downloaded if missing)
 
 #### Steps
 
-1. Download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave-tauri/releases)
-2. Extract the archive
-3. Run `weave.exe`
+1. Download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave/releases)
+2. Extract the archive to any convenient location on your disk
+3. Run `WEave.exe`
 
-> **Note:** WEave will auto-download a portable .NET 9.0.17 runtime if no system .NET 8/9/10 is detected.
+> **Note:** When you first log in, WEave will automatically download additional tools and the portable version of .NET Runtime 9.0.17 if .NET Runtime/SDK 8/9/10 is not detected on your system.
 
 ---
 
@@ -180,8 +180,10 @@ cd src-tauri && cargo test  # Backend tests
 - **Tokio** (Async runtime)
 - **Reqwest** (HTTP client)
 - **Scraper** (HTML parsing)
+- **zip + unrar** (Archive extraction)
 - **AES-GCM + PBKDF2** (Encryption)
 - **Serde** (Serialization)
+- **dirs** (Platform directories)
 - **Tracing** (Logging)
 
 </td>
@@ -199,7 +201,7 @@ cd src-tauri && cargo test  # Backend tests
 WEave/
 ├── src/                              # React frontend
 │   ├── components/
-│   │   ├── common/                   # Reusable UI (Dialog, Drawer, Tooltip, etc.)
+│   │   ├── common/                   # Reusable UI (Dialog, Drawer, SetupOverlay, etc.)
 │   │   ├── dialogs/                  # Modal dialogs (Settings, Legal, Update, etc.)
 │   │   ├── installed/                # Installed wallpapers components
 │   │   ├── layout/                   # TitleBar, Sidebar, TopBar
@@ -207,7 +209,7 @@ WEave/
 │   │   ├── tasks/                    # Download/extract task drawer
 │   │   ├── views/                    # Main views (Workshop, Collections, Installed)
 │   │   └── workshop/                 # Workshop components (Cards, Filters, Details)
-│   ├── stores/                       # Zustand state stores
+│   ├── stores/                       # Zustand state stores (dotnet, plugins, etc.)
 │   ├── hooks/                        # React hooks (useBootstrap, useTheme, etc.)
 │   ├── lib/                          # Utilities (errors, logger, helpers)
 │   ├── i18n/                         # Type-safe i18n system
@@ -222,6 +224,7 @@ WEave/
 │   │   │   ├── extract.rs            # Package extraction
 │   │   │   ├── steam.rs              # Steam login/cookies
 │   │   │   ├── dotnet.rs             # .NET runtime management
+│   │   │   ├── plugins.rs            # Plugin initialization
 │   │   │   ├── logging.rs            # Logging integration
 │   │   │   └── ...
 │   │   ├── workshop/                 # Steam Workshop parser
@@ -229,7 +232,9 @@ WEave/
 │   │   ├── config/                   # Configuration management
 │   │   ├── download/                 # Download manager (DepotDownloader wrapper)
 │   │   ├── extract/                  # Extract manager (RePKG wrapper)
-│   │   ├── dotnet_runtime/           # .NET runtime downloader
+│   │   ├── runtime.rs                # .NET runtime downloader
+│   │   ├── plugin_manager.rs         # Plugin auto-downloader (GitHub releases)
+│   │   ├── plugin_paths.rs           # Plugin binary path resolution
 │   │   ├── we_client/                # Wallpaper Engine client
 │   │   ├── metadata/                 # Metadata batch initializer
 │   │   ├── logger.rs                 # Rotating file logger
@@ -237,9 +242,9 @@ WEave/
 │   │   └── ...
 │   └── locales/                      # Backend translations
 │
-└── plugins/                          # External tools (gitignored)
-    ├── DepotDownloaderMod/           # Steam depot downloader (.NET)
-    ├── RePKG/                        # WE package extractor
+└── plugins/                          # External tools (auto-downloaded)
+    ├── depot_downloader_mod/         # Steam depot downloader (.NET)
+    ├── repkg/                        # WE package extractor
     └── dotnet/                       # Portable .NET runtime (auto-downloaded)
 ```
 
@@ -249,15 +254,17 @@ WEave/
 
 ## 📝 Configuration
 
-Configuration files are stored in:  
+Configuration files and plugins are stored in:  
 **`%LOCALAPPDATA%\com.weave.app\`**
 
-| File | Description |
+| File / Directory | Description |
 |------|-------------|
 | `settings.json` | App settings (theme, language, WE directory, etc.) |
 | `metadata.json` | Cached wallpaper metadata |
 | `user_accounts.enc` | Encrypted Steam accounts |
 | `SteamWebView/` | WebView2 data (persisted cookies) |
+| `plugins/` | Auto-downloaded plugins (DepotDownloaderMod, RePKG) |
+| `dotnet/` | Portable .NET Runtime 9.0.17 (auto-downloaded if needed) |
 | `weave.log` | Rotating log file (10MB, 5 files retention) |
 
 ---

@@ -12,6 +12,7 @@ use crate::config::{MetadataService, SettingsService};
 use crate::download::DownloadManager;
 use crate::extract::ExtractManager;
 use crate::i18n::I18nService;
+use crate::plugin_manager;
 use crate::we_client::WallpaperEngineClient;
 use crate::workshop::webview::SteamWebview;
 use crate::workshop::WorkshopClient;
@@ -36,6 +37,8 @@ pub struct AppState {
     pub dotnet_root: Arc<Mutex<Option<PathBuf>>>,
     /// Flag to ensure .NET Runtime check runs only once
     dotnet_initialized: Arc<AtomicBool>,
+    /// Flag to ensure plugins check runs only once
+    plugins_initialized: Arc<AtomicBool>,
 }
 
 impl AppState {
@@ -104,6 +107,7 @@ impl AppState {
             steam_webview: Arc::new(steam_webview),
             dotnet_root: Arc::new(Mutex::new(None)),
             dotnet_initialized: Arc::new(AtomicBool::new(false)),
+            plugins_initialized: Arc::new(AtomicBool::new(false)),
         })
     }
 
@@ -139,10 +143,11 @@ impl AppState {
         log::info!("Initializing .NET Runtime check");
         let app = self.app_handle.clone();
         let dotnet_root = self.dotnet_root.clone();
+        let app_data_dir = self.app_data_dir.clone();
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async move {
-                match crate::dotnet_runtime::ensure_dotnet_runtime(&app).await {
+                match crate::runtime::ensure_dotnet_runtime(&app, &app_data_dir).await {
                     Ok(path) => {
                         if let Some(ref p) = path {
                             log::info!(".NET Runtime available at: {}", p.display());
@@ -157,6 +162,36 @@ impl AppState {
                 }
             });
         });
+    }
+
+    /// Initialize plugins check in background. Downloads any missing plugins.
+    pub fn init_plugins(&self) {
+        log::info!("Initializing plugins check");
+        let app = self.app_handle.clone();
+        let plugins_dir = self.app_data_dir.join("plugins");
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async move {
+                match plugin_manager::ensure_plugins(&app, &plugins_dir).await {
+                    Ok(()) => {
+                        log::info!("All plugins are ready");
+                    }
+                    Err(e) => {
+                        log::error!("Failed to ensure plugins: {}", e);
+                    }
+                }
+            });
+        });
+    }
+
+    /// Initialize plugins check manually (for frontend-triggered init)
+    pub fn init_plugins_async(&self) {
+        // Check if already initialized to prevent duplicate runs
+        if self.plugins_initialized.swap(true, Ordering::SeqCst) {
+            log::debug!("plugins_init already called, skipping duplicate initialization");
+            return;
+        }
+        self.init_plugins();
     }
 
     /// Initialize .NET Runtime check manually (for frontend-triggered init)

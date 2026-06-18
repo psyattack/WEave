@@ -193,7 +193,7 @@ export default {
       "Log in to Steam so authenticated Workshop browsing (age-gated items) works the same as in a browser.",
     download_account: "Download account",
     download_account_description:
-      "Pick a Steam account used for downloading via DepotDownloaderMod. Custom credentials can be added below.",
+      "Pick a Steam account used for downloading. Custom credentials can be added below.",
     custom_badge: "custom",
     signed_in: "Signed in",
     not_signed_in: "Not signed in",
@@ -204,7 +204,7 @@ export default {
     steam_account_unknown: "Unknown",
     custom_accounts: "Custom accounts",
     custom_accounts_description:
-      "Encrypted on disk with a machine-bound key (PBKDF2 + AES-256-GCM).",
+      "Encrypted on disk with a machine-bound key.",
     username: "Username",
     password: "Password",
     add_account_button: "Add",

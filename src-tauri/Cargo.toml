@@ -57,6 +57,7 @@ hmac = "0.12"
 pbkdf2 = "0.12"
 aes-gcm = "0.10"
 zip = "2"
+unrar = "0.5"
 
 [dev-dependencies]
 tempfile = "3"

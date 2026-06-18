@@ -84,11 +84,12 @@ export function useBootstrap() {
       // Auto-check for updates on startup if enabled.
       void maybeCheckForUpdates();
 
-      // Initialize .NET Runtime check after all event listeners are set up
+      // Initialize .NET Runtime and plugins check after all event listeners are set up
       // Only call once to prevent duplicate initialization
       if (!dotnetInitialized.current) {
         dotnetInitialized.current = true;
         void invoke("dotnet_init").catch(() => undefined);
+        void invoke("plugins_init").catch(() => undefined);
       }
 
       // Persist window state on close if enabled.
@@ -107,6 +108,23 @@ export function useBootstrap() {
           void import("@/stores/dotnet").then(({ useDotnetStore }) => {
             useDotnetStore.getState().setStatus({
               phase: event.payload.phase as any,
+              message: event.payload.message,
+              progress: event.payload.progress ?? null,
+            });
+          });
+        }),
+        listen<{
+          phase: string;
+          plugin_id: string;
+          plugin_name: string;
+          message: string;
+          progress?: number | null;
+        }>("plugin://status", (event) => {
+          void import("@/stores/dotnet").then(({ useDotnetStore }) => {
+            useDotnetStore.getState().setPluginStatus({
+              phase: event.payload.phase as any,
+              plugin_id: event.payload.plugin_id,
+              plugin_name: event.payload.plugin_name,
               message: event.payload.message,
               progress: event.payload.progress ?? null,
             });
