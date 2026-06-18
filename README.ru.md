@@ -17,9 +17,7 @@
 
 WEave — мощный менеджер Wallpaper Engine Workshop, созданный на Tauri 2 и React. Открывайте, загружайте и управляйте тысячами обоев из Steam Workshop без необходимости открывать Steam или браузер.
 
-<div align="center">
-  <img src="public/main_window.png" alt="Интерфейс WEave" width="100%">
-</div>
+https://github.com/user-attachments/assets/9d04b5a6-9893-44e4-9b1b-5938c16d4698
 
 ---
 
