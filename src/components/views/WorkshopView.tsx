@@ -11,6 +11,7 @@ import { useFiltersStore } from "@/stores/filters";
 import { useAppStore } from "@/stores/app";
 import { pushToast } from "@/stores/toasts";
 import { useRefreshStore } from "@/stores/refresh";
+import { usePaginationContext } from "@/hooks/usePaginationContext";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import type { WorkshopFilters } from "@/stores/filters";
 import { WorkshopItem, WorkshopPage } from "@/types/workshop";
@@ -115,6 +116,19 @@ export default function WorkshopView() {
   const items = page?.items ?? [];
   const total = page?.total_items ?? 0;
   const totalPages = page?.total_pages ?? 1;
+
+  // Publish pagination context so global hotkeys (mouse back/forward, etc.)
+  // can act on this view's pagination.
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    setViewPage("workshop", newPage);
+  };
+  usePaginationContext({
+    view: "workshop",
+    page: filters.page,
+    totalPages,
+    onPageChange: handlePageChange,
+  });
 
   const handleDownload = async (item: WorkshopItem) => {
     if (item.is_collection) {

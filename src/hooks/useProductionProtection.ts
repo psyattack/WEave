@@ -4,77 +4,50 @@ import { useEffect } from "react";
  * Hook that disables DevTools, context menu, and certain keyboard shortcuts
  * ONLY in production builds. In development mode (npm run tauri dev) this
  * hook does nothing, allowing normal debugging workflow.
+ *
+ * Listeners are attached in capture phase so they fire before the global
+ * hotkeys handler and can reliably suppress events.
  */
+
+/** Keys blocked in production (DevTools / security). */
+const BLOCKED = new Set(["F12", "u", "s", "a"]);
+
 export function useProductionProtection() {
   useEffect(() => {
     // Only apply protection in production builds
-    if (import.meta.env.DEV) {
-      return;
-    }
+    if (import.meta.env.DEV) return;
 
-    // Disable right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      return false;
     };
 
-    // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
     const handleKeyDown = (e: KeyboardEvent) => {
       // F12
       if (e.key === "F12") {
         e.preventDefault();
-        return false;
+        return;
       }
 
-      // Ctrl+Shift+I (DevTools)
-      if (e.ctrlKey && e.shiftKey && e.key === "I") {
+      // Ctrl+Shift+I / J / C  (DevTools)
+      if (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) {
         e.preventDefault();
-        return false;
+        return;
       }
 
-      // Ctrl+Shift+J (Console)
-      if (e.ctrlKey && e.shiftKey && e.key === "J") {
+      // Ctrl+U, Ctrl+S, Ctrl+A
+      if (e.ctrlKey && BLOCKED.has(e.key)) {
         e.preventDefault();
-        return false;
-      }
-
-      // Ctrl+Shift+C (Inspect Element)
-      if (e.ctrlKey && e.shiftKey && e.key === "C") {
-        e.preventDefault();
-        return false;
-      }
-
-      // Ctrl+U (View Source)
-      if (e.ctrlKey && e.key === "u") {
-        e.preventDefault();
-        return false;
-      }
-
-      // Ctrl+S (Save Page)
-      if (e.ctrlKey && e.key === "s") {
-        e.preventDefault();
-        return false;
+        return;
       }
     };
 
-    // Disable text selection via keyboard (Ctrl+A)
-    const handleSelectAll = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "a") {
-        e.preventDefault();
-        return false;
-      }
-    };
+    // Use capture phase so these fire BEFORE the global hotkeys handler.
+    document.addEventListener("contextmenu", handleContextMenu, true);
+    document.addEventListener("keydown", handleKeyDown, true);
 
-    // Add event listeners
-    document.addEventListener("contextmenu", handleContextMenu);
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keydown", handleSelectAll);
-
-    // Cleanup on unmount
     return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keydown", handleSelectAll);
+      document.removeEventListener("contextmenu", handleContextMenu, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
     };
   }, []);
 }
