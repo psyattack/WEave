@@ -22,7 +22,7 @@ import {
   RawTag,
   WorkshopItem,
 } from "@/types/workshop";
-import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, invoke, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { useNavStore } from "@/stores/nav";
 import { useInstalledStore } from "@/stores/installed";
@@ -248,6 +248,7 @@ export default function DetailsPanel(props: Props) {
   const [translated, setTranslated] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
 
   const pubfileid = props.item?.pubfileid ?? null;
 
@@ -258,6 +259,7 @@ export default function DetailsPanel(props: Props) {
     setFresh(null);
     setTranslated("");
     setShowTranslation(false);
+    setRateLimited(false);
     if (!pubfileid || !inTauri) return;
     let cancelled = false;
     void (async () => {
@@ -267,10 +269,18 @@ export default function DetailsPanel(props: Props) {
         });
         if (!cancelled && saved) setFresh(saved);
       }
-      const remote = await tryInvoke<Partial<Meta>>("workshop_get_item", {
-        pubfileid,
-      });
-      if (!cancelled && remote) setFresh(remote);
+      try {
+        const remote = await invoke<Partial<Meta>>("workshop_get_item", {
+          pubfileid,
+        });
+        if (!cancelled && remote) setFresh(remote);
+      } catch (err: any) {
+        if (String(err).includes("429") || (err instanceof Error && err.message.includes("429"))) {
+          setRateLimited(true);
+        } else {
+          console.warn(`invoke workshop_get_item failed`, err);
+        }
+      }
     })();
     return () => {
       cancelled = true;
@@ -397,6 +407,12 @@ export default function DetailsPanel(props: Props) {
     >
       {meta && (
         <div className="flex flex-col gap-2.5 p-3 text-[13px]">
+          {rateLimited && (
+            <div className="rounded-md border border-warning/30 bg-warning/10 p-2.5 text-xs text-warning-foreground">
+              {t("metadata_init.rate_limit_error") ||
+                "Rate limit exceeded. Please try again in a few minutes."}
+            </div>
+          )}
           <div className="overflow-hidden rounded-md border border-border bg-surface-sunken">
             <PreviewImage
               key={meta.preview}

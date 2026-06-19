@@ -7,6 +7,7 @@ import {
   FileArchive,
   Loader2,
   MinusCircle,
+  RotateCcw,
   X,
   XCircle,
 } from "lucide-react";
@@ -15,9 +16,11 @@ import { invoke } from "@tauri-apps/api/core";
 import Drawer from "@/components/common/Drawer";
 import PreviewImage from "@/components/common/PreviewImage";
 import * as Progress from "@radix-ui/react-progress";
-import { inTauri, tryInvoke } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { TaskStatus, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
+import { useAppStore } from "@/stores/app";
+import { pushToast } from "@/stores/toasts";
 
 interface Props {
   open: boolean;
@@ -31,6 +34,23 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
   const clearFinished = useTasksStore((s) => s.clearFinished);
 
   const active = Object.values(tasks);
+  const accountIndex = useAppStore((s) => s.accountIndex);
+
+  const handleRetry = async (task: TaskStatus) => {
+    if (!inTauri) return;
+    if (task.kind === "download") {
+      const ok = await tryInvokeOk("download_start", {
+        pubfileid: task.pubfileid,
+        accountIndex,
+      });
+      if (ok) pushToast(t("messages.download_started"), "success");
+    } else if (task.kind === "extract") {
+      const ok = await tryInvokeOk("pkg_extract", {
+        pubfileid: task.pubfileid,
+      });
+      if (ok) pushToast(t("messages.extraction_started") || "Extraction started!", "success");
+    }
+  };
 
   const handleCancel = async (task: TaskStatus) => {
     if (!inTauri) return;
@@ -146,6 +166,16 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                         : task.status}
                     </div>
                   </div>
+                  {task.phase === "failed" && (
+                    <button
+                      type="button"
+                      onClick={() => void handleRetry(task)}
+                      className="ml-auto inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:bg-surface-raised hover:text-foreground"
+                      title="Retry"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
