@@ -38,7 +38,7 @@ pub enum DotnetPhase {
 ///
 /// # Arguments
 /// * `app` - Tauri app handle for emitting events
-/// * `app_data_dir` - The shared app data directory (e.g., %LOCALAPPDATA%\com.weave.app)
+/// * `app_data_dir` - The shared app data directory (e.g., %LOCALAPPDATA%\WEave)
 pub async fn ensure_dotnet_runtime(
     app: &AppHandle,
     app_data_dir: &std::path::Path,

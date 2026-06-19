@@ -2,27 +2,27 @@
 //!
 //! Plugins are now stored in the shared app data directory under `plugins/`.
 //! The app data directory is typically:
-//! - Windows: %LOCALAPPDATA%\com.weave.app
-//! - macOS:   ~/Library/Application Support/com.weave.app
-//! - Linux:   $XDG_DATA_HOME/com.weave.app or ~/.local/share/com.weave.app
+//! - Windows: %LOCALAPPDATA%\WEave
+//! - macOS:   ~/Library/Application Support/WEave
+//! - Linux:   $XDG_DATA_HOME/WEave or ~/.local/share/WEave
 
 use std::path::PathBuf;
 
 /// Resolve the shared app data directory.
 fn resolve_app_data_dir() -> PathBuf {
     if let Some(base) = dirs::data_local_dir() {
-        return base.join("com.weave.app");
+        return base.join("WEave");
     }
 
     if let Some(base) = dirs::data_dir() {
-        return base.join("com.weave.app");
+        return base.join("WEave");
     }
 
     if let Some(home) = dirs::home_dir() {
         return home.join(".weave");
     }
 
-    PathBuf::from("./com.weave.app")
+    PathBuf::from("./WEave")
 }
 
 /// Get the plugins directory in the shared app data directory.

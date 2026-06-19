@@ -207,23 +207,23 @@ impl AppState {
 
 /// Resolve the app's data directory.
 ///
-/// Uses the same identifier as the Tauri app (com.weave.app) to keep
+/// Uses the same identifier as the Tauri app (WEave) to keep
 /// all application data (config, cache, WebView2) in one location.
 fn resolve_app_data_dir() -> PathBuf {
-    // Windows: %LOCALAPPDATA%\com.weave.app
-    // macOS:   ~/Library/Application Support/com.weave.app
-    // Linux:   $XDG_DATA_HOME/com.weave.app or ~/.local/share/com.weave.app
+    // Windows: %LOCALAPPDATA%\WEave
+    // macOS:   ~/Library/Application Support/WEave
+    // Linux:   $XDG_DATA_HOME/WEave or ~/.local/share/WEave
     if let Some(base) = dirs::data_local_dir() {
-        return base.join("com.weave.app");
+        return base.join("WEave");
     }
 
     if let Some(base) = dirs::data_dir() {
-        return base.join("com.weave.app");
+        return base.join("WEave");
     }
 
     if let Some(home) = dirs::home_dir() {
         return home.join(".weave");
     }
 
-    PathBuf::from("./com.weave.app")
+    PathBuf::from("./WEave")
 }

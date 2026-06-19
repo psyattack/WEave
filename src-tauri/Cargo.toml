@@ -6,6 +6,10 @@ authors = ["psyattack"]
 edition = "2021"
 rust-version = "1.77"
 
+[[bin]]
+name = "WEave"
+path = "src/main.rs"
+
 [lib]
 name = "weave_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]

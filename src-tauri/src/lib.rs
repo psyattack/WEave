@@ -37,7 +37,7 @@ pub fn run() {
 
     // Try to initialize custom logger, fallback to env_logger
     if let Some(data_dir) = dirs::data_local_dir() {
-        let log_dir = data_dir.join("com.weave.app");
+        let log_dir = data_dir.join("WEave");
         if logger::WEaveLogger::init(&log_dir, log_level).is_err() {
             env_logger::try_init().ok();
         }

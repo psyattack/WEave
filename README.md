@@ -253,7 +253,7 @@ WEave/
 ## 📝 Configuration
 
 Configuration files and plugins are stored in:  
-**`%LOCALAPPDATA%\com.weave.app\`**
+**`%LOCALAPPDATA%\WEave\`**
 
 | File / Directory | Description |
 |------|-------------|
