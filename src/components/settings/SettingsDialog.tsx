@@ -8,6 +8,7 @@ import Tabs from "@/components/common/Tabs";
 import Select from "@/components/common/Select";
 import { Switch } from "@/components/common/Switch";
 import ParserDebugDialog from "@/components/dialogs/ParserDebugDialog";
+import HotkeysSettings from "@/components/settings/HotkeysSettings";
 import { changeLanguageTo } from "@/hooks/useBootstrap";
 import { persistTheme } from "@/hooks/useTheme";
 import { inTauri, invoke, tryInvoke, tryInvokeOk } from "@/lib/tauri";
@@ -302,6 +303,11 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                 <CustomAccountsSection />
               </div>
             ),
+          },
+          {
+            value: "hotkeys",
+            label: t("settings.hotkeys") || "Hotkeys",
+            content: <HotkeysSettings />,
           },
         ]}
       />

@@ -18,11 +18,19 @@ import ToastStack from "@/components/common/ToastStack";
 import SetupOverlay from "@/components/common/SetupOverlay";
 import MetadataInitDialog from "@/components/common/MetadataInitDialog";
 import { useBootstrap } from "@/hooks/useBootstrap";
-import { useApplyTheme } from "@/hooks/useTheme";
+import { useApplyTheme, persistTheme, THEME_CODES } from "@/hooks/useTheme";
 import { useProductionProtection } from "@/hooks/useProductionProtection";
+import { useHotkeys } from "@/hooks/useHotkeys";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { useFiltersStore } from "@/stores/filters";
+import { triggerGlobalRefresh } from "@/stores/refresh";
+import {
+  pagePrev,
+  pageNext,
+  pageFirst,
+  pageLast,
+} from "@/stores/hotkeys/pagination";
 
 export default function App() {
   useBootstrap();
@@ -43,39 +51,48 @@ export default function App() {
   const legalAccepted = useAppStore((s) => s.legalAccepted);
   const setLegalAccepted = useAppStore((s) => s.setLegalAccepted);
 
-  // Show legal dialog on first run
   useEffect(() => {
-    if (ready && !legalAccepted) {
-      setLegalOpen(true);
-    }
+    if (ready && !legalAccepted) setLegalOpen(true);
   }, [ready, legalAccepted]);
 
   const setPage = useFiltersStore((s) => s.setPage);
+  const toggleSidebar = useAppStore((s) => s.toggleSidebar);
 
-  // Clear any sub-view stack whenever the user switches primary nav by hand
-  // and drop paging. We intentionally don't wipe sort/misc_tags/etc so that
-  // a user who built up a filter in Workshop keeps it when they pop over to
-  // Installed and back; the "tab shows nothing" bug was really driven by
-  // `view` being force-mutated to "collections" when a sub-view opened —
-  // that's fixed below via `activeKey` deriving from `sub.kind` directly.
   const changeView = (key: NavKey) => {
     resetNav();
     setPage(1);
     setView(key);
   };
 
-  // Whenever we leave a sub-view (back to none) reset paging too — the
-  // author view scrolls past the main grid's last page in many cases.
   useEffect(() => {
     if (sub.kind === "none") setPage(1);
   }, [sub.kind, setPage]);
 
-  // Derive the mounted view entirely from state; we used to mutate `view`
-  // when a collection was opened, which meant that closing the collection
-  // left the user stranded on the Collections tab instead of returning to
-  // whichever primary tab (Installed / Workshop / Collections) they were
-  // actually on. Treat collection/author as pure sub-view overlays that
-  // don't clobber the primary tab selection.
+  // ─── Global hotkeys ──────────────────────────────────────────────────────
+  useHotkeys({
+    "page.prev": pagePrev,
+    "page.next": pageNext,
+    "page.first": pageFirst,
+    "page.last": pageLast,
+
+    "nav.workshop": () => changeView("workshop"),
+    "nav.collections": () => changeView("collections"),
+    "nav.installed": () => changeView("installed"),
+
+    refresh: () => triggerGlobalRefresh(),
+    open_settings: () => setSettingsOpen(true),
+    toggle_sidebar: () => toggleSidebar(),
+    theme_cycle: () => {
+      const theme = useAppStore.getState().theme;
+      const i = THEME_CODES.indexOf(theme);
+      const next = THEME_CODES[(i + 1) % THEME_CODES.length];
+      useAppStore.getState().setTheme(next);
+      void persistTheme(next);
+    },
+    open_tasks: () => setTasksOpen(true),
+    open_multi_download: () => setMultiOpen(true),
+  });
+
   const activeKey: NavKey | "author" =
     sub.kind === "author"
       ? "author"

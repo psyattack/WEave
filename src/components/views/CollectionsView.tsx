@@ -14,6 +14,7 @@ import { useRefreshStore } from "@/stores/refresh";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { pushToast } from "@/stores/toasts";
+import { usePaginationContext } from "@/hooks/usePaginationContext";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import type { WorkshopFilters } from "@/stores/filters";
 import { WorkshopItem, WorkshopPage } from "@/types/workshop";
@@ -183,6 +184,28 @@ export default function CollectionsView() {
     };
   }, [filtersKey, filters, requestedCollectionId, refreshCounter]);
 
+  const items = page?.items ?? [];
+  const total = page?.total_items ?? 0;
+  const totalPages = page?.total_pages ?? 1;
+
+  // Publish pagination context for hotkeys.
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    if (requestedCollectionId) {
+      setViewPage("collection", newPage, requestedCollectionId);
+    } else {
+      setViewPage("collections", newPage);
+    }
+  };
+  usePaginationContext({
+    view: requestedCollectionId
+      ? `collection:${requestedCollectionId}`
+      : "collections",
+    page: filters.page,
+    totalPages,
+    onPageChange: handlePageChange,
+  });
+
   const openCollection = async (item: WorkshopItem) => {
     if (!inTauri) {
       setOpened({
@@ -285,10 +308,6 @@ export default function CollectionsView() {
       </div>
     );
   }
-
-  const items = page?.items ?? [];
-  const total = page?.total_items ?? 0;
-  const totalPages = page?.total_pages ?? 1;
 
   return (
     <div className="flex h-full flex-col">

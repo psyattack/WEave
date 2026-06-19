@@ -12,6 +12,7 @@ import { useRefreshStore } from "@/stores/refresh";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { pushToast } from "@/stores/toasts";
+import { usePaginationContext } from "@/hooks/usePaginationContext";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { cn } from "@/lib/utils";
 import { WorkshopItem, WorkshopPage } from "@/types/workshop";
@@ -135,6 +136,18 @@ export default function AuthorView() {
 
   const items = page?.items ?? [];
   const totalPages = page?.total_pages ?? 1;
+
+  // Publish pagination context for hotkeys.
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    setViewPage("author", newPage, profileUrl);
+  };
+  usePaginationContext({
+    view: "author",
+    page: filters.page,
+    totalPages,
+    onPageChange: handlePageChange,
+  });
 
   return (
     <div className="flex h-full flex-col">
