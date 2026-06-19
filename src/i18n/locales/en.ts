@@ -219,6 +219,7 @@ export default {
     download_account_description:
       "Pick a Steam account used for downloading. Custom credentials can be added below.",
     custom_badge: "custom",
+    auto_account: "Auto",
     signed_in: "Signed in",
     not_signed_in: "Not signed in",
     waiting_for_login: "Waiting for login…",

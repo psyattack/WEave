@@ -273,7 +273,19 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                       "Pick a Steam account used for downloading. Custom credentials can be added below."}
                   </p>
                   <div className="divide-y divide-border rounded-md border border-border bg-surface-sunken">
-                    {state.accounts.map((a) => (
+                    <label className="flex cursor-pointer items-center gap-3 p-2.5 text-sm">
+                      <input
+                        type="radio"
+                        name="account"
+                        checked={state.accounts.find(a => a.index === state.accountIndex)?.is_custom !== true}
+                        onChange={() => {
+                          state.setAccountIndex(0);
+                          void persist("settings.account.account.account_number", 0);
+                        }}
+                      />
+                      <span className="flex-1">{t("settings.auto_account") || "Auto"}</span>
+                    </label>
+                    {state.accounts.filter(a => a.is_custom).map((a) => (
                       <label
                         key={`${a.index}-${a.username}`}
                         className="flex cursor-pointer items-center gap-3 p-2.5 text-sm"
@@ -291,11 +303,9 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                           }}
                         />
                         <span className="flex-1">{a.username}</span>
-                        {a.is_custom && (
-                          <span className="chip text-info">
-                            {t("settings.custom_badge") || "custom"}
-                          </span>
-                        )}
+                        <span className="chip text-info">
+                          {t("settings.custom_badge") || "custom"}
+                        </span>
                       </label>
                     ))}
                   </div>

@@ -31,8 +31,8 @@ pub struct AccountManager {
 
 const BUILTIN_ACCOUNT_BUNDLE_KEY: &[u8] = b"WEave built-in Steam accounts bundle v1";
 const BUILTIN_ACCOUNT_BUNDLE: &str = concat!(
-    "N8iRFEuocHKEK5ngsqrg6hKyPqLuPeB6rR0KI83W4mVIHIK4RpgUGGonFgSAFdPlJazxuqy1TLn9cWaZ",
-    "lqBz65ZBbjewOcqi9EbkAjMRJXpVLFDWifNwGHoYvh+A/zwDmBdghMUx5ZEdud5EZd23fU7JBR9N7g=="
+    "h0m6wUVpNDnJPxcGwGQcdocH6IIllAM2x1yyS7sHXfqwhaBtXusl+kNUwBne2g8PNUK0xen+chgB49muEjjp",
+    "MvUMM5g03SarxUoZf1dhECB0KwsfEZEjRWsBGSD2aO/8ZsUaDOdf6ITjwscsB/bp5yQLRk7PagyfJdBhIiNF2lRoiVJ9Y7DZlJSc7/qAV1eq8z3d2C/VE4djAg9lyQr4Ggde+fYsztziOL7NEQ8JKzoOISS9oIg="
 );
 
 #[derive(Debug, Deserialize)]
@@ -61,6 +61,10 @@ impl AccountManager {
             });
         }
         all
+    }
+
+    pub fn builtin_count(&self) -> usize {
+        self.builtin.read().len()
     }
 
     pub fn list_usernames(&self) -> Vec<String> {

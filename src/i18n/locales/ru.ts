@@ -220,6 +220,7 @@ export default {
     download_account_description:
       "Выберите аккаунт Steam, используемый для загрузки. Пользовательские учётные данные можно добавить ниже.",
     custom_badge: "пользовательский",
+    auto_account: "Авто",
     signed_in: "Вход выполнен",
     not_signed_in: "Вход не выполнен",
     waiting_for_login: "Ожидание входа…",

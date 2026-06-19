@@ -18,13 +18,13 @@ pub async fn download_start(
     let exe = plugin_paths::depot_downloader()?;
     let index =
         account_index.unwrap_or_else(|| state.settings.read().get_account_number() as usize);
-    let credentials = state.accounts.credentials(index);
     let dotnet_root = state.dotnet_root.lock().clone();
     state
         .downloads
         .start(
             &pubfileid,
-            credentials,
+            index,
+            state.accounts.clone(),
             PathBuf::from(we_directory),
             exe,
             dotnet_root,
