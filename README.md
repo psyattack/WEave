@@ -76,6 +76,8 @@ https://github.com/user-attachments/assets/9d04b5a6-9893-44e4-9b1b-5938c16d4698
 - 5 built-in themes
 - 10 accent colors
 - Multi-language support (English, Russian)
+- Auto-detect system language on first launch
+- Global hotkey system with customizable bindings
 
 </details>
 
