@@ -36,8 +36,8 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
       if (data) useUpdaterStore.getState().show(data);
     } else {
       setInfo({
-        current_version: "4.3.0",
-        latest_version: "4.3.0",
+        current_version: __APP_VERSION__,
+        latest_version: __APP_VERSION__,
         update_available: false,
         release_notes: "(mock) You are up to date.",
         html_url: "",
@@ -52,9 +52,9 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
 
   const skipThisVersion = async () => {
     if (!info?.latest_version || !inTauri) return;
-    await invoke("updater_skip_version", { version: info.latest_version }).catch(
-      () => undefined,
-    );
+    await invoke("updater_skip_version", {
+      version: info.latest_version,
+    }).catch(() => undefined);
     useUpdaterStore.getState().dismiss();
     onOpenChange(false);
   };
@@ -85,7 +85,9 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
             {info.update_available ? (
               <div className="card border-primary/40 bg-primary/10 p-3 text-sm">
                 <p className="mb-2 font-medium">
-                  {t("labels.update_available_for", { version: info.latest_version })}
+                  {t("labels.update_available_for", {
+                    version: info.latest_version,
+                  })}
                 </p>
                 <div className="max-h-60 overflow-auto rounded-md border border-border bg-background/40 p-2 text-xs text-muted">
                   <Markdown source={info.release_notes} />
@@ -110,9 +112,7 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
                 {t("labels.up_to_date")}
               </div>
             )}
-            {info.error && (
-              <p className="text-xs text-danger">{info.error}</p>
-            )}
+            {info.error && <p className="text-xs text-danger">{info.error}</p>}
             <button className="btn-ghost w-full" onClick={run}>
               <RefreshCw className="h-4 w-4" />
               {t("tooltips.refresh")}

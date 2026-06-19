@@ -57,7 +57,7 @@ export default function InfoDialog({
   onOpenLegal,
 }: Props) {
   const { t } = useTranslation();
-  const [version, setVersion] = useState<string>("");
+  const [version, setVersion] = useState<string>(__APP_VERSION__);
   const [dataDir, setDataDir] = useState<string>("");
   const [showChangelog, setShowChangelog] = useState(false);
   const [releases, setReleases] = useState<GithubRelease[] | null>(null);
