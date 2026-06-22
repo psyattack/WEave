@@ -34,7 +34,7 @@ export default function Drawer({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-40 bg-background/60 backdrop-blur-[2px]"
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md"
               />
             </RadixDialog.Overlay>
             <RadixDialog.Content asChild>
@@ -49,16 +49,16 @@ export default function Drawer({
                 }}
                 style={{ width }}
                 className={cn(
-                  "fixed top-0 z-50 flex h-full flex-col border-border bg-surface shadow-card-hover",
+                  "fixed top-0 z-50 flex h-full flex-col border-white/10 bg-background/50 backdrop-blur-3xl shadow-2xl",
                   isRight ? "right-0 border-l" : "left-0 border-r",
                 )}
               >
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
                   <RadixDialog.Title className="text-sm font-semibold">
                     {title}
                   </RadixDialog.Title>
                   <RadixDialog.Description className="sr-only">
-                    {title}
+                    Details
                   </RadixDialog.Description>
                   <RadixDialog.Close className="btn-icon" aria-label="Close">
                     <X className="h-5 w-5" />

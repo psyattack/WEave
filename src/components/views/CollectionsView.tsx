@@ -274,26 +274,12 @@ export default function CollectionsView() {
             {t("labels.items_count", { count: opened.items.length })}
           </span>
         </div>
-        <div className="flex-1 overflow-auto px-4 py-3">
-          {opened.items.length === 0 ? (
-            <div className="flex h-64 items-center justify-center text-sm text-muted">
-              {t("labels.no_wallpapers_found")}
-            </div>
-          ) : (
-            <AnimatePresence mode="popLayout">
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-                {opened.items.map((item) => (
-                  <WorkshopCard
-                    key={item.pubfileid}
-                    item={item}
-                    onOpen={setSelected}
-                    onDownload={handleDownload}
-                  />
-                ))}
-              </div>
-            </AnimatePresence>
-          )}
-        </div>
+        <CollectionVirtualGrid
+          items={opened.items}
+          onOpen={setSelected}
+          onDownload={handleDownload}
+          emptyLabel={t("labels.no_wallpapers_found")}
+        />
         <DetailsPanel
           kind="workshop"
           item={selected}
@@ -396,4 +382,120 @@ function makeMockPage(page: number): WorkshopPage {
     total_pages: 5,
     current_page: page,
   };
+}
+
+// ─── Inline virtual grid for opened collection ────────────────────────────────
+// Lives here to avoid the forwardRef/ref complications that broke other views.
+
+interface CollectionVirtualGridProps {
+  items: WorkshopItem[];
+  onOpen: (item: WorkshopItem) => void;
+  onDownload: (item: WorkshopItem) => Promise<void>;
+  emptyLabel: string;
+}
+
+function CollectionVirtualGrid({
+  items,
+  onOpen,
+  onDownload,
+  emptyLabel,
+}: CollectionVirtualGridProps) {
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  const minColWidth = 190;
+  const gap = 12;
+
+  const { cols, colWidth, itemHeight, totalRows, totalHeight } = useMemo(() => {
+    const c =
+      dimensions.width === 0
+        ? 4
+        : Math.max(1, Math.floor((dimensions.width + gap) / (minColWidth + gap)));
+    const cw =
+      dimensions.width === 0
+        ? minColWidth
+        : (dimensions.width - (c - 1) * gap) / c;
+    const ih = cw;
+    const tr = Math.ceil(items.length / c);
+    const th = tr * ih + (tr > 0 ? (tr - 1) * gap : 0);
+    return { cols: c, colWidth: cw, itemHeight: ih, totalRows: tr, totalHeight: th };
+  }, [dimensions.width, items.length]);
+
+  useEffect(() => {
+    if (!container) return;
+
+    const onScroll = () => setScrollTop(container.scrollTop);
+    const ro = new ResizeObserver(([entry]) => {
+      setDimensions((prev) => {
+        const { width, height } = entry.contentRect;
+        if (prev.width === width && prev.height !== 0 && Math.abs(prev.height - height) < 150)
+          return prev;
+        return { width, height };
+      });
+    });
+
+    container.addEventListener("scroll", onScroll, { passive: true });
+    ro.observe(container);
+    setDimensions({ width: container.clientWidth, height: container.clientHeight });
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, [container]);
+
+  const visibleItems = useMemo(() => {
+    if (items.length === 0) return [];
+    if (dimensions.height === 0) return items.slice(0, 12).map((item, index) => ({ item, index }));
+
+    const buffer = 2;
+    const startRow = Math.max(0, Math.floor(scrollTop / (itemHeight + gap)) - buffer);
+    const endRow = Math.min(
+      totalRows,
+      Math.ceil((scrollTop + dimensions.height) / (itemHeight + gap)) + buffer,
+    );
+
+    const result: { item: WorkshopItem; index: number }[] = [];
+    for (let i = startRow * cols; i < Math.min(items.length, endRow * cols); i++) {
+      result.push({ item: items[i], index: i });
+    }
+    return result;
+  }, [items, scrollTop, dimensions.height, cols, itemHeight, totalRows]);
+
+  if (items.length === 0) {
+    return (
+      <div className="flex-1 flex h-64 items-center justify-center text-sm text-muted">
+        {emptyLabel}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setContainer} className="flex-1 overflow-auto px-4 py-3 relative">
+      <div style={{ height: `${totalHeight}px`, width: "100%", position: "relative" }}>
+        {visibleItems.map(({ item, index }) => {
+          const row = Math.floor(index / cols);
+          const col = index % cols;
+          return (
+            <div
+              key={item.pubfileid}
+              style={{
+                position: "absolute",
+                top: `${row * (itemHeight + gap)}px`,
+                left: `${col * (colWidth + gap)}px`,
+                width: `${colWidth}px`,
+                height: `${itemHeight}px`,
+              }}
+            >
+              <WorkshopCard
+                item={item}
+                onOpen={onOpen}
+                onDownload={onDownload}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

@@ -145,6 +145,9 @@ pub fn app_restore_window_geometry(
     app: AppHandle,
 ) -> Result<bool, String> {
     let Some(geom) = app_get_window_geometry(state) else {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.center();
+        }
         return Ok(false);
     };
     let Some(window) = app.get_webview_window("main") else {

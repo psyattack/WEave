@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "@/i18n/hooks";
 import { useDotnetStore } from "@/stores/dotnet";
 
 export default function SetupOverlay() {
+  const { t } = useTranslation();
   const overallProgress = useDotnetStore((s) => s.overallProgress);
   const currentMessage = useDotnetStore((s) => s.currentMessage);
   const currentPhase = useDotnetStore((s) => s.currentPhase);
@@ -69,7 +71,7 @@ export default function SetupOverlay() {
             {/* Status message */}
             <div className="text-center">
               <h2 className="text-xl font-semibold text-foreground">
-                {getPhaseTitle(currentPhase)}
+                {getPhaseTitle(currentPhase, t)}
               </h2>
               <p className="mt-2 text-sm text-muted">{currentMessage}</p>
             </div>
@@ -91,7 +93,7 @@ export default function SetupOverlay() {
 
             {hasErrors && (
               <p className="text-sm text-red-500">
-                Some installations failed. Please check logs.
+                {t("setup.failed_check_logs")}
               </p>
             )}
           </div>
@@ -101,19 +103,19 @@ export default function SetupOverlay() {
   );
 }
 
-function getPhaseTitle(phase: string | null): string {
+function getPhaseTitle(phase: string | null, t: any): string {
   switch (phase) {
     case "checking":
-      return "Checking...";
+      return t("setup.checking");
     case "downloading":
-      return "Downloading...";
+      return t("setup.downloading");
     case "extracting":
-      return "Installing...";
+      return t("setup.installing");
     case "ready":
-      return "Ready";
+      return t("setup.ready");
     case "error":
-      return "Installation Error";
+      return t("setup.error");
     default:
-      return "Preparing...";
+      return t("setup.preparing");
   }
 }

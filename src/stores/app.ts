@@ -16,6 +16,10 @@ interface AppState {
   accounts: { index: number; username: string; is_custom: boolean }[];
   sidebarCollapsed: boolean;
   legalAccepted: boolean;
+  lowPerformance: boolean;
+  enable3dCards: boolean;
+  enableLayoutAnimations: boolean;
+  activeDetailsCover: string | null;
   setReady: (v: boolean) => void;
   setLanguage: (lang: string) => void;
   setTheme: (theme: ThemeCode) => void;
@@ -29,6 +33,10 @@ interface AppState {
   setSidebarCollapsed: (v: boolean) => void;
   toggleSidebar: () => void;
   setLegalAccepted: (v: boolean) => void;
+  setLowPerformance: (v: boolean) => void;
+  setEnable3dCards: (v: boolean) => void;
+  setEnableLayoutAnimations: (v: boolean) => void;
+  setActiveDetailsCover: (v: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -47,6 +55,10 @@ export const useAppStore = create<AppState>()(
       accounts: [],
       sidebarCollapsed: false,
       legalAccepted: false,
+      lowPerformance: false,
+      enable3dCards: true,
+      enableLayoutAnimations: false,
+      activeDetailsCover: null,
       setReady: (v) => set({ ready: v }),
       setLanguage: (language) => set({ language }),
       setTheme: (theme) => {
@@ -58,12 +70,16 @@ export const useAppStore = create<AppState>()(
       setAccent: (accent) => set({ accent }),
       setWeDirectory: (weDirectory) => set({ weDirectory }),
       setAvailableLanguages: (availableLanguages) =>
-        set({ availableLanguages }),
+         set({ availableLanguages }),
       setAccountIndex: (accountIndex) => set({ accountIndex }),
       setAccounts: (accounts) => set({ accounts }),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
       setLegalAccepted: (legalAccepted) => set({ legalAccepted }),
+      setLowPerformance: (lowPerformance) => set({ lowPerformance }),
+      setEnable3dCards: (enable3dCards) => set({ enable3dCards }),
+      setEnableLayoutAnimations: (enableLayoutAnimations) => set({ enableLayoutAnimations }),
+      setActiveDetailsCover: (activeDetailsCover) => set({ activeDetailsCover }),
     }),
     {
       name: "weave.ui",
@@ -74,6 +90,9 @@ export const useAppStore = create<AppState>()(
         language: state.language,
         accent: state.accent,
         legalAccepted: state.legalAccepted,
+        lowPerformance: state.lowPerformance,
+        enable3dCards: state.enable3dCards,
+        enableLayoutAnimations: state.enableLayoutAnimations,
       }),
     },
   ),

@@ -165,12 +165,16 @@ impl SteamWebview {
     /// Drive the hidden webview through Steam's login form using the given
     /// credentials. The window stays invisible throughout. Returns true if
     /// we end up with a `steamLoginSecure` cookie within the timeout.
-    pub async fn auto_login(&self, username: &str, password: &str) -> Result<bool, String> {
+    ///
+    /// When `force` is true the existing session check is skipped and the
+    /// login form is always submitted — useful for manual re-login.
+    pub async fn auto_login(&self, username: &str, password: &str, force: bool) -> Result<bool, String> {
         let _g = self.lock.lock().await;
         self.ensure_window().map_err(|e| e.to_string())?;
 
-        // Early return if we're already logged in from a previous run.
-        if self.is_logged_in_inner() {
+        // Early return if we're already logged in from a previous run,
+        // unless the caller explicitly wants to force a re-login.
+        if !force && self.is_logged_in_inner() {
             return Ok(true);
         }
 
@@ -185,11 +189,14 @@ impl SteamWebview {
 
         // Fill + submit the login form. Retry a few times: the SPA may render
         // the inputs asynchronously, and the first eval can land before them.
+        // When force-login is active we never break early on an existing
+        // cookie — the old session may be stale and we always want to
+        // submit fresh credentials.
         let script = build_login_script(username, password);
         for _ in 0..6 {
             w.eval(&script).map_err(|e| e.to_string())?;
             sleep(Duration::from_millis(800)).await;
-            if self.is_logged_in_inner() {
+            if !force && self.is_logged_in_inner() {
                 break;
             }
         }

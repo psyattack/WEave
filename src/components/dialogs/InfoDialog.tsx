@@ -10,12 +10,13 @@ import {
   Github,
   Loader2,
   RefreshCw,
+  HelpCircle,
 } from "lucide-react";
 
 import Dialog from "@/components/common/Dialog";
 import Markdown from "@/components/common/Markdown";
 import { inTauri, invoke, tryInvoke } from "@/lib/tauri";
-import AppIcon from "@/assets/icon.svg?react";
+import AppIcon from "@/components/common/AppIcon";
 
 interface GithubRelease {
   tag_name: string;
@@ -33,6 +34,27 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onCheckUpdates?: () => void;
   onOpenLegal?: () => void;
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-white/5 last:border-0">
+      <button 
+        type="button" 
+        className="w-full flex items-center justify-between text-left py-2.5 text-sm font-medium hover:text-primary transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="pr-4">{q}</span>
+        {open ? <ChevronUp className="h-4 w-4 shrink-0 opacity-50" /> : <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />}
+      </button>
+      {open && (
+        <div className="pb-3 text-xs text-muted whitespace-pre-wrap leading-relaxed">
+          {a}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const TOOLS: { label: string; url: string; license?: string }[] = [
@@ -64,6 +86,7 @@ export default function InfoDialog({
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [changelogError, setChangelogError] = useState<string | null>(null);
   const [loadingReleases, setLoadingReleases] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
 
   useEffect(() => {
     if (!open || !inTauri) return;
@@ -82,6 +105,7 @@ export default function InfoDialog({
   useEffect(() => {
     if (!open) {
       setShowChangelog(false);
+      setShowFaq(false);
       setChangelogError(null);
     }
   }, [open]);
@@ -114,9 +138,16 @@ export default function InfoDialog({
   const toggleChangelog = () => {
     const next = !showChangelog;
     setShowChangelog(next);
+    if (next && showFaq) setShowFaq(false);
     if (next && !releases && !loadingReleases) {
       void loadReleases();
     }
+  };
+
+  const toggleFaq = () => {
+    const next = !showFaq;
+    setShowFaq(next);
+    if (next && showChangelog) setShowChangelog(false);
   };
 
   const selectedRelease =
@@ -153,14 +184,14 @@ export default function InfoDialog({
 
         <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button
-            className="btn-outline"
+            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
             onClick={() => openLink("https://github.com/psyattack/WEave")}
           >
             <Github className="h-4 w-4" />
             {t("buttons.github")}
           </button>
           <button
-            className="btn-outline"
+            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
             onClick={() => {
               if (onCheckUpdates) {
                 onOpenChange(false);
@@ -172,7 +203,7 @@ export default function InfoDialog({
             {t("buttons.check_updates")}
           </button>
           <button
-            className="btn-outline"
+            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
             onClick={openDataFolder}
             disabled={!inTauri}
             title={dataDir}
@@ -181,7 +212,7 @@ export default function InfoDialog({
             {t("buttons.open_data_folder")}
           </button>
           <button
-            className="btn-outline"
+            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
             onClick={toggleChangelog}
             aria-expanded={showChangelog}
           >
@@ -194,7 +225,20 @@ export default function InfoDialog({
             )}
           </button>
           <button
-            className="btn-outline"
+            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            onClick={toggleFaq}
+            aria-expanded={showFaq}
+          >
+            <HelpCircle className="h-4 w-4" />
+            {t("buttons.faq") || "FAQ"}
+            {showFaq ? (
+              <ChevronUp className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" />
+            )}
+          </button>
+          <button
+            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
             onClick={() => {
               if (onOpenLegal) {
                 onOpenChange(false);
@@ -294,6 +338,36 @@ export default function InfoDialog({
                 <Markdown source={selectedRelease.body || ""} />
               </div>
             )}
+          </div>
+        )}
+
+        {showFaq && (
+          <div className="w-full rounded-md border border-border bg-surface-sunken p-3 text-left">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-subtle">
+              {t("info.faq_title") || "Frequently Asked Questions"}
+            </div>
+            <div className="flex flex-col">
+              <FaqItem 
+                q={t("faq.download_issues_q") || "Что делать если обои не скачиваются?"} 
+                a={t("faq.download_issues_a") || "Попробовать снова, возможно немного подождать.\nМожеть быть такое, что пароли от системных аккаунтов для загрузки устарели, в таком случае можно:\n1) Добавить свой личный аккаунт без Steam Guard с копией Wallpaper Engine (Вкладка аккаунты в настройках) (Но зачем вам это, не понятно)\n2) Купить на различных площадках оффлайн-активации Wallpaper Engine без Steam Guard и добавить по методу выше (Стоят очень дёшего)\n3) Написать Issue в репозиторий на GitHub и я постараюсь оперативно обновить рабочие аккаунты"} 
+              />
+              <FaqItem 
+                q={t("faq.login_issues_q") || "В приложении не загружаются обои или возникает ошибка логина Steam"} 
+                a={t("faq.login_issues_a") || "Если вам не нужен 18+ контент, то можете не беспокоиться об этом и просто игнорировать.\n\nВ ином случае, откройте папку с данными (кнопка 'Open Data Folder' в окне About) и удалите папку «EBWebView» (это сбросит кэш встроенного браузера). Перезапустите программу.\n\nЕсли проблема не решилась/не решается долгое время, скорее всего проблемы с системным аккаунтом парсера, попробуйте указать свой собственный аккаунт Steam в настройках парсера (Accounts -> Custom account). Вы можете использовать любой аккаунт (пустышку), главное чтобы в настройках вашего аккаунта не было поставлено ограничений на 18+ контент.\n\nПри необходимости в будущем будет создано больше системных аккаунтов с автоматической выборкой."} 
+              />
+              <FaqItem 
+                q={t("faq.extract_q") || "Почему у некоторых загруженных обоев не работает кнопка 'Extract'?"} 
+                a={t("faq.extract_a") || "Не все обои в Workshop являются полноценными проектами (с файлом project.json). Существуют видео-обои (MP4) или веб-обои (HTML). Они уже готовы к использованию, и их не нужно (и технически невозможно) распаковывать как проекты Wallpaper Engine."} 
+              />
+              <FaqItem 
+                q={t("faq.storage_q") || "Где хранятся скачанные обои?"} 
+                a={t("faq.storage_a") || "Все скачанные обои сохраняются напрямую в корневую папку Wallpaper Engine в директорию `projects/myprojects`. Они сразу же становятся доступны в официальном приложении без дополнительных действий с вашей стороны."} 
+              />
+              <FaqItem 
+                q={t("faq.visibility_q") || "Обои скачиваются, но в оригинальном приложении их не видно"} 
+                a={t("faq.visibility_a") || "Убедитесь, что в настройках (System & Integration) вы указали правильный путь до папки Wallpaper Engine. Путь должен указывать на корневую папку, где лежат исполняемые файлы (wallpaper32.exe / wallpaper64.exe)."} 
+              />
+            </div>
           </div>
         )}
 

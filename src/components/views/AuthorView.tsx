@@ -40,6 +40,12 @@ export default function AuthorView() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const handleTabChange = (newTab: Tab) => {
+    setTab(newTab);
+    setPage(1);
+    setViewPage("author", 1, profileUrl);
+  };
+
   // Get the saved page for this author
   const currentPage = getViewPage("author", profileUrl);
 
@@ -162,13 +168,13 @@ export default function AuthorView() {
         </span>
 
         <div className="ml-auto flex items-center gap-1 rounded-md border border-border bg-surface-sunken p-0.5">
-          <TabButton active={tab === "items"} onClick={() => setTab("items")}>
+          <TabButton active={tab === "items"} onClick={() => handleTabChange("items")}>
             <User className="h-3.5 w-3.5" />
             {t("labels.wallpapers")}
           </TabButton>
           <TabButton
             active={tab === "collections"}
-            onClick={() => setTab("collections")}
+            onClick={() => handleTabChange("collections")}
           >
             <Layers className="h-3.5 w-3.5" />
             {t("labels.author_collections")}
@@ -262,3 +268,4 @@ function TabButton({
     </button>
   );
 }
+

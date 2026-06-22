@@ -45,22 +45,21 @@ export default function Dialog({
                 className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm"
               />
             </RadixDialog.Overlay>
-            <RadixDialog.Content
-              asChild
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+              <RadixDialog.Content
+                asChild
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.97 }}
                   transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
                   className={cn(
-                    "pointer-events-auto relative flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-2xl",
+                    "pointer-events-auto relative flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-surface/60 backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.6)]",
                     SIZES[size],
                   )}
                 >
-                  <div className="flex items-start justify-between border-b border-border bg-surface-raised/40 px-5 py-3.5">
+                  <div className="flex items-start justify-between border-b border-white/5 bg-white/5 px-5 py-3.5">
                     <div className="min-w-0">
                       <RadixDialog.Title className="truncate text-sm font-semibold tracking-tight">
                         {title}
@@ -82,13 +81,13 @@ export default function Dialog({
                     {children}
                   </div>
                   {footer && (
-                    <div className="flex items-center justify-end gap-2 border-t border-border bg-surface-sunken px-5 py-3">
+                    <div className="flex items-center justify-end gap-2 border-t border-white/5 bg-black/20 px-5 py-3">
                       {footer}
                     </div>
                   )}
                 </motion.div>
-              </div>
-            </RadixDialog.Content>
+              </RadixDialog.Content>
+            </div>
           </RadixDialog.Portal>
         )}
       </AnimatePresence>

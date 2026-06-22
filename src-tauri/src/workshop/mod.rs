@@ -87,6 +87,7 @@ pub struct SteamAccount {
     pub account_name: String,
     pub steamid: String,
     pub profile_url: String,
+    pub avatar_url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -177,11 +178,20 @@ impl WorkshopClient {
 
         // Try `g_rgProfileData = { ... };` — this JSON is rendered into
         // every profile page and has both the vanity URL and the persona.
-        let persona_name = Regex::new(r#""personaname"\s*:\s*"([^"]+)""#)
+        let persona_name = Regex::new(r#""personaname"\s*:\s*"([^"]+)"""#)
             .ok()?
             .captures(&body)
             .and_then(|c| c.get(1))
-            .map(|m| m.as_str().to_string());
+            .map(|m| m.as_str().to_string())
+            .or_else(|| {
+                // Fallback: on the /my/home page the display name appears in
+                // a button in the header nav: <button ...>WE Workshop Manager</button>
+                Regex::new(r#"<button[^>]*role="button"[^>]*>([^<]+)</button>"#)
+                    .ok()
+                    .and_then(|re| re.captures(&body))
+                    .and_then(|c| c.get(1))
+                    .map(|m| m.as_str().trim().to_string())
+            });
         let steamid = Regex::new(r#""steamid"\s*:\s*"(\d+)""#)
             .ok()
             .and_then(|re| re.captures(&body))
@@ -195,12 +205,27 @@ impl WorkshopClient {
                     .map(|m| m.as_str().to_string())
             });
         // Fallback for the account login name: parse `AccountName` out of
-        // the embedded JS if present (older skin).
+        // the embedded JS, or from the header text "Об аккаунте: <span>name</span>".
         let account_name = Regex::new(r#"g_AccountName\s*=\s*"([^"]+)""#)
             .ok()
             .and_then(|re| re.captures(&body))
             .and_then(|c| c.get(1))
-            .map(|m| m.as_str().to_string());
+            .map(|m| m.as_str().to_string())
+            .or_else(|| {
+                Regex::new(r#">([^<]+)</span></a>"#)
+                    .ok()
+                    .and_then(|re| re.captures(&body))
+                    .and_then(|c| c.get(1))
+                    .map(|m| m.as_str().trim().to_string())
+            });
+
+        // Parse avatar: <img ... src="https://avatars...steamstatic.com/...">
+        let avatar_url = Regex::new(r#"<img[^>]+src="(https://avatars[^"]+)""#)
+            .ok()
+            .and_then(|re| re.captures(&body))
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_string())
+            .unwrap_or_default();
 
         // If we couldn't even find a persona or a steamid, treat as
         // logged-out rather than returning an empty struct.
@@ -213,6 +238,7 @@ impl WorkshopClient {
             account_name: account_name.unwrap_or_default(),
             steamid: steamid.unwrap_or_default(),
             profile_url: url_str,
+            avatar_url,
         })
     }
 

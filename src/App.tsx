@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 
 import Sidebar, { NavKey } from "@/components/layout/Sidebar";
 import TitleBar from "@/components/layout/TitleBar";
@@ -51,9 +51,35 @@ export default function App() {
   const legalAccepted = useAppStore((s) => s.legalAccepted);
   const setLegalAccepted = useAppStore((s) => s.setLegalAccepted);
 
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const listener = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener("change", listener);
+    return () => {
+      mediaQuery.removeEventListener("change", listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      document.documentElement.classList.add("prefers-reduced-motion");
+    } else {
+      document.documentElement.classList.remove("prefers-reduced-motion");
+    }
+  }, [prefersReducedMotion]);
+
   useEffect(() => {
     if (ready && !legalAccepted) setLegalOpen(true);
   }, [ready, legalAccepted]);
+
+
 
   const setPage = useFiltersStore((s) => s.setPage);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
@@ -101,65 +127,68 @@ export default function App() {
         : view;
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
-      <TitleBar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar current={view} onChange={changeView} />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <TopBar
-            onOpenSettings={() => setSettingsOpen(true)}
-            onOpenMulti={() => setMultiOpen(true)}
-            onOpenInfo={() => setInfoOpen(true)}
-            onOpenTasks={() => setTasksOpen(true)}
-          />
-          <main className="relative flex-1 overflow-hidden">
-            <AnimatePresence mode="wait">
-              {ready && activeKey === "workshop" && (
-                <ViewWrap key="workshop">
-                  <WorkshopView />
-                </ViewWrap>
-              )}
-              {ready && activeKey === "collections" && (
-                <ViewWrap key="collections">
-                  <CollectionsView />
-                </ViewWrap>
-              )}
-              {ready && activeKey === "installed" && (
-                <ViewWrap key="installed">
-                  <InstalledView />
-                </ViewWrap>
-              )}
-              {ready && activeKey === "author" && (
-                <ViewWrap key="author">
-                  <AuthorView />
-                </ViewWrap>
-              )}
-            </AnimatePresence>
-            {!ready && <BootLoader />}
-          </main>
-        </div>
-      </div>
+    <MotionConfig reducedMotion={prefersReducedMotion ? "always" : "never"}>
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground relative">
 
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <MultiDownloadDialog open={multiOpen} onOpenChange={setMultiOpen} />
-      <InfoDialog
-        open={infoOpen}
-        onOpenChange={setInfoOpen}
-        onCheckUpdates={() => setUpdateOpen(true)}
-        onOpenLegal={() => setLegalOpen(true)}
-      />
-      <UpdateDialog open={updateOpen} onOpenChange={setUpdateOpen} />
-      <TasksDrawer open={tasksOpen} onOpenChange={setTasksOpen} />
-      <LegalDialog
-        open={legalOpen}
-        onOpenChange={setLegalOpen}
-        requireAccept={!legalAccepted}
-        onAccept={() => setLegalAccepted(true)}
-      />
-      <ToastStack />
-      <SetupOverlay />
-      <MetadataInitDialog />
-    </div>
+        <TitleBar />
+        <div className="flex flex-1 overflow-hidden z-10">
+          <Sidebar current={view} onChange={changeView} />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <TopBar
+              onOpenSettings={() => setSettingsOpen(true)}
+              onOpenMulti={() => setMultiOpen(true)}
+              onOpenInfo={() => setInfoOpen(true)}
+              onOpenTasks={() => setTasksOpen(true)}
+            />
+            <main className="relative flex-1 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {ready && activeKey === "workshop" && (
+                  <ViewWrap key="workshop">
+                    <WorkshopView />
+                  </ViewWrap>
+                )}
+                {ready && activeKey === "collections" && (
+                  <ViewWrap key="collections">
+                    <CollectionsView />
+                  </ViewWrap>
+                )}
+                {ready && activeKey === "installed" && (
+                  <ViewWrap key="installed">
+                    <InstalledView />
+                  </ViewWrap>
+                )}
+                {ready && activeKey === "author" && (
+                  <ViewWrap key="author">
+                    <AuthorView />
+                  </ViewWrap>
+                )}
+              </AnimatePresence>
+              {!ready && <BootLoader />}
+            </main>
+          </div>
+        </div>
+
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <MultiDownloadDialog open={multiOpen} onOpenChange={setMultiOpen} />
+        <InfoDialog
+          open={infoOpen}
+          onOpenChange={setInfoOpen}
+          onCheckUpdates={() => setUpdateOpen(true)}
+          onOpenLegal={() => setLegalOpen(true)}
+        />
+        <UpdateDialog open={updateOpen} onOpenChange={setUpdateOpen} />
+        <TasksDrawer open={tasksOpen} onOpenChange={setTasksOpen} />
+        <LegalDialog
+          open={legalOpen}
+          onOpenChange={setLegalOpen}
+          requireAccept={!legalAccepted}
+          onAccept={() => setLegalAccepted(true)}
+        />
+        <ToastStack />
+        <SetupOverlay />
+        <MetadataInitDialog />
+      </div>
+    </MotionConfig>
   );
 }
 
