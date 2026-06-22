@@ -64,7 +64,7 @@ pub fn parse_browse(html: &str, current_page: u32) -> WorkshopPage {
         }
     }
 
-    let (total_pages, total_items) = parse_pagination(html, &items);
+    let (total_pages, total_items) = parse_pagination(&doc, html, &items);
     WorkshopPage {
         items,
         current_page,
@@ -424,7 +424,7 @@ fn unescape_json_string(s: &str) -> String {
     out
 }
 
-fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
+fn parse_pagination(doc: &Html, html: &str, items: &[WorkshopItem]) -> (u32, u64) {
     // Приоритет 1: ищем паттерн с многоточием и последним числом в пагинации
     // Паттерн: <div>...</div><div class="...Panel" tabindex="0" role="button">1,000</div>
     // ВАЖНО: ищем ПОСЛЕДНЕЕ совпадение, так как троеточий может быть несколько
@@ -467,12 +467,38 @@ fn parse_pagination(html: &str, items: &[WorkshopItem]) -> (u32, u64) {
         }
     }
 
-    // Приоритет 3: поиск по ссылкам пагинации (старый метод)
-    let re_pages = Regex::new(r#"(?:p|page)=(\d+)[^"]*"\s*class="[^"]*"\s*>\s*(\d+)\s*<"#).unwrap();
-    let max_page = re_pages
+    // Приоритет 3: поиск по селекторам в controls пагинации (старый метод)
+    if let Ok(paging_sel) = Selector::parse(".workshopBrowsePagingControls a, .workshopBrowsePagingControls span") {
+        let mut max_page = 0;
+        for el in doc.select(&paging_sel) {
+            let text = el.text().collect::<String>().trim().to_string();
+            if let Ok(p) = text.parse::<u32>() {
+                if p > max_page {
+                    max_page = p;
+                }
+            }
+        }
+        if max_page > 0 {
+            let per_page = items.len().max(30) as u64;
+            return (max_page, (max_page as u64) * per_page);
+        }
+    }
+
+    // Приоритет 4: поиск по ссылкам пагинации с помощью регулярного выражения (старый метод, fallback)
+    // Улучшенный регулярный выражение, поддерживающий любой порядок атрибутов
+    let re_pages_1 = Regex::new(r#"class="pagelink"[^>]*>\s*(\d+)\s*<"#).unwrap();
+    let re_pages_2 = Regex::new(r#"class="page_current"[^>]*>\s*(\d+)\s*<"#).unwrap();
+    
+    let max_page_1 = re_pages_1
         .captures_iter(html)
-        .filter_map(|c| c[2].parse::<u32>().ok())
+        .filter_map(|c| c[1].parse::<u32>().ok())
         .max();
+    let max_page_2 = re_pages_2
+        .captures_iter(html)
+        .filter_map(|c| c[1].parse::<u32>().ok())
+        .max();
+        
+    let max_page = max_page_1.max(max_page_2);
     if let Some(max) = max_page {
         let per_page = items.len().max(30) as u64;
         return (max, (max as u64) * per_page);
@@ -1028,5 +1054,23 @@ mod tests {
         assert_eq!(page.items[0].author, "Author One");
         assert_eq!(page.items[1].pubfileid, "222");
         assert_eq!(page.items[1].author, "Author Two");
+    }
+
+    #[test]
+    fn test_parse_pagination_old_style() {
+        let html = r##"
+            <div class="workshopBrowsePaging">
+                <div>
+                    Показывать на странице: 9&nbsp;<a href="?appid=431960&amp;p=1&amp;numperpage=18">18</a>&nbsp;<a href="?appid=431960&amp;p=1&amp;numperpage=30">30</a>&nbsp;
+                </div>
+                <div class="workshopBrowsePagingControls">
+                     <span class="pagebtn disabled">&lt;</span><span class="page_current">1</span><a class="pagelink" href="?appid=431960&amp;p=2">2</a><a class="pagelink" href="?appid=431960&amp;p=3">3</a>&nbsp;...&nbsp;<a class="pagelink" href="?appid=431960&amp;p=24">24</a><a class="pagebtn" href="?appid=431960&amp;p=2">&gt;</a>
+                </div>
+             </div>
+        "##;
+        let doc = Html::parse_document(html);
+        let items = vec![];
+        let (pages, _items_count) = parse_pagination(&doc, html, &items);
+        assert_eq!(pages, 24);
     }
 }

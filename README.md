@@ -117,12 +117,8 @@ https://github.com/user-attachments/assets/9d04b5a6-9893-44e4-9b1b-5938c16d4698
 
 ```bash
 # Clone repository
-git clone https://github.com/psyattack/weave-tauri.git
-cd weave-tauri
-
-# Download required tools to plugins/ directory:
-# - DepotDownloaderMod: https://github.com/SteamAutoCracks/DepotDownloaderMod/releases
-# - RePKG: https://github.com/notscuffed/repkg/releases
+git clone https://github.com/psyattack/WEave.git
+cd WEave
 
 # Install dependencies
 npm install
@@ -134,7 +130,7 @@ npm run tauri dev
 npm run tauri build
 
 # Run tests
-npm test  # Frontend tests
+npm run test  # Frontend tests
 cd src-tauri && cargo test  # Backend tests
 ```
 

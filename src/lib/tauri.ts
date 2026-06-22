@@ -42,7 +42,8 @@ export async function tryInvokeOk(
 ): Promise<boolean> {
   if (!inTauri) return false;
   try {
-    await tauriInvoke<unknown>(cmd, args);
+    const res = await tauriInvoke<unknown>(cmd, args);
+    if (typeof res === "boolean") return res;
     return true;
   } catch (err) {
     console.warn(`invoke ${cmd} failed`, err);

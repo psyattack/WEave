@@ -1,4 +1,6 @@
 import { Fragment, useMemo } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { inTauri } from "@/lib/tauri";
 
 /**
  * Tiny, dependency-free markdown renderer just powerful enough for
@@ -176,6 +178,13 @@ function renderBlock(b: Block, idx: number) {
 }
 
 function renderInline(text: string): React.ReactNode {
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (inTauri) {
+      e.preventDefault();
+      void openUrl(href);
+    }
+  };
+
   // tokenize: code, bold, italic, links, bare URLs, raw text
   const out: React.ReactNode[] = [];
   let rest = text;
@@ -232,6 +241,7 @@ function renderInline(text: string): React.ReactNode {
           target="_blank"
           rel="noreferrer"
           className="text-primary hover:underline"
+          onClick={(e) => handleLinkClick(e, m[2])}
         >
           {m[1]}
         </a>,
@@ -244,6 +254,7 @@ function renderInline(text: string): React.ReactNode {
           target="_blank"
           rel="noreferrer"
           className="text-primary hover:underline"
+          onClick={(e) => handleLinkClick(e, m[0])}
         >
           {m[0]}
         </a>,

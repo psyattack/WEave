@@ -60,17 +60,16 @@ export default function ConfirmDialog({
                 className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
               />
             </RadixDialog.Overlay>
-            <RadixDialog.Content
-              asChild
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+              <RadixDialog.Content
+                asChild
+              >
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
                   transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
-                  className="pointer-events-auto relative flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-2xl"
+                  className="pointer-events-auto relative flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-white/10 bg-background/50 backdrop-blur-3xl shadow-2xl"
                 >
                   <div className="flex items-start gap-3 px-5 py-4">
                     <div className={`mt-0.5 flex-shrink-0 ${styles.icon}`}>
@@ -86,25 +85,25 @@ export default function ConfirmDialog({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 border-t border-border bg-surface-sunken px-5 py-3">
+                  <div className="flex items-center justify-end gap-2 border-t border-white/10 bg-white/5 px-5 py-3">
                     <button
                       type="button"
                       onClick={() => onOpenChange(false)}
-                      className="rounded-md px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-raised"
+                      className="hover-shimmer rounded-md px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/10"
                     >
                       {cancelLabel}
                     </button>
                     <button
                       type="button"
                       onClick={handleConfirm}
-                      className={`rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition-colors ${styles.button}`}
+                      className={`hover-shimmer rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition-colors ${styles.button}`}
                     >
                       {confirmLabel}
                     </button>
                   </div>
                 </motion.div>
-              </div>
-            </RadixDialog.Content>
+              </RadixDialog.Content>
+            </div>
           </RadixDialog.Portal>
         )}
       </AnimatePresence>

@@ -224,86 +224,88 @@ export default function FilterBar() {
           onValueChange={(v) => setFilters({ age_rating: v, page: 1 })}
           options={ageRatingOptions}
         />
-        <button
-          onClick={toggleAdvanced}
-          className={cn(
-            "btn-icon relative",
-            showAdvanced && "bg-primary/10 text-primary",
-          )}
-          aria-expanded={showAdvanced}
-        >
-          <Filter className="h-5 w-5" />
-          {activeFiltersCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-              {activeFiltersCount}
-            </span>
-          )}
-        </button>
-        {hasActiveFilters && (
+        <div className={cn(
+          "flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/50 rounded-md",
+          hasActiveFilters && "border border-border/80"
+        )}>
           <button
-            onClick={resetFilters}
-            className="btn-icon"
-            aria-label={t("labels.clear")}
+            onClick={toggleAdvanced}
+            className={cn(
+              "relative flex h-[38px] w-[38px] items-center justify-center outline-none transition-colors",
+              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-surface-raised",
+              hasActiveFilters ? "rounded-l-[5px]" : "rounded-md"
+            )}
+            aria-expanded={showAdvanced}
           >
-            <X className="h-5 w-5" />
+            <Filter className="h-5 w-5" />
+            {activeFiltersCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                {activeFiltersCount}
+              </span>
+            )}
           </button>
-        )}
+          {hasActiveFilters && (
+            <>
+              <div className="h-[22px] w-[1px] bg-border/80" />
+              <button
+                onClick={resetFilters}
+                className="flex h-[38px] w-[38px] items-center justify-center rounded-r-[5px] outline-none transition-colors text-muted hover:bg-danger/15 hover:text-danger"
+                aria-label={t("labels.clear")}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <AnimatePresence>
         {showAdvanced && (
-          <>
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-            >
-              <TagBlock
-                title={t("labels.miscellaneous")}
-                tags={MISC_TAGS}
-                included={filters.misc_tags}
-                excluded={filters.excluded_misc_tags}
-                onToggleInclude={(tag) => toggleTag("misc_tags", tag)}
-                onToggleExclude={(tag) => {
-                  const current = filters.excluded_misc_tags;
-                  const next = current.includes(tag)
-                    ? current.filter((t) => t !== tag)
-                    : [...current, tag];
-                  setFilters({ excluded_misc_tags: next, page: 1 });
-                }}
-                isFirst={true}
-                isLast={false}
-                i18n={i18n}
-                i18nPrefix="filters.misc_tags"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-            >
-              <TagBlock
-                title={t("labels.genre")}
-                tags={GENRE_TAGS}
-                included={filters.genre_tags}
-                excluded={filters.excluded_genre_tags}
-                onToggleInclude={(tag) => toggleTag("genre_tags", tag)}
-                onToggleExclude={(tag) => {
-                  const current = filters.excluded_genre_tags;
-                  const next = current.includes(tag)
-                    ? current.filter((t) => t !== tag)
-                    : [...current, tag];
-                  setFilters({ excluded_genre_tags: next, page: 1 });
-                }}
-                isFirst={false}
-                isLast={true}
-                i18n={i18n}
-                i18nPrefix="filters.genre_tags"
-              />
-            </motion.div>
-          </>
+          <motion.div
+            key="advanced-filter-panel"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="flex flex-col gap-2"
+          >
+            <TagBlock
+              title={t("labels.miscellaneous")}
+              tags={MISC_TAGS}
+              included={filters.misc_tags}
+              excluded={filters.excluded_misc_tags}
+              onToggleInclude={(tag) => toggleTag("misc_tags", tag)}
+              onToggleExclude={(tag) => {
+                const current = filters.excluded_misc_tags;
+                const next = current.includes(tag)
+                  ? current.filter((t) => t !== tag)
+                  : [...current, tag];
+                setFilters({ excluded_misc_tags: next, page: 1 });
+              }}
+              isFirst={true}
+              isLast={false}
+              i18n={i18n}
+              i18nPrefix="filters.misc_tags"
+            />
+            <TagBlock
+              title={t("labels.genre")}
+              tags={GENRE_TAGS}
+              included={filters.genre_tags}
+              excluded={filters.excluded_genre_tags}
+              onToggleInclude={(tag) => toggleTag("genre_tags", tag)}
+              onToggleExclude={(tag) => {
+                const current = filters.excluded_genre_tags;
+                const next = current.includes(tag)
+                  ? current.filter((t) => t !== tag)
+                  : [...current, tag];
+                setFilters({ excluded_genre_tags: next, page: 1 });
+              }}
+              isFirst={false}
+              isLast={true}
+              i18n={i18n}
+              i18nPrefix="filters.genre_tags"
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

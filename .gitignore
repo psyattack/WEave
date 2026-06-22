@@ -1,23 +1,7 @@
 # Node
 node_modules
 dist
-dist-ssr
-*.local
-.DS_Store
 
-# Logs
-logs
-*.log
-npm-debug.log*
-
-# Editor
-.vscode/*
-!.vscode/extensions.json
-.idea
-
-# Rust / Tauri
+# Tauri
 src-tauri/target
 src-tauri/gen
-
-# Bundled plugins
-plugins/

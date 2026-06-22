@@ -155,21 +155,28 @@ export function useBootstrap() {
           if (normalizedPhase === "failed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
-                `Download failed (${event.payload.pubfileid}): ${event.payload.status}`,
+                i18n.t("bootstrap.download_failed", {
+                  id: event.payload.pubfileid,
+                  status: event.payload.status,
+                }),
                 "error",
               );
             });
           } else if (normalizedPhase === "cancelled") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
-                `Download cancelled: ${event.payload.pubfileid}`,
+                i18n.t("bootstrap.download_cancelled", {
+                  id: event.payload.pubfileid,
+                }),
                 "warning",
               );
             });
           } else if (normalizedPhase === "completed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
-                `Download completed: ${event.payload.pubfileid}`,
+                i18n.t("bootstrap.download_completed", {
+                  id: event.payload.pubfileid,
+                }),
                 "success",
               );
             });
@@ -205,14 +212,19 @@ export function useBootstrap() {
           if (normalizedPhase === "failed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
-                `Extract failed (${event.payload.pubfileid}): ${event.payload.status}`,
+                i18n.t("bootstrap.extract_failed", {
+                  id: event.payload.pubfileid,
+                  status: event.payload.status,
+                }),
                 "error",
               );
             });
           } else if (normalizedPhase === "completed") {
             void import("@/stores/toasts").then(({ pushToast }) => {
               pushToast(
-                `Extract completed: ${event.payload.pubfileid}`,
+                i18n.t("bootstrap.extract_completed", {
+                  id: event.payload.pubfileid,
+                }),
                 "success",
               );
             });
@@ -308,36 +320,57 @@ async function syncSteamSession() {
   }
   session.setLoggingIn();
   try {
-    // `accountIndex: null` → use the dedicated parser credentials. Returns
-    // false when login couldn't be completed (stale password, Steam Guard
-    // prompt, no credentials configured, …).
-    const ok = await tryInvoke<boolean>(
-      "steam_auto_login",
-      { accountIndex: null },
-      false,
-    );
-    if (!ok) {
-      // Auto-login itself failed; but a session from a previous run may have
-      // been restored from disk, so double-check before flagging an error.
-      const loggedIn = await tryInvoke<boolean>(
-        "steam_is_logged_in",
-        undefined,
-        false,
-      );
-      if (!loggedIn) {
-        session.setError();
-        return;
-      }
-    }
-    // Ask Steam itself who we're signed in as. A null result means the
-    // session is attached but Steam didn't resolve a concrete account — the
-    // store maps that to the "unknown" state.
-    const info = await tryInvoke<SteamAccountInfo | null>(
+    // First check if we have a valid session by hitting Steam directly.
+    // This is more reliable than trusting the cookie alone.
+    let info = await tryInvoke<SteamAccountInfo | null>(
       "steam_current_account",
       undefined,
       null,
     );
-    session.setLoggedIn(info ?? null);
+
+    if (info) {
+      // Session is valid — we're already logged in.
+      session.setLoggedIn(info);
+      return;
+    }
+
+    // No valid session found. Try auto-login with the parser credentials.
+    // `accountIndex: null` → use the dedicated parser credentials.
+    let ok = await tryInvoke<boolean>(
+      "steam_auto_login",
+      { accountIndex: null },
+      false,
+    );
+
+    // Verify the session is actually valid after auto-login.
+    if (ok) {
+      info = await tryInvoke<SteamAccountInfo | null>(
+        "steam_current_account",
+        undefined,
+        null,
+      );
+      if (info) {
+        session.setLoggedIn(info);
+        return;
+      }
+      // Cookie existed but session was stale — force re-login.
+      ok = await tryInvoke<boolean>(
+        "steam_auto_login",
+        { accountIndex: null, force: true },
+        false,
+      );
+    }
+
+    if (ok) {
+      info = await tryInvoke<SteamAccountInfo | null>(
+        "steam_current_account",
+        undefined,
+        null,
+      );
+      session.setLoggedIn(info ?? null);
+    } else {
+      session.setError();
+    }
   } catch {
     session.setError();
   }

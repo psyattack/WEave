@@ -44,7 +44,7 @@ export function useConfirm() {
     setIsOpen(false);
   };
 
-  const ConfirmDialogComponent = () => (
+  const confirmDialogElement = (
     <ConfirmDialog
       open={isOpen}
       onOpenChange={(open) => {
@@ -59,5 +59,6 @@ export function useConfirm() {
     />
   );
 
-  return { confirm, ConfirmDialog: ConfirmDialogComponent };
+  return { confirm, ConfirmDialog: confirmDialogElement };
 }
+

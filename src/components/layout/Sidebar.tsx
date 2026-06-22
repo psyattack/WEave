@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   FolderHeart,
   Globe,
-  HelpCircle,
   Layers,
   Loader2,
   PanelLeftClose,
@@ -15,12 +14,13 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+
 import { useAppStore } from "@/stores/app";
 import {
   useSteamSessionStore,
   SteamSessionPhase,
 } from "@/stores/steam-session";
-import AppIcon from "@/assets/icon.svg?react";
+import AppIcon from "@/components/common/AppIcon";
 
 export type NavKey = "workshop" | "collections" | "installed";
 
@@ -43,7 +43,7 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex shrink-0 flex-col gap-2 border-r border-border bg-surface-sunken py-4 transition-[width] duration-200 ease-out",
+        "flex shrink-0 flex-col gap-2 border-r border-white/5 bg-surface-sunken/70 backdrop-blur-md py-4 transition-[width] duration-200 ease-out",
         collapsed
           ? "w-[64px] items-center px-1"
           : "w-[165px] items-stretch px-3",
@@ -80,6 +80,7 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
                 active && "nav-item-active",
               )}
               aria-current={active ? "page" : undefined}
+              aria-label={i18n.t(item.labelKey as any)}
             >
               {active && (
                 <motion.span
@@ -109,6 +110,11 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
             "nav-item text-subtle hover:text-foreground",
             collapsed ? "justify-center" : "justify-start",
           )}
+          aria-label={
+            collapsed
+              ? t("tooltips.expand_sidebar")
+              : t("tooltips.collapse_sidebar")
+          }
         >
           {collapsed ? (
             <PanelLeftOpen className="h-5 w-5 shrink-0" />
@@ -150,14 +156,6 @@ function visualsFor(phase: SteamSessionPhase): StatusVisuals | null {
         dotTone: "bg-success",
         labelKey: "steam_status.signed_in",
       };
-    case "unknown":
-      return {
-        Icon: HelpCircle,
-        spin: false,
-        tone: "text-warning",
-        dotTone: "bg-warning",
-        labelKey: "steam_status.unknown_account",
-      };
     case "error":
       return {
         Icon: AlertCircle,
@@ -180,27 +178,17 @@ function visualsFor(phase: SteamSessionPhase): StatusVisuals | null {
 function SteamSessionStatus({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation();
   const phase = useSteamSessionStore((s) => s.phase);
-  const account = useSteamSessionStore((s) => s.account);
 
   const visuals = visualsFor(phase);
   if (!visuals) return null;
 
   const { Icon, spin, tone, dotTone, labelKey } = visuals;
   const label = t(labelKey);
-  const accountName =
-    account?.persona_name?.trim() || account?.account_name?.trim() || "";
-  // For the signed-in state we prefer to show who we're signed in as.
-  const text = phase === "logged-in" && accountName ? accountName : label;
-  const tooltip =
-    phase === "logged-in" && accountName
-      ? `${label} \u00b7 ${accountName}`
-      : label;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      title={`${t("steam_status.title")}: ${tooltip}`}
       className={cn(
         "flex items-center gap-2 rounded-md border border-border bg-surface-sunken px-2 py-1.5 text-[11px]",
         collapsed ? "relative justify-center" : "justify-start",
@@ -218,7 +206,7 @@ function SteamSessionStatus({ collapsed }: { collapsed: boolean }) {
           )}
         />
       ) : (
-        <span className={cn("truncate", tone)}>{text}</span>
+        <span className={cn("truncate", tone)}>{label}</span>
       )}
     </div>
   );

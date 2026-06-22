@@ -17,6 +17,7 @@ import { open as openPath } from "@tauri-apps/plugin-dialog";
 
 import PreviewImage from "@/components/common/PreviewImage";
 import { InstalledWallpaper, WorkshopItem } from "@/types/workshop";
+import { useAppStore } from "@/stores/app";
 import { useInstalledStore } from "@/stores/installed";
 import { useTasksStore } from "@/stores/tasks";
 import { pushToast } from "@/stores/toasts";
@@ -40,6 +41,7 @@ export default function WorkshopCard({
   hideDownload,
 }: Props) {
   const { t } = useTranslation();
+  const enableLayoutAnimations = useAppStore((s) => s.enableLayoutAnimations);
   const { confirm, ConfirmDialog } = useConfirm();
   const installed = useInstalledStore((s) => s.byId[item.pubfileid]);
   const refreshInstalled = useInstalledStore((s) => s.refresh);
@@ -63,6 +65,33 @@ export default function WorkshopCard({
     (downloadTask.phase === "starting" || downloadTask.phase === "running");
   const downloadProgress =
     typeof downloadTask?.progress === "number" ? downloadTask.progress : null;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const appState = useAppStore.getState();
+    const lowPerf = appState.lowPerformance;
+    const enable3d = appState.enable3dCards;
+    if (reduceMotion || lowPerf || !enable3d) {
+      return;
+    }
+
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const width = rect.width || 200;
+    const height = rect.height || 250;
+    const x = e.clientX - (rect.left || 0);
+    const y = e.clientY - (rect.top || 0);
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const rotateX = ((y - centerY) / centerY) * -15; // Max 15 degrees tilt
+    const rotateY = ((x - centerX) / centerX) * 15;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.transform = "";
+  };
 
   // Installed quick actions — Apply / Extract / Open folder / Delete.
   // These mirror `InstalledView` so a downloaded wallpaper surfaced in
@@ -174,18 +203,23 @@ export default function WorkshopCard({
   return (
     <>
       <motion.article
-        layout
+        layout={enableLayoutAnimations ? true : false}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
-        transition={{ duration: 0.18 }}
+        transition={enableLayoutAnimations ? { duration: 0.3, ease: "easeOut" } : { duration: 0.15 }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         className={cn(
           "card card-hover group relative flex flex-col overflow-hidden",
-          (isDownloading || isDeleting) && "pointer-events-none",
+          enableLayoutAnimations
+            ? "transition-all duration-300 ease-out"
+            : "transition-[border-color,box-shadow] duration-200",
+          isDeleting && "pointer-events-none",
         )}
       >
         <div
-          className="relative aspect-square w-full overflow-hidden bg-surface-sunken cursor-pointer"
+          className="relative aspect-square w-full overflow-hidden rounded-[inherit] [-webkit-mask-image:-webkit-radial-gradient(white,black)] bg-surface-sunken cursor-pointer"
           onClick={() => onOpen(item)}
         >
           <PreviewImage
@@ -193,9 +227,8 @@ export default function WorkshopCard({
             src={item.preview_url}
             alt={item.title}
             className={cn(
-              "h-full w-full scale-[1.02] object-cover transition-all",
-              !isDownloading &&
-                "duration-700 ease-out group-hover:scale-[1.15] group-hover:brightness-75",
+              "h-full w-full scale-[1.02] object-cover transition-all rounded-[inherit]",
+              "duration-700 ease-out group-hover:scale-[1.15] group-hover:brightness-75",
             )}
           />
 
@@ -203,7 +236,7 @@ export default function WorkshopCard({
           <div
             className={cn(
               "absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300",
-              !isDownloading && "group-hover:opacity-90",
+              "group-hover:opacity-90",
             )}
           />
 
@@ -354,14 +387,12 @@ export default function WorkshopCard({
             <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12">
               <h3
                 className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg"
-                title={item.title}
               >
                 {item.title || "—"}
               </h3>
               <div className="flex items-center gap-2 text-[10px]">
                 <span
                   className="line-clamp-1 flex-1 font-medium text-white/90 drop-shadow-md"
-                  title={item.author || ""}
                 >
                   {item.author || "—"}
                 </span>
@@ -376,10 +407,11 @@ export default function WorkshopCard({
           )}
         </div>
       </motion.article>
-      <ConfirmDialog />
+      {ConfirmDialog}
     </>
   );
 }
+
 
 function QuickIcon({
   onClick,

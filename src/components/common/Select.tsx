@@ -10,6 +10,7 @@ interface Option {
 }
 
 interface Props {
+  id?: string;
   value: string;
   onValueChange: (value: string) => void;
   options: Option[];
@@ -21,6 +22,7 @@ interface Props {
 const EMPTY_SENTINEL = "__empty__";
 
 export default function Select({
+  id,
   value,
   onValueChange,
   options,
@@ -35,6 +37,7 @@ export default function Select({
       onValueChange={(v) => onValueChange(v === EMPTY_SENTINEL ? "" : v)}
     >
       <RadixSelect.Trigger
+        id={id}
         className={cn(
           "flex min-w-[120px] items-center gap-2 rounded-md bg-surface-sunken border border-border px-3 py-2 text-sm outline-none hover:border-border-strong focus:ring-2 focus:ring-primary/30",
           className,

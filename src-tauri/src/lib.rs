@@ -123,6 +123,7 @@ pub fn run() {
             commands::extract::extract_status_all,
             commands::image::open_path,
             commands::steam::steam_login_show,
+            commands::steam::steam_parser_show,
             commands::steam::steam_login_hide,
             commands::steam::steam_sync_cookies,
             commands::steam::steam_is_logged_in,

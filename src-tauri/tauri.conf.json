@@ -13,8 +13,8 @@
       {
         "label": "main",
         "title": "WEave",
-        "width": 1280,
-        "height": 800,
+        "width": 1200,
+        "height": 700,
         "minWidth": 960,
         "minHeight": 600,
         "resizable": true,
@@ -25,7 +25,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost https://steamuserimages-a.akamaihd.net https://images.steamusercontent.com https://shared.fastly.steamstatic.com https://steamcommunity.com data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost https://steamcommunity.com https://api.github.com https://translate.googleapis.com; font-src 'self' data:",
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost https://steamuserimages-a.akamaihd.net https://images.steamusercontent.com https://shared.fastly.steamstatic.com https://avatars.fastly.steamstatic.com https://steamcommunity.com data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost https://steamcommunity.com https://api.github.com https://translate.googleapis.com; font-src 'self' data:",
       "assetProtocol": {
         "enable": true,
         "scope": ["**"]

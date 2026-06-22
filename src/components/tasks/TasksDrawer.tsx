@@ -88,11 +88,11 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    className="card flex gap-3 p-3"
+                    className="flex gap-3 p-3 rounded-xl border border-white/5 bg-white/5 backdrop-blur-md shadow-lg"
                   >
                     <TaskPreview pubfileid={task.pubfileid} />
                     <div className="min-w-0 flex-1">
-                      <div className="mb-2 flex items-center justify-between gap-2">
+                      <div className="mb-0.5 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-sm font-medium">
                           {task.kind === "download" ? (
                             <Download className="h-4 w-4 text-primary" />
@@ -145,7 +145,7 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
               {history.map((task, i) => (
                 <div
                   key={`${task.kind}-${task.pubfileid}-${i}`}
-                  className="card flex items-center gap-2 p-2 text-xs text-muted"
+                  className="flex items-center gap-2 p-2 text-xs text-muted rounded-lg border border-white/5 bg-white/5 backdrop-blur-sm"
                 >
                   <TaskPreview pubfileid={task.pubfileid} small />
                   {task.phase === "completed" ? (
@@ -157,8 +157,10 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-foreground">
-                      {task.kind.charAt(0).toUpperCase() + task.kind.slice(1)}:{" "}
-                      {task.pubfileid}
+                      {task.kind === "download"
+                        ? t("labels.download_prefix")
+                        : t("labels.extract_prefix")}
+                      : {task.pubfileid}
                     </div>
                     <div className="truncate">
                       {task.phase === "cancelled"
@@ -171,7 +173,7 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                       type="button"
                       onClick={() => void handleRetry(task)}
                       className="ml-auto inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:bg-surface-raised hover:text-foreground"
-                      title="Retry"
+                      title={t("buttons.retry")}
                     >
                       <RotateCcw className="h-4 w-4" />
                     </button>
@@ -238,10 +240,10 @@ function TaskPreview({
     };
   }, [pubfileid, installed]);
 
-  const dim = small ? "h-9 w-9" : "h-12 w-12";
+  const dim = small ? "h-10 w-10" : "h-16 w-16";
   return (
     <div
-      className={`${dim} shrink-0 overflow-hidden rounded-md border border-border bg-surface-sunken`}
+      className={`${dim} shrink-0 overflow-hidden rounded-md border border-white/10 bg-surface-sunken/50`}
     >
       {src ? (
         <PreviewImage

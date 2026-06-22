@@ -7,7 +7,7 @@ import {
   Leaf,
   ListTodo,
   Moon,
-  Palette,
+//   Palette,
   RefreshCw,
   Settings,
   Sun,
@@ -23,7 +23,6 @@ import { Tooltip } from "@/components/common/Tooltip";
 function ThemeIcon({ theme }: { theme: ThemeCode }) {
   if (theme === "light") return <Sun className="h-5 w-5" />;
   if (theme === "nord") return <Droplet className="h-5 w-5" />;
-  if (theme === "monokai") return <Palette className="h-5 w-5" />;
   if (theme === "solarized") return <Leaf className="h-5 w-5" />;
   return <Moon className="h-5 w-5" />;
 }
@@ -97,17 +96,29 @@ export default function TopBar({
           </button>
         </Tooltip>
         <Tooltip content={t("tooltips.multi_download")} side="bottom">
-          <button className="btn-icon" onClick={onOpenMulti}>
+          <button
+            className="btn-icon"
+            onClick={onOpenMulti}
+            aria-label={t("tooltips.multi_download") || "Multi-Download"}
+          >
             <Layers className="h-5 w-5" />
           </button>
         </Tooltip>
         <Tooltip content={t("tooltips.info")} side="bottom">
-          <button className="btn-icon" onClick={onOpenInfo}>
+          <button
+            className="btn-icon"
+            onClick={onOpenInfo}
+            aria-label={t("tooltips.info") || "Information"}
+          >
             <Info className="h-5 w-5" />
           </button>
         </Tooltip>
         <Tooltip content={t("tooltips.settings")} side="bottom">
-          <button className="btn-icon" onClick={onOpenSettings}>
+          <button
+            className="btn-icon"
+            onClick={onOpenSettings}
+            aria-label={t("tooltips.settings") || "Settings"}
+          >
             <Settings className="h-5 w-5" />
           </button>
         </Tooltip>
