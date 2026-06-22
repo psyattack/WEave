@@ -73,7 +73,7 @@ https://github.com/user-attachments/assets/9d04b5a6-9893-44e4-9b1b-5938c16d4698
 <details>
 <summary><b>🎨 Персонализация</b></summary>
 
-- 5 встроенных тем
+- 4 встроенных тем
 - 10 акцентных цветов
 - Поддержка нескольких языков (английский, русский)
 - Автоопределение системного языка при первом запуске
@@ -161,12 +161,12 @@ cd src-tauri && cargo test  # Тесты backend
 - **Tauri 2** (Десктопный фреймворк)
 - **Vite** (Сборщик)
 - **TailwindCSS** (Стилизация)
-- **Framer Motion** (Анимации)
+- **Framer Motion** (Анимации с поддержкой режима уменьшения движения)
 - **Radix UI** (Компоненты)
 - **Zustand** (Управление состоянием)
 - **Type-safe i18n** (Собственная система)
 - **Lucide React** (Иконки)
-- **Vitest** (Тестирование)
+- **Vitest** (Юнит, интеграционные и сквозные (E2E) тесты с кастомным макетированием Tauri)
 
 </td>
 <td width="50%">
@@ -198,18 +198,20 @@ WEave/
 ├── src/                              # React frontend
 │   ├── components/
 │   │   ├── common/                   # Переиспользуемые UI (Dialog, Drawer, SetupOverlay и др.)
-│   │   ├── dialogs/                  # Модальные окна (Settings, Legal, Update и др.)
-│   │   ├── installed/                # Компоненты установленных обоев
+│   │   │   └── details/              # Подкомпоненты панели подробностей (Кнопки действий, Мета-сетка, Боковая панель)
+│   │   ├── dialogs/                  # Модальные окна (Legal, Update и др.)
+│   │   ├── installed/                # Компоненты установленных обоев (Сетка, Панель инструментов, Панель выбора, Карточка)
 │   │   ├── layout/                   # TitleBar, Sidebar, TopBar
-│   │   ├── settings/                 # Секции диалога настроек
+│   │   ├── settings/                 # Вкладки настроек (General, Accounts, Appearance и др.)
 │   │   ├── tasks/                    # Панель задач загрузки/извлечения
 │   │   ├── views/                    # Основные представления (Workshop, Collections, Installed)
 │   │   └── workshop/                 # Компоненты Workshop (Cards, Filters, Details)
 │   ├── stores/                       # Zustand хранилища состояний (dotnet, plugins и др.)
-│   ├── hooks/                        # React хуки (useBootstrap, useTheme и др.)
-│   ├── lib/                          # Утилиты (errors, logger, helpers)
+│   ├── hooks/                        # React хуки (useBootstrap, useTheme, useWallpaperActions, useDetailsMeta, useConfirm)
+│   ├── lib/                          # Утилиты (errors, logger, helpers, tauri-mock)
 │   ├── i18n/                         # Типобезопасная система i18n
 │   ├── types/                        # TypeScript определения типов
+│   ├── e2e/                          # Сквозные (E2E) и интеграционные тесты (доступность, стресс-тесты, сценарии)
 │   └── assets/                       # Статические ресурсы
 │
 ├── src-tauri/                        # Rust backend
@@ -218,12 +220,12 @@ WEave/
 │   │   │   ├── accounts.rs           # Управление аккаунтами
 │   │   │   ├── download.rs           # Оркестрация загрузок
 │   │   │   ├── extract.rs            # Извлечение пакетов
-│   │   │   ├── steam.rs              # Steam логин/cookies
+│   │   │   ├── steam.rs              # Steam логин/cookies/отображение webview
 │   │   │   ├── dotnet.rs             # Управление .NET runtime
 │   │   │   ├── plugins.rs            # Инициализация плагинов
 │   │   │   ├── logging.rs            # Интеграция логирования
 │   │   │   └── ...
-│   │   ├── workshop/                 # Парсер Steam Workshop
+│   │   ├── workshop/                 # Парсер Steam Workshop (аватары, отображаемые имена)
 │   │   ├── accounts/                 # Шифрованное хранилище аккаунтов
 │   │   ├── config/                   # Управление конфигурацией
 │   │   ├── download/                 # Менеджер загрузок (обёртка DepotDownloader)

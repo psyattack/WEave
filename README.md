@@ -73,7 +73,7 @@ https://github.com/user-attachments/assets/9d04b5a6-9893-44e4-9b1b-5938c16d4698
 <details>
 <summary><b>🎨 Customization</b></summary>
 
-- 5 built-in themes
+- 4 built-in themes
 - 10 accent colors
 - Multi-language support (English, Russian)
 - Auto-detect system language on first launch
@@ -161,12 +161,12 @@ cd src-tauri && cargo test  # Backend tests
 - **Tauri 2** (Desktop framework)
 - **Vite** (Build tool)
 - **TailwindCSS** (Styling)
-- **Framer Motion** (Animations)
+- **Framer Motion** (Animations with reduced motion support)
 - **Radix UI** (Components)
 - **Zustand** (State management)
 - **Type-safe i18n** (Custom system)
 - **Lucide React** (Icons)
-- **Vitest** (Testing)
+- **Vitest** (Unit, Integration, and E2E testing with custom Tauri mock setup)
 
 </td>
 <td width="50%">
@@ -198,18 +198,20 @@ WEave/
 ├── src/                              # React frontend
 │   ├── components/
 │   │   ├── common/                   # Reusable UI (Dialog, Drawer, SetupOverlay, etc.)
-│   │   ├── dialogs/                  # Modal dialogs (Settings, Legal, Update, etc.)
-│   │   ├── installed/                # Installed wallpapers components
+│   │   │   └── details/              # Details panel subcomponents (Action buttons, Meta grid, Sidebar)
+│   │   ├── dialogs/                  # Modal dialogs (Legal, Update, etc.)
+│   │   ├── installed/                # Installed wallpapers components (Grid, Toolbar, Selection bar, Card)
 │   │   ├── layout/                   # TitleBar, Sidebar, TopBar
-│   │   ├── settings/                 # Settings dialog sections
+│   │   ├── settings/                 # Settings dialog tabs (General, Accounts, Appearance, etc.)
 │   │   ├── tasks/                    # Download/extract task drawer
 │   │   ├── views/                    # Main views (Workshop, Collections, Installed)
 │   │   └── workshop/                 # Workshop components (Cards, Filters, Details)
 │   ├── stores/                       # Zustand state stores (dotnet, plugins, etc.)
-│   ├── hooks/                        # React hooks (useBootstrap, useTheme, etc.)
-│   ├── lib/                          # Utilities (errors, logger, helpers)
+│   ├── hooks/                        # React hooks (useBootstrap, useTheme, useWallpaperActions, useDetailsMeta, useConfirm)
+│   ├── lib/                          # Utilities (errors, logger, helpers, tauri-mock)
 │   ├── i18n/                         # Type-safe i18n system
 │   ├── types/                        # TypeScript definitions
+│   ├── e2e/                          # End-to-End and Integration tests (accessibility, stress, scenarios)
 │   └── assets/                       # Static assets
 │
 ├── src-tauri/                        # Rust backend
@@ -218,12 +220,12 @@ WEave/
 │   │   │   ├── accounts.rs           # Account management
 │   │   │   ├── download.rs           # Download orchestration
 │   │   │   ├── extract.rs            # Package extraction
-│   │   │   ├── steam.rs              # Steam login/cookies
+│   │   │   ├── steam.rs              # Steam login/cookies/webview show
 │   │   │   ├── dotnet.rs             # .NET runtime management
 │   │   │   ├── plugins.rs            # Plugin initialization
 │   │   │   ├── logging.rs            # Logging integration
 │   │   │   └── ...
-│   │   ├── workshop/                 # Steam Workshop parser
+│   │   ├── workshop/                 # Steam Workshop parser (avatar URL, display names)
 │   │   ├── accounts/                 # Encrypted account storage
 │   │   ├── config/                   # Configuration management
 │   │   ├── download/                 # Download manager (DepotDownloader wrapper)
