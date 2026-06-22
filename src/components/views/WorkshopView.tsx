@@ -11,6 +11,7 @@ import { useFiltersStore } from "@/stores/filters";
 import { useAppStore } from "@/stores/app";
 import { pushToast } from "@/stores/toasts";
 import { useRefreshStore } from "@/stores/refresh";
+import { useSteamSessionStore } from "@/stores/steam-session";
 import { usePaginationContext } from "@/hooks/usePaginationContext";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import type { WorkshopFilters } from "@/stores/filters";
@@ -23,6 +24,7 @@ export default function WorkshopView() {
   const setViewPage = useFiltersStore((s) => s.setViewPage);
   const getViewPage = useFiltersStore((s) => s.getViewPage);
   const accountIndex = useAppStore((s) => s.accountIndex);
+  const steamPhase = useSteamSessionStore((s) => s.phase);
   const [page, setPageData] = useState<WorkshopPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WorkshopItem | null>(null);
@@ -56,6 +58,10 @@ export default function WorkshopView() {
   }, [filters.page]);
 
   useEffect(() => {
+    if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
+      setLoading(true);
+      return;
+    }
     let active = true;
 
     const cached = cacheRef.current.get(filtersKey);
@@ -111,7 +117,7 @@ export default function WorkshopView() {
     return () => {
       active = false;
     };
-  }, [filters, filtersKey, refreshCounter]);
+  }, [filters, filtersKey, refreshCounter, steamPhase]);
 
   const items = page?.items ?? [];
   const total = page?.total_items ?? 0;
