@@ -14,6 +14,7 @@ import { useRefreshStore } from "@/stores/refresh";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { pushToast } from "@/stores/toasts";
+import { useSteamSessionStore } from "@/stores/steam-session";
 import { usePaginationContext } from "@/hooks/usePaginationContext";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import type { WorkshopFilters } from "@/stores/filters";
@@ -53,6 +54,7 @@ export default function CollectionsView() {
   const accountIndex = useAppStore((s) => s.accountIndex);
   const sub = useNavStore((s) => s.sub);
   const navBack = useNavStore((s) => s.back);
+  const steamPhase = useSteamSessionStore((s) => s.phase);
   const [page, setPageData] = useState<WorkshopPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WorkshopItem | null>(null);
@@ -124,6 +126,10 @@ export default function CollectionsView() {
 
   useEffect(() => {
     if (requestedCollectionId) return;
+    if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
+      setLoading(true);
+      return;
+    }
     let active = true;
 
     const cached = cacheRef.current.get(filtersKey);
@@ -182,7 +188,7 @@ export default function CollectionsView() {
     return () => {
       active = false;
     };
-  }, [filtersKey, filters, requestedCollectionId, refreshCounter]);
+  }, [filtersKey, filters, requestedCollectionId, refreshCounter, steamPhase]);
 
   const items = page?.items ?? [];
   const total = page?.total_items ?? 0;

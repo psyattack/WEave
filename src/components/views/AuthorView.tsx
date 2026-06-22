@@ -12,6 +12,7 @@ import { useRefreshStore } from "@/stores/refresh";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { pushToast } from "@/stores/toasts";
+import { useSteamSessionStore } from "@/stores/steam-session";
 import { usePaginationContext } from "@/hooks/usePaginationContext";
 import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ export default function AuthorView() {
   const sub = useNavStore((s) => s.sub);
   const navBack = useNavStore((s) => s.back);
   const openCollectionNav = useNavStore((s) => s.openCollection);
+  const steamPhase = useSteamSessionStore((s) => s.phase);
 
   const profileUrl = sub.kind === "author" ? sub.profileUrl : "";
   const displayName = sub.kind === "author" ? sub.displayName : "";
@@ -78,6 +80,10 @@ export default function AuthorView() {
 
   useEffect(() => {
     if (!profileUrl) return;
+    if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
+      setLoading(true);
+      return;
+    }
     let active = true;
     setLoading(true);
     void (async () => {
@@ -109,7 +115,7 @@ export default function AuthorView() {
     return () => {
       active = false;
     };
-  }, [key, profileUrl, tab, filters, refreshCounter]);
+  }, [key, profileUrl, tab, filters, refreshCounter, steamPhase]);
 
   const handleOpen = (item: WorkshopItem) => {
     if (tab === "collections") {
