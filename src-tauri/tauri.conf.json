@@ -1,0 +1,41 @@
+{
+  "productName": "WEave",
+  "version": "4.7.0",
+  "identifier": "WEave",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "WEave",
+        "width": 1200,
+        "height": 700,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "decorations": false,
+        "transparent": false,
+        "shadow": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost https://steamuserimages-a.akamaihd.net https://images.steamusercontent.com https://shared.fastly.steamstatic.com https://avatars.fastly.steamstatic.com https://steamcommunity.com data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost https://steamcommunity.com https://api.github.com https://translate.googleapis.com; font-src 'self' data:",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.ico"],
+    "resources": []
+  }
+}

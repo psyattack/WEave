@@ -1,0 +1,393 @@
+//! Hidden Steam WebView: keeps a persistent browser profile (matches the
+//! Python app's `QWebEngineProfile` with persistent cookies) so that the
+//! user can log in to Steam once, and the authenticated cookies are reused
+//! for reqwest-based Workshop scraping on every subsequent run.
+//!
+//! Ports of:
+//!   - `infrastructure/steam/workshop_scripts.py::login_form_fill_script`
+//!   - `ui/tabs/workshop_tab.py::_handle_load_finished` (auto-login driver)
+//!
+//! The webview is created invisible and remains invisible while we drive the
+//! login form in JavaScript; only when auto-login fails do we prompt the
+//! user to click "Open Steam login" and show the window so they can log in
+//! (or answer a Steam Guard challenge) manually.
+
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
+
+use reqwest::cookie::{CookieStore, Jar};
+use reqwest::header::HeaderValue;
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tokio::sync::Mutex;
+use tokio::time::sleep;
+
+pub const LABEL: &str = "steam-webview";
+const STEAM_LOGIN_URL: &str =
+    "https://steamcommunity.com/login/home/?goto=workshop%2Fbrowse%2F%3Fappid%3D431960";
+const STEAM_HOME_URL: &str = "https://steamcommunity.com/workshop/browse/?appid=431960";
+
+pub struct SteamWebview {
+    app: AppHandle,
+    data_dir: PathBuf,
+    jar: Arc<Jar>,
+    lock: Mutex<()>,
+}
+
+impl SteamWebview {
+    pub fn new(app: AppHandle, data_dir: PathBuf, jar: Arc<Jar>) -> Self {
+        std::fs::create_dir_all(&data_dir).ok();
+        Self {
+            app,
+            data_dir,
+            jar,
+            lock: Mutex::new(()),
+        }
+    }
+
+    pub fn jar(&self) -> Arc<Jar> {
+        self.jar.clone()
+    }
+
+    /// Create (if missing) and return the hidden Steam webview. Idempotent.
+    /// Returns `true` when a new window was created on this call, `false`
+    /// when it already existed — callers use this to know whether they
+    /// should give WebView2 a moment to restore the persisted cookie jar.
+    fn ensure_window(&self) -> Result<bool, tauri::Error> {
+        if self.app.get_webview_window(LABEL).is_some() {
+            return Ok(false);
+        }
+        let url = WebviewUrl::External(STEAM_LOGIN_URL.parse().expect("valid url"));
+        WebviewWindowBuilder::new(&self.app, LABEL, url)
+            .title("Steam")
+            .data_directory(self.data_dir.clone())
+            .visible(false)
+            .decorations(true)
+            .skip_taskbar(true)
+            .inner_size(1000.0, 720.0)
+            .resizable(true)
+            .build()?;
+        Ok(true)
+    }
+
+    /// Show the webview window so the user can interact with Steam's login
+    /// form. Cookies are persisted to disk automatically by WebView2.
+    pub async fn show_login(&self) -> Result<(), tauri::Error> {
+        let _g = self.lock.lock().await;
+        self.ensure_window()?;
+        if let Some(w) = self.app.get_webview_window(LABEL) {
+            let _ = w.set_skip_taskbar(false);
+            w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))?;
+            w.show()?;
+            w.set_focus()?;
+        }
+        Ok(())
+    }
+
+    pub async fn hide(&self) -> Result<(), tauri::Error> {
+        if let Some(w) = self.app.get_webview_window(LABEL) {
+            w.hide()?;
+        }
+        Ok(())
+    }
+
+    pub async fn prepare_login(&self) -> Result<(), tauri::Error> {
+        let _g = self.lock.lock().await;
+        self.ensure_window()?;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Ok(());
+        };
+        let _ = w.clear_all_browsing_data();
+        w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))?;
+        Ok(())
+    }
+
+    /// Pull all `steamcommunity.com` cookies from the webview and load them
+    /// into our reqwest jar. WebView2 persists cookies automatically, so no
+    /// additional file storage is needed.
+    pub async fn sync_cookies(&self) -> Result<usize, String> {
+        let _g = self.lock.lock().await;
+        self.ensure_window().map_err(|e| e.to_string())?;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Ok(0);
+        };
+        let cookies = w.cookies().map_err(|e| e.to_string())?;
+        let steam_com = "https://steamcommunity.com"
+            .parse::<url::Url>()
+            .map_err(|e| e.to_string())?;
+        let steam_pow = "https://store.steampowered.com"
+            .parse::<url::Url>()
+            .map_err(|e| e.to_string())?;
+        let mut n = 0;
+        for c in cookies {
+            let domain = c.domain().unwrap_or("steamcommunity.com").to_string();
+            if !(domain.ends_with("steamcommunity.com") || domain.ends_with("steampowered.com")) {
+                continue;
+            }
+            let path = c.path().unwrap_or("/").to_string();
+            let name = c.name().to_string();
+            let value = c.value().to_string();
+            let header = format!("{}={}; Path={}; Domain={}", name, value, path, domain);
+            if let Ok(hv) = header.parse::<HeaderValue>() {
+                let values = [hv];
+                let target = if domain.ends_with("steampowered.com") {
+                    &steam_pow
+                } else {
+                    &steam_com
+                };
+                self.jar.set_cookies(&mut values.iter(), target);
+                n += 1;
+            }
+        }
+        Ok(n)
+    }
+
+    /// True if the webview believes it's logged in (i.e. has a
+    /// `steamLoginSecure` cookie).
+    ///
+    /// Ensures the hidden webview window exists before reading cookies.
+    /// Without this, calling `is_logged_in` before the window has been
+    /// created (e.g. opening Settings shortly after startup, before the
+    /// background `init_cookies` thread has instantiated the window) always
+    /// returned `false` even though a valid session was persisted on disk by
+    /// WebView2 — which is why the status flipped to "Signed in" only after
+    /// the user pressed "Open Parser" and incidentally created the window.
+    pub async fn is_logged_in(&self) -> bool {
+        let _g = self.lock.lock().await;
+        let created = match self.ensure_window() {
+            Ok(created) => created,
+            Err(_) => return false,
+        };
+        // When we just created the window, WebView2 needs a brief moment to
+        // restore the persisted cookie jar from disk before they're readable.
+        // Poll a few times so a freshly-created window doesn't report a stale
+        // "logged out" before the session cookie has been rehydrated.
+        if created {
+            for _ in 0..20 {
+                if self.is_logged_in_inner() {
+                    return true;
+                }
+                sleep(Duration::from_millis(150)).await;
+            }
+        }
+        self.is_logged_in_inner()
+    }
+
+    /// Drive the hidden webview through Steam's login form using the given
+    /// credentials. The window stays invisible throughout. Returns true if
+    /// we end up with a `steamLoginSecure` cookie within the timeout.
+    ///
+    /// When `force` is true the existing session check is skipped and the
+    /// login form is always submitted — useful for manual re-login.
+    pub async fn auto_login(&self, username: &str, password: &str, force: bool) -> Result<bool, String> {
+        let _g = self.lock.lock().await;
+        self.ensure_window().map_err(|e| e.to_string())?;
+
+        // Early return if we're already logged in from a previous run,
+        // unless the caller explicitly wants to force a re-login.
+        if !force && self.is_logged_in_inner() {
+            return Ok(true);
+        }
+
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Ok(false);
+        };
+
+        if force {
+            let _ = w.clear_all_browsing_data();
+        }
+
+        // Navigate to the login page and wait a moment for the SPA to render.
+        w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))
+            .map_err(|e| e.to_string())?;
+        sleep(Duration::from_millis(2500)).await;
+
+        // Fill + submit the login form. Retry a few times: the SPA may render
+        // the inputs asynchronously, and the first eval can land before them.
+        // When force-login is active we never break early on an existing
+        // cookie — the old session may be stale and we always want to
+        // submit fresh credentials.
+        let script = build_login_script(username, password);
+        for _ in 0..6 {
+            w.eval(&script).map_err(|e| e.to_string())?;
+            sleep(Duration::from_millis(800)).await;
+            if !force && self.is_logged_in_inner() {
+                break;
+            }
+        }
+
+        // Poll for the auth cookie to arrive after submit.
+        for _ in 0..25 {
+            sleep(Duration::from_millis(800)).await;
+            if self.is_logged_in_inner() {
+                // Navigate to a plain Workshop page so any further state
+                // (age-gate, community country) is picked up.
+                let _ = w.eval(format!("window.location.href = {:?}", STEAM_HOME_URL));
+                sleep(Duration::from_millis(1500)).await;
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
+    }
+
+    fn is_logged_in_inner(&self) -> bool {
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return false;
+        };
+        let Ok(cookies) = w.cookies() else {
+            return false;
+        };
+        cookies
+            .iter()
+            .any(|c| c.name() == "steamLoginSecure" && !c.value().is_empty())
+    }
+
+    pub async fn login_fill(&self, username: &str, password: &str) -> Result<(), String> {
+        let _g = self.lock.lock().await;
+        self.ensure_window().map_err(|e| e.to_string())?;
+
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Err("No window".into());
+        };
+
+        let _ = w.clear_all_browsing_data();
+
+        w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))
+            .map_err(|e| e.to_string())?;
+        sleep(Duration::from_millis(2500)).await;
+
+        let script = build_login_script(username, password);
+        for _ in 0..4 {
+            let _ = w.eval(&script);
+            sleep(Duration::from_millis(600)).await;
+        }
+        Ok(())
+    }
+
+    pub async fn login_fill_2fa(&self, code: &str) -> Result<(), String> {
+        let _g = self.lock.lock().await;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Err("No window".into());
+        };
+        let script = build_2fa_script(code);
+        w.eval(&script).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub async fn login_switch_to_code(&self) -> Result<(), String> {
+        let _g = self.lock.lock().await;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Err("No window".into());
+        };
+        let script = r#"
+        (function() {
+            var switchBtn = Array.from(document.querySelectorAll('div, button, a')).find(el => {
+                var t = el.innerText || '';
+                return (t.includes('кода') || t.includes('code') || t.includes('Code')) && !el.querySelector('div');
+            });
+            if (switchBtn) {
+                switchBtn.click();
+            }
+        })();
+        "#;
+        w.eval(script).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+}
+
+/// Builds a JS snippet that locates the login/password inputs, fills them
+/// in via the native `value` setter (so React's onChange handlers fire),
+/// and submits the form. This is a near-direct port of
+/// `infrastructure/steam/workshop_scripts.py::login_form_fill_script`.
+fn build_login_script(username: &str, password: &str) -> String {
+    let user = escape_js_string(username);
+    let pass = escape_js_string(password);
+    format!(
+        r#"
+        (function() {{
+            try {{
+                var login = document.querySelector('input[type="text"]');
+                var pass = document.querySelector('input[type="password"]');
+                if (!login || !pass) return {{ready:false}};
+                function fill(el, v) {{
+                    el.focus();
+                    var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                    s.call(el, v);
+                    el.dispatchEvent(new Event('input', {{bubbles:true}}));
+                    el.dispatchEvent(new Event('change', {{bubbles:true}}));
+                }}
+                fill(login, "{user}");
+                fill(pass, "{pass}");
+                var btn = document.querySelector('button[type="submit"]');
+                if (!btn) {{
+                    var btns = document.querySelectorAll('button');
+                    for (var i = 0; i < btns.length; i++) {{
+                        if ((btns[i].innerText || '').toLowerCase().indexOf('sign in') >= 0) {{
+                            btn = btns[i];
+                            break;
+                        }}
+                    }}
+                }}
+                if (btn) {{
+                    btn.disabled = false;
+                    btn.click();
+                    return {{ready:true, clicked:true}};
+                }}
+                return {{ready:true, clicked:false}};
+            }} catch (e) {{
+                return {{error: String(e)}};
+            }}
+        }})();
+        "#
+    )
+}
+
+fn escape_js_string(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
+}
+
+fn build_2fa_script(code: &str) -> String {
+    let code = escape_js_string(code);
+    format!(
+        r#"
+        (function(code) {{
+            try {{
+                var inputs = document.querySelectorAll('input[type="text"]');
+                var seg = Array.from(inputs).filter(i => i.parentElement && i.parentElement.className.includes('Segmented'));
+                if (seg.length === 0) seg = Array.from(document.querySelectorAll('input[class*="SegmentedCharacterInput"]'));
+                if (seg.length === 0) {{
+                     seg = Array.from(inputs).filter(i => !i.disabled && i.style.display !== 'none');
+                }}
+                if (seg.length > 0) {{
+                    if (seg.length >= 5) {{
+                        for (var i = 0; i < code.length && i < seg.length; i++) {{
+                            seg[i].focus();
+                            var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                            if(s) s.call(seg[i], code[i]);
+                            else seg[i].value = code[i];
+                            seg[i].dispatchEvent(new Event('input', {{bubbles:true}}));
+                            seg[i].dispatchEvent(new Event('change', {{bubbles:true}}));
+                            seg[i].dispatchEvent(new KeyboardEvent('keyup', {{bubbles:true, key: code[i]}}));
+                        }}
+                    }} else {{
+                        var i0 = seg[0];
+                        i0.focus();
+                        var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                        if(s) s.call(i0, code);
+                        else i0.value = code;
+                        i0.dispatchEvent(new Event('input', {{bubbles:true}}));
+                        i0.dispatchEvent(new Event('change', {{bubbles:true}}));
+                        i0.dispatchEvent(new KeyboardEvent('keydown', {{bubbles:true, key: 'Enter', keyCode: 13}}));
+                    }}
+                }}
+            }} catch (e) {{
+                console.error(e);
+            }}
+        }})("{code}");
+        "#
+    )
+}
