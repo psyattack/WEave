@@ -1,6 +1,5 @@
 import * as RadixDialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
 import { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -70,12 +69,6 @@ export default function Dialog({
                         </RadixDialog.Description>
                       )}
                     </div>
-                    <RadixDialog.Close
-                      className="btn-icon -mr-1 -mt-1"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </RadixDialog.Close>
                   </div>
                   <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
                     {children}

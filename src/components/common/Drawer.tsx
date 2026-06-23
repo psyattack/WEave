@@ -1,6 +1,5 @@
 import * as RadixDialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
 import { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -60,9 +59,6 @@ export default function Drawer({
                   <RadixDialog.Description className="sr-only">
                     Details
                   </RadixDialog.Description>
-                  <RadixDialog.Close className="btn-icon" aria-label="Close">
-                    <X className="h-5 w-5" />
-                  </RadixDialog.Close>
                 </div>
                 <div className="drawer-scroll flex-1 overflow-auto">
                   {children}
