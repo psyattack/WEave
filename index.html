@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEave — Wallpaper Engine Workshop Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #010102;
+            color: #f7f8f8;
+        }
+        .linear-canvas { background-color: #010102; }
+        .linear-surface-1 { background-color: #0f1011; }
+        .linear-surface-2 { background-color: #141516; }
+        .linear-surface-3 { background-color: #18191a; }
+        
+        .linear-hairline { border-color: #23252a; }
+        .linear-hairline-strong { border-color: #34343a; }
+        
+        .linear-lavender { color: #5e6ad2; }
+        .bg-linear-lavender { background-color: #5e6ad2; }
+        .bg-linear-lavender-hover { background-color: #828fff; }
+        
+        .panel-edge-highlight {
+            box-shadow: inset 0 1px 0px 0px rgba(255, 255, 255, 0.03);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #010102;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #23252a;
+            border-radius: 9999px;
+            border: 2px solid #010102;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5e6ad2;
+        }
+    </style>
+</head>
+<body class="linear-canvas text-[#f7f8f8] overflow-x-hidden antialiased">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 linear-canvas/80 backdrop-blur-xl border-b linear-hairline h-14">
+        <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between relative">
+            
+            <div class="flex items-center space-x-2.5 z-10 select-none">
+                <img src="https://raw.githubusercontent.com/psyattack/WEave/main/src/assets/icon.svg" class="w-5 h-5 object-contain" alt="WEave Logo" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%235e6ad2\' stroke-width=\'2\'><path d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/></svg>'">
+                <span class="text-sm font-medium tracking-[-0.2px] text-[#f7f8f8]">WEave</span>
+            </div>
+            
+            <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center space-x-6 text-[13px] font-normal text-[#8a8f98] z-0">
+                <a href="#features" data-i18n="nav-features" class="hover:text-[#f7f8f8] transition-colors">Features</a>
+                <a href="#how-it-works" data-i18n="nav-how" class="hover:text-[#f7f8f8] transition-colors">How it works</a>
+                <a href="#download" data-i18n="nav-download" class="hover:text-[#f7f8f8] transition-colors">Download</a>
+            </div>
+
+            <div class="flex items-center space-x-3 z-10">
+                <div class="flex items-center text-[11px] font-medium bg-black/60 p-0.5 rounded-full border linear-hairline select-none">
+                    <button id="lang-en" class="px-2.5 py-0.5 rounded-full transition-all duration-150">EN</button>
+                    <button id="lang-ru" class="px-2.5 py-0.5 rounded-full transition-all duration-150">RU</button>
+                </div>
+
+                <a href="https://github.com/psyattack/WEave" target="_blank" class="flex items-center space-x-2 text-[#8a8f98] hover:text-[#f7f8f8] transition-colors linear-surface-1 px-2.5 h-7 rounded-[6px] border linear-hairline text-xs font-medium group">
+                    <svg class="w-3.5 h-3.5 fill-current text-[#8a8f98] group-hover:text-[#f7f8f8] transition-colors" viewBox="0 0 24 24">
+                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                    </svg>
+                    <span class="w-px h-2.5 bg-zinc-800"></span>
+                    <span class="flex items-center space-x-1 text-[#d0d6e0]">
+                        <svg class="w-3 h-3 text-linear-lavender fill-current" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                        <span id="star-count-nav" class="font-medium font-mono text-[11px]">...</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative pt-28 pb-16 md:pt-40 md:pb-24 max-w-7xl mx-auto px-6 text-center">
+        <div class="inline-block text-[12px] font-medium tracking-[0.4px] text-linear-lavender uppercase mb-4 select-none">
+            Tauri 2 + React Architecture //
+        </div>
+
+        <h1 id="hero-title" class="text-4xl sm:text-6xl md:text-[80px] font-semibold tracking-[-3.0px] leading-[1.05] max-w-5xl mx-auto text-[#f7f8f8]">
+            Manage Wallpaper Engine <br class="hidden sm:inline"> without launching Steam
+        </h1>
+
+        <p id="hero-subtitle" class="mt-6 text-sm md:text-[16px] text-[#8a8f98] tracking-[-0.05px] max-w-2xl mx-auto font-normal leading-[1.5]">
+            WEave is a lightweight, multifunctional desktop manager. Discover, download, and install thousands of live wallpapers from Steam Workshop in one click.
+        </p>
+
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="#download" class="w-full sm:w-auto flex items-center justify-center space-x-2 bg-linear-lavender text-white px-3.5 py-2 rounded-[6px] font-medium text-sm hover:bg-linear-lavender-hover transition-colors">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span data-i18n="hero-btn-dl">Download for Windows</span>
+            </a>
+            <a href="https://github.com/psyattack/WEave" target="_blank" class="w-full sm:w-auto flex items-center justify-center space-x-2 linear-surface-1 text-[#f7f8f8] px-3.5 py-2 rounded-[6px] font-medium text-sm hover:bg-linear-surface-2 transition-colors border linear-hairline group">
+                <svg class="w-3.5 h-3.5 fill-current text-[#8a8f98] group-hover:text-[#f7f8f8] transition-colors" viewBox="0 0 24 24">
+                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                </svg>
+                <span data-i18n="hero-btn-src">Source Code</span>
+            </a>
+        </div>
+
+        <div class="mt-16 md:mt-24 relative rounded-[16px] linear-surface-1 p-2 border linear-hairline max-w-5xl mx-auto overflow-hidden panel-edge-highlight">
+            
+            <div class="w-full h-8 flex items-center px-4 border-b border-zinc-900/60 bg-black/20 select-none">
+                <div class="flex space-x-1.5">
+                    <div class="w-2 h-2 rounded-full bg-zinc-800"></div>
+                    <div class="w-2 h-2 rounded-full bg-zinc-800"></div>
+                    <div class="w-2 h-2 rounded-full bg-zinc-800"></div>
+                </div>
+                <div class="mx-auto text-[11px] tracking-wider text-[#62666d] font-mono">WEave</div>
+            </div>
+            
+            <div class="bg-black/10 aspect-[16/9] w-full flex text-left p-4 md:p-6 space-x-4">
+                <div class="w-1/4 border-r linear-hairline pr-4 space-y-1.5 hidden sm:block select-none">
+                    <div class="h-7 bg-linear-surface-2 border linear-hairline rounded-[6px] flex items-center px-3 text-xs text-[#f7f8f8] font-medium cursor-pointer hover:bg-linear-surface-3 transition-all">
+                        <i data-lucide="compass" class="w-3.5 h-3.5 mr-2 text-linear-lavender"></i> <span data-i18n="mock-sidebar-1">Workshop</span>
+                    </div>
+                    <div class="h-7 border border-transparent rounded-[6px] flex items-center px-3 text-xs text-[#8a8f98] cursor-pointer hover:bg-linear-surface-2 hover:text-[#f7f8f8] transition-all">
+                        <i data-lucide="download-cloud" class="w-3.5 h-3.5 mr-2"></i> <span data-i18n="mock-sidebar-2">Collections</span>
+                    </div>
+                    <div class="h-7 border border-transparent rounded-[6px] flex items-center px-3 text-xs text-[#8a8f98] cursor-pointer hover:bg-linear-surface-2 hover:text-[#f7f8f8] transition-all">
+                        <i data-lucide="folder" class="w-3.5 h-3.5 mr-2"></i> <span data-i18n="mock-sidebar-3">Installed</span>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-4">
+                    <div class="h-8 bg-black/40 border linear-hairline rounded-[6px] flex items-center px-3 justify-between cursor-text hover:border-linear-hairstone-strong transition-all">
+                        <span class="text-xs text-[#62666d]" data-i18n="mock-search">Search live wallpapers...</span>
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-[#62666d]"></i>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div class="aspect-video bg-linear-surface-2/40 border linear-hairline rounded-[8px] p-3 relative flex flex-col justify-end overflow-hidden cursor-pointer hover:border-[#34343a] hover:bg-linear-surface-2 transition-all duration-150">
+                            <div class="h-2 w-3/4 bg-zinc-800 rounded-full mb-1 relative z-10"></div>
+                            <div class="h-1.5 w-1/2 bg-zinc-900 rounded-full relative z-10"></div>
+                        </div>
+                        <div class="aspect-video bg-linear-surface-2/40 border linear-hairline rounded-[8px] p-3 flex flex-col justify-end cursor-pointer hover:border-[#34343a] hover:bg-linear-surface-2 transition-all duration-150">
+                            <div class="h-2 w-2/3 bg-zinc-800 rounded-full mb-1"></div>
+                            <div class="h-1.5 w-1/3 bg-zinc-900 rounded-full"></div>
+                        </div>
+                        <div class="aspect-video bg-linear-surface-2/40 border linear-hairline rounded-[8px] p-3 flex flex-col justify-end hidden md:flex cursor-pointer hover:border-[#34343a] hover:bg-linear-surface-2 transition-all duration-150">
+                            <div class="h-2 w-4/5 bg-zinc-800 rounded-full mb-1"></div>
+                            <div class="h-1.5 w-1/2 bg-zinc-900 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="max-w-7xl mx-auto px-6 py-20 md:py-24 border-t linear-hairline">
+        <div class="max-w-3xl mb-12 md:mb-16">
+            <p id="features-title" class="text-3xl sm:text-[40px] font-semibold tracking-[-1.0px] leading-[1.15] text-[#f7f8f8]">Everything you need to customize your desktop</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="linear-surface-1 border linear-hairline p-6 rounded-[12px] hover:bg-linear-surface-2 transition-all group panel-edge-highlight">
+                <div class="w-8 h-8 rounded-[6px] bg-black/40 border linear-hairline flex items-center justify-center text-linear-lavender mb-5 group-hover:border-zinc-700 transition-all">
+                    <i data-lucide="cloud-off" class="w-4 h-4"></i>
+                </div>
+                <h3 id="f1-t" class="text-[16px] font-medium tracking-[-0.05px] text-[#f7f8f8] mb-1.5">No Steam Required</h3>
+                <p id="f1-d" class="text-[#8a8f98] text-sm leading-[1.5]">You no longer need to keep the Steam client open.</p>
+            </div>
+            <div class="linear-surface-1 border linear-hairline p-6 rounded-[12px] hover:bg-linear-surface-2 transition-all group panel-edge-highlight">
+                <div class="w-8 h-8 rounded-[6px] bg-black/40 border linear-hairline flex items-center justify-center text-linear-lavender mb-5 group-hover:border-zinc-700 transition-all">
+                    <i data-lucide="search-code" class="w-4 h-4"></i>
+                </div>
+                <h3 id="f2-t" class="text-[16px] font-medium tracking-[-0.05px] text-[#f7f8f8] mb-1.5">Direct Workshop Access</h3>
+                <p id="f2-d" class="text-[#8a8f98] text-sm leading-[1.5]">Convenient built-in search and filters. Sort instantly.</p>
+            </div>
+            <div class="linear-surface-1 border linear-hairline p-6 rounded-[12px] hover:bg-linear-surface-2 transition-all group panel-edge-highlight">
+                <div class="w-8 h-8 rounded-[6px] bg-black/40 border linear-hairline flex items-center justify-center text-linear-lavender mb-5 group-hover:border-zinc-700 transition-all">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                </div>
+                <h3 id="f3-t" class="text-[16px] font-medium tracking-[-0.05px] text-[#f7f8f8] mb-1.5">Blazing Fast</h3>
+                <p id="f3-d" class="text-[#8a8f98] text-sm leading-[1.5]">Built on the Tauri 2 core and modern React. The app launches in a fraction of a second.</p>
+            </div>
+            <div class="linear-surface-1 border linear-hairline p-6 rounded-[12px] hover:bg-linear-surface-2 transition-all group panel-edge-highlight">
+                <div class="w-8 h-8 rounded-[6px] bg-black/40 border linear-hairline flex items-center justify-center text-linear-lavender mb-5 group-hover:border-zinc-700 transition-all">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                </div>
+                <h3 id="f4-t" class="text-[16px] font-medium tracking-[-0.05px] text-[#f7f8f8] mb-1.5">Download Manager</h3>
+                <p id="f4-d" class="text-[#8a8f98] text-sm leading-[1.5]">Download content in multiple threads and track installation progress in a beautiful interface.</p>
+            </div>
+            <div class="linear-surface-1 border linear-hairline p-6 rounded-[12px] hover:bg-linear-surface-2 transition-all group panel-edge-highlight">
+                <div class="w-8 h-8 rounded-[6px] bg-black/40 border linear-hairline flex items-center justify-center text-linear-lavender mb-5 group-hover:border-zinc-700 transition-all">
+                    <i data-lucide="sliders" class="w-4 h-4"></i>
+                </div>
+                <h3 id="f5-t" class="text-[16px] font-medium tracking-[-0.05px] text-[#f7f8f8] mb-1.5">One-Click Control</h3>
+                <p id="f5-d" class="text-[#8a8f98] text-sm leading-[1.5]">Install, disable, or completely remove wallpapers without manually searching for system folders.</p>
+            </div>
+            <div class="linear-surface-1 border linear-hairline p-6 rounded-[12px] hover:bg-linear-surface-2 transition-all group panel-edge-highlight">
+                <div class="w-8 h-8 rounded-[6px] bg-black/40 border linear-hairline flex items-center justify-center text-linear-lavender mb-5 group-hover:border-zinc-700 transition-all">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                </div>
+                <h3 id="f6-t" class="text-[16px] font-medium tracking-[-0.05px] text-[#f7f8f8] mb-1.5">Open Source Security</h3>
+                <p id="f6-d" class="text-[#8a8f98] text-sm leading-[1.5]">Fully open-source on GitHub. No hidden trackers, ads, or telemetry — just pure performance.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="max-w-7xl mx-auto px-6 py-16 linear-surface-1 border linear-hairline rounded-[12px] my-10 panel-edge-highlight">
+        <div class="text-center max-w-2xl mx-auto mb-14">
+            <h2 id="how-title" class="text-2xl md:text-[28px] font-semibold tracking-[-0.6px] text-[#f7f8f8]">Three steps to a perfect desktop</h2>
+            <p id="how-subtitle" class="text-[#8a8f98] mt-2 text-xs uppercase tracking-[0.4px] font-mono">Setup takes less than a minute</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative px-2">
+            <div class="space-y-2">
+                <div class="text-xs font-mono text-linear-lavender">01 //</div>
+                <h4 id="step1-t" class="text-sm font-medium text-[#f7f8f8] tracking-[-0.05px]">Launch WEave</h4>
+                <p id="step1-d" class="text-[#8a8f98] text-xs leading-[1.5]">Download and open the app. It automatically detects your Wallpaper Engine installation directory.</p>
+            </div>
+            <div class="space-y-2">
+                <div class="text-xs font-mono text-linear-lavender">02 //</div>
+                <h4 id="step2-t" class="text-sm font-medium text-[#f7f8f8] tracking-[-0.05px]">Find Content</h4>
+                <p id="step2-d" class="text-[#8a8f98] text-xs leading-[1.5]">Use the search inside WEave or simply paste the links\ID to the wallpaper pages from the Steam workshop in the Multi-Download window.</p>
+            </div>
+            <div class="space-y-2">
+                <div class="text-xs font-mono text-linear-lavender">03 //</div>
+                <h4 id="step3-t" class="text-sm font-medium text-[#f7f8f8] tracking-[-0.05px]">Click "Install"</h4>
+                <p id="step3-d" class="text-[#8a8f98] text-xs leading-[1.5]">WEave will download the wallpaper itself to the desired folder.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="download" class="relative py-20 text-center max-w-5xl mx-auto px-6">
+        <div class="linear-surface-1 p-10 md:p-12 rounded-[12px] border linear-hairline relative overflow-hidden panel-edge-highlight">
+            <h2 id="cta-title" class="text-2xl md:text-[28px] font-semibold tracking-[-0.6px] text-[#f7f8f8]">Ready to elevate <br class="sm:hidden"> your desktop?</h2>
+            <p id="cta-subtitle" class="text-[#8a8f98] mt-3 max-w-xl mx-auto text-xs md:text-sm leading-[1.5]">
+                Download the latest stable release of WEave. Completely free and licensed under MIT.
+            </p>
+
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="https://github.com/psyattack/WEave/releases" target="_blank" class="w-full sm:w-auto bg-[#f7f8f8] text-black px-6 py-2 rounded-[6px] font-medium text-xs hover:bg-[#d0d6e0] transition-colors flex items-center justify-center space-x-2">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-black"></i>
+                    <span data-i18n="cta-btn-dl">Download Release</span>
+                </a>
+                <a href="https://github.com/psyattack/WEave" target="_blank" class="w-full sm:w-auto linear-canvas text-[#f7f8f8] px-6 py-2 rounded-[6px] font-medium text-xs hover:bg-linear-surface-2 transition-colors flex items-center justify-center space-x-2.5 border linear-hairline group">
+                    <svg class="w-4 h-4 fill-current text-[#8a8f98] group-hover:text-[#f7f8f8] transition-colors" viewBox="0 0 24 24">
+                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                    </svg>
+                    <span data-i18n="cta-btn-star">GitHub Repository</span>
+                </a>
+            </div>
+            
+            <div id="cta-footer" class="mt-6 text-[11px] text-[#62666d] font-mono uppercase tracking-[0.4px]">
+                Compatible with Windows 10 / 11
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t linear-hairline py-8 text-center text-xs text-[#8a8f98]">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div id="footer-copy">
+                © 2026 WEave.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const translations = {
+            en: {
+                "nav-features": "Features",
+                "nav-how": "How it works",
+                "nav-download": "Download",
+                "hero-title": 'Manage Wallpaper Engine <br class="hidden sm:inline"> without launching Steam',
+                "hero-subtitle": "WEave is a lightweight, multifunctional desktop manager. Discover, download, and install thousands of live wallpapers from Steam Workshop in one click.",
+                "hero-btn-dl": "Download for Windows",
+                "hero-btn-src": "Source Code",
+                "mock-sidebar-1": "Workshop",
+                "mock-sidebar-2": "Collections",
+                "mock-sidebar-3": "Installed",
+                "mock-search": "Search live wallpapers...",
+                "features-title": "Everything you need to customize your desktop",
+                "f1-t": "No Steam Required",
+                "f1-d": "You no longer need to keep the Steam client open.",
+                "f2-t": "Direct Workshop Access",
+                "f2-d": "Convenient built-in search and filters. Sort instantly.",
+                "f3-t": "Blazing Fast",
+                "f3-d": "Built on the Tauri 2 core and modern React. The app launches in a fraction of a second.",
+                "f4-t": "Download Manager",
+                "f4-d": "Download content in multiple threads and track installation progress in a beautiful interface.",
+                "f5-t": "One-Click Control",
+                "f5-d": "Install, disable, or completely remove wallpapers without manually searching for system folders.",
+                "f6-t": "Open Source Security",
+                "f6-d": "Fully open-source on GitHub. No hidden trackers, ads, or telemetry — just pure performance.",
+                "how-title": "Three steps to a perfect desktop",
+                "how-subtitle": "Setup takes less than a minute",
+                "step1-t": "Launch WEave",
+                "step1-d": "Download and open the app. It automatically detects your Wallpaper Engine installation directory.",
+                "step2-t": "Find Content",
+                "step2-d": "Use the search inside WEave or simply paste the links\\ID to the wallpaper pages from the Steam workshop in the Multi-Download window.",
+                "step3-t": 'Click "Install"',
+                "step3-d": "WEave will download the wallpaper itself to the desired folder.",
+                "cta-title": 'Ready to elevate <br class="sm:hidden"> your desktop?',
+                "cta-subtitle": "Download the latest stable release of WEave. Completely free and licensed under MIT.",
+                "cta-btn-dl": "Download Release",
+                "cta-btn-star": "GitHub Repository",
+                "cta-footer": "Compatible with Windows 10 / 11",
+                "footer-copy": "© 2026 WEave."
+            },
+            ru: {
+                "nav-features": "Возможности",
+                "nav-how": "Как это работает",
+                "nav-download": "Скачать",
+                "hero-title": 'Управляйте Wallpaper Engine <br class="hidden sm:inline"> без запуска Steam',
+                "hero-subtitle": "WEave — это легкий и многофункциональный десктопный менеджер. Находите, скачивайте и устанавливайте тысячи живых обоев из Steam Workshop в один клик.",
+                "hero-btn-dl": "Скачать для Windows",
+                "hero-btn-src": "Исходный код",
+                "mock-sidebar-1": "Мастерская",
+                "mock-sidebar-2": "Коллекции",
+                "mock-sidebar-3": "Установленные",
+                "mock-search": "Поиск живых обоев...",
+                "features-title": "Всё, что нужно для кастомизации рабочего стола",
+                "f1-t": "Без запуска Steam",
+                "f1-d": "Вам больше не нужно держать клиент Steam открытым.",
+                "f2-t": "Прямой доступ к Workshop",
+                "f2-d": "Удобный встроенный поиск и фильтры. Мгновенная сортировка.",
+                "f3-t": "Невероятно быстрый",
+                "f3-d": "Построен на базе ядра Tauri 2 и современного React. Приложение запускается за доли секунды.",
+                "f4-t": "Менеджер загрузок",
+                "f4-d": "Скачивайте контент в несколько потоков и отслеживайте прогресс установки в красивом интерфейсе.",
+                "f5-t": "Управление в один клик",
+                "f5-d": "Устанавливайте, отключайте или полностью удаляйте обои без ручного поиска системных папок.",
+                "f6-t": "Open Source безопасность",
+                "f6-d": "Полностью открытый исходный код на GitHub. Никаких скрытых трекеров, рекламы или телеметрии — только чистый функционал.",
+                "how-title": "Три шага к идеальному столу",
+                "how-subtitle": "Процесс настройки занимает меньше минуты",
+                "step1-t": "Запустите WEave",
+                "step1-d": "Скачайте и откройте приложение. Оно автоматически определит директорию установленного Wallpaper Engine.",
+                "step2-t": "Найдите контент",
+                "step2-d": "Используйте поиск внутри WEave или просто вставьте ссылки\\ID страниц обоев из мастерской Steam в окно мульти-загрузки.",
+                "step3-t": 'Нажмите «Установить»',
+                "step3-d": "WEave сам скачает обои в нужную папку.",
+                "cta-title": 'Готовы прокачать <br class="sm:hidden"> свой рабочий стол?',
+                "cta-subtitle": "Скачайте последнюю стабильную сборку WEave прямо сейчас. Продукт абсолютно бесплатен и распространяется по лицензии MIT.",
+                "cta-btn-dl": "Загрузить релиз",
+                "cta-btn-star": "Репозиторий GitHub",
+                "cta-footer": "Совместимо с Windows 10 / 11",
+                "footer-copy": "© 2026 WEave."
+            }
+        };
+
+        let currentLang = localStorage.getItem('weave-lang') || 'en';
+
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-i18n], [id]');
+            elements.forEach(elem => {
+                const key = elem.getAttribute('data-i18n') || elem.id;
+                if (translations[currentLang][key]) {
+                    elem.innerHTML = translations[currentLang][key];
+                }
+            });
+
+            const btnEn = document.getElementById('lang-en');
+            const btnRu = document.getElementById('lang-ru');
+            
+            if (currentLang === 'en') {
+                btnEn.className = "px-2.5 py-0.5 rounded-full bg-[#141516] text-[#f7f8f8] font-medium shadow-sm border linear-hairline";
+                btnRu.className = "px-2.5 py-0.5 rounded-full text-[#8a8f98] hover:text-[#f7f8f8]";
+            } else {
+                btnEn.className = "px-2.5 py-0.5 rounded-full text-[#8a8f98] hover:text-[#f7f8f8]";
+                btnRu.className = "px-2.5 py-0.5 rounded-full bg-[#141516] text-[#f7f8f8] font-medium shadow-sm border linear-hairline";
+            }
+            
+            document.documentElement.lang = currentLang;
+        }
+
+        document.getElementById('lang-en').addEventListener('click', () => {
+            currentLang = 'en';
+            localStorage.setItem('weave-lang', currentLang);
+            updateLanguage();
+        });
+
+        document.getElementById('lang-ru').addEventListener('click', () => {
+            currentLang = 'ru';
+            localStorage.setItem('weave-lang', currentLang);
+            updateLanguage();
+        });
+
+        async function fetchGitHubStars() {
+            const starCounterNav = document.getElementById('star-count-nav');
+            try {
+                const response = await fetch('https://api.github.com/repos/psyattack/WEave');
+                if (response.ok) {
+                    const data = await response.json();
+                    const stars = data.stargazers_count;
+                    const formattedStars = stars >= 1000 ? (stars / 1000).toFixed(1) + 'k' : stars;
+                    starCounterNav.innerText = formattedStars;
+                } else {
+                    starCounterNav.innerText = '0';
+                }
+            } catch (error) {
+                console.error('Error fetching GitHub stars:', error);
+                starCounterNav.innerText = '—';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLanguage();
+            fetchGitHubStars();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
