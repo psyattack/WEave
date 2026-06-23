@@ -2,7 +2,10 @@ import { vi } from "vitest";
 
 // Maps to store mock handlers and event listeners
 export const mockCommands = new Map<string, any>();
-export const eventListeners = new Map<string, Function[]>();
+export const eventListeners = new Map<
+  string,
+  ((...args: unknown[]) => unknown)[]
+>();
 export let mockDialogResult: string | string[] | null = null;
 export const mockOpenUrlFn = vi.fn();
 
@@ -12,7 +15,6 @@ export function getMockDialogResult() {
 export function getMockOpenUrlFn() {
   return mockOpenUrlFn;
 }
-
 
 export const mockWindowInstance = {
   minimize: vi.fn().mockResolvedValue(undefined),

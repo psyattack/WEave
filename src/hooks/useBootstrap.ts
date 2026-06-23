@@ -186,16 +186,21 @@ export function useBootstrap() {
             // installed indicators, and fetch workshop metadata for
             // the new item so it's cached for future use.
             void useInstalledStore.getState().refresh();
-            void (async () => {
-              await tryInvoke(
-                "workshop_get_item",
-                { pubfileid: event.payload.pubfileid },
-                null,
-              );
-            })();
             void maybeAutoApply(event.payload.pubfileid);
           }
         }),
+
+        listen<{ payload: string }>(
+          "download://require_app_confirm",
+          () => {
+            void import("@/stores/toasts").then(({ pushToast }) => {
+              pushToast(
+                "Please approve the login in your Steam Mobile App.",
+                "info",
+              );
+            });
+          },
+        ),
         listen<{
           pubfileid: string;
           status: string;

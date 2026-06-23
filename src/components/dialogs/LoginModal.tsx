@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Lock, User, KeyRound } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
@@ -25,10 +25,16 @@ export default function LoginModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
-  const [qrSession, setQrSession] = useState<{ clientId: string; requestId: string; createdAt: number } | null>(null);
+  const [qrSession, setQrSession] = useState<{
+    clientId: string;
+    requestId: string;
+    createdAt: number;
+  } | null>(null);
   const [isPrepared, setIsPrepared] = useState(false);
-  
-  const setShowLoginPromptOnFail = useAppStore((s) => s.setShowLoginPromptOnFail);
+
+  const setShowLoginPromptOnFail = useAppStore(
+    (s) => s.setShowLoginPromptOnFail,
+  );
   const loginModalMode = useAppStore((s) => s.loginModalMode);
   const setAccounts = useAppStore((s) => s.setAccounts);
   const setSessionLoggedIn = useSteamSessionStore((s) => s.setLoggedIn);
@@ -46,16 +52,27 @@ export default function LoginModal({
       setQrCode(null);
       setQrSession(null);
       setIsPrepared(false);
-      
+
       tryInvoke("steam_login_prepare").then(() => {
         setIsPrepared(true);
       });
-      
+
       // Init QR Session
-      tryInvoke<{ client_id: string; challenge_url: string; request_id: string }>("steam_qr_begin").then((res) => {
+      tryInvoke<{
+        client_id: string;
+        challenge_url: string;
+        request_id: string;
+      }>("steam_qr_begin").then((res) => {
         if (res) {
-          setQrSession({ clientId: res.client_id, requestId: res.request_id, createdAt: Date.now() });
-          setQrCode("https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" + encodeURIComponent(res.challenge_url));
+          setQrSession({
+            clientId: res.client_id,
+            requestId: res.request_id,
+            createdAt: Date.now(),
+          });
+          setQrCode(
+            "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" +
+              encodeURIComponent(res.challenge_url),
+          );
         }
       });
     } else {
@@ -64,11 +81,45 @@ export default function LoginModal({
     }
   }, [open]);
 
+  const refreshSession = useCallback(async () => {
+    const v = await tryInvoke<boolean>("steam_is_logged_in", undefined, false);
+    if (!v) {
+      await tryInvoke("steam_current_account", undefined);
+      setSessionLoggedIn(null);
+      return;
+    }
+    const info = await tryInvoke<SteamAccountInfo | null>(
+      "steam_current_account",
+      undefined,
+      null,
+    );
+    setSessionLoggedIn(info ?? null);
+  }, [setSessionLoggedIn]);
+
+  const finalizeLogin = useCallback(async () => {
+    await invoke<number>("steam_sync_cookies").catch(() => 0);
+    pushToast(
+      t("messages.signed_in_to_steam") || "Signed in to Steam",
+      "success",
+    );
+    const list = await tryInvoke<
+      { index: number; username: string; is_custom: boolean }[]
+    >("accounts_list", undefined, []);
+    if (list) setAccounts(list);
+    await refreshSession();
+    triggerGlobalRefresh();
+    onOpenChange(false);
+  }, [refreshSession, setAccounts, onOpenChange, t]);
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (open && isPrepared) {
       interval = setInterval(async () => {
-        const isLoggedIn = await tryInvoke<boolean>("steam_is_logged_in", undefined, false);
+        const isLoggedIn = await tryInvoke<boolean>(
+          "steam_is_logged_in",
+          undefined,
+          false,
+        );
         if (isLoggedIn) {
           clearInterval(interval);
           await finalizeLogin();
@@ -77,24 +128,38 @@ export default function LoginModal({
 
         if (step === "credentials" && qrSession) {
           if (Date.now() - qrSession.createdAt > 25000) {
-            tryInvoke<{ client_id: string; challenge_url: string; request_id: string }>("steam_qr_begin").then((res) => {
+            tryInvoke<{
+              client_id: string;
+              challenge_url: string;
+              request_id: string;
+            }>("steam_qr_begin").then((res) => {
               if (res) {
-                setQrSession({ clientId: res.client_id, requestId: res.request_id, createdAt: Date.now() });
-                setQrCode("https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" + encodeURIComponent(res.challenge_url));
+                setQrSession({
+                  clientId: res.client_id,
+                  requestId: res.request_id,
+                  createdAt: Date.now(),
+                });
+                setQrCode(
+                  "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" +
+                    encodeURIComponent(res.challenge_url),
+                );
               }
             });
             return;
           }
-          
-          const res = await tryInvoke<any>("steam_qr_poll", { clientId: qrSession.clientId, requestId: qrSession.requestId });
+
+          const res = await tryInvoke<any>("steam_qr_poll", {
+            clientId: qrSession.clientId,
+            requestId: qrSession.requestId,
+          });
           if (res && res.response) {
             if (res.response.refresh_token && res.response.access_token) {
               clearInterval(interval);
               setBusy(true);
               try {
-                await tryInvoke("steam_qr_login_finalize", { 
-                  accessToken: res.response.access_token, 
-                  refreshToken: res.response.refresh_token 
+                await tryInvoke("steam_qr_login_finalize", {
+                  accessToken: res.response.access_token,
+                  refreshToken: res.response.refresh_token,
                 });
                 await finalizeLogin();
               } catch (e: any) {
@@ -105,41 +170,40 @@ export default function LoginModal({
             }
           }
         }
-        
+
         if (busyRef.current) {
-          const err = await tryInvoke<string | null>("steam_login_poll_error", undefined, null);
+          const err = await tryInvoke<string | null>(
+            "steam_login_poll_error",
+            undefined,
+            null,
+          );
           if (err && err.length > 20) {
-              setErrorMsg(err);
-              setBusy(false);
-              busyRef.current = false;
+            setErrorMsg(err);
+            setBusy(false);
+            busyRef.current = false;
           }
         }
       }, 3500);
     }
     return () => clearInterval(interval);
-  }, [open, step, qrSession, isPrepared]);
-
-  const refreshSession = async () => {
-    const v = await tryInvoke<boolean>("steam_is_logged_in", undefined, false);
-    if (!v) {
-      await tryInvoke("steam_current_account", undefined);
-      setSessionLoggedIn(null);
-      return;
-    }
-    const info = await tryInvoke<SteamAccountInfo | null>("steam_current_account", undefined, null);
-    setSessionLoggedIn(info ?? null);
-  };
+  }, [open, step, qrSession, isPrepared, finalizeLogin]);
 
   const handleSystemRelogin = async () => {
     setBusy(true);
     busyRef.current = true;
     try {
-      const ok = await tryInvoke<boolean>("steam_auto_login", {
-        accountIndex: null,
-        force: true,
-      }, false);
+      const ok = await tryInvoke<boolean>(
+        "steam_auto_login",
+        {
+          accountIndex: null,
+          force: true,
+        },
+        false,
+      );
       if (ok) {
-        const list = await tryInvoke<{ index: number; username: string; is_custom: boolean }[]>("accounts_list", undefined, []);
+        const list = await tryInvoke<
+          { index: number; username: string; is_custom: boolean }[]
+        >("accounts_list", undefined, []);
         if (list) setAccounts(list);
         await refreshSession();
         triggerGlobalRefresh();
@@ -158,9 +222,13 @@ export default function LoginModal({
   const waitForLoginResult = async (maxAttempts = 15) => {
     for (let i = 0; i < maxAttempts; i++) {
       if (!busyRef.current) return "ERROR";
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
       if (!busyRef.current) return "ERROR";
-      const isLoggedIn = await tryInvoke<boolean>("steam_is_logged_in", undefined, false);
+      const isLoggedIn = await tryInvoke<boolean>(
+        "steam_is_logged_in",
+        undefined,
+        false,
+      );
       if (isLoggedIn) {
         return "SUCCESS";
       }
@@ -175,7 +243,7 @@ export default function LoginModal({
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) return;
-    
+
     setErrorMsg(null);
     setBusy(true);
     busyRef.current = true;
@@ -226,16 +294,6 @@ export default function LoginModal({
     }
   };
 
-  const finalizeLogin = async () => {
-    await invoke<number>("steam_sync_cookies").catch(() => 0);
-    pushToast(t("messages.signed_in_to_steam") || "Signed in to Steam", "success");
-    const list = await tryInvoke<{ index: number; username: string; is_custom: boolean }[]>("accounts_list", undefined, []);
-    if (list) setAccounts(list);
-    await refreshSession();
-    triggerGlobalRefresh();
-    onOpenChange(false);
-  };
-
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -247,9 +305,11 @@ export default function LoginModal({
               {t("settings.login_title") || "Steam Login"}
             </Dialog.Title>
             <Dialog.Description className="text-sm text-muted">
-              {step === "credentials" 
-                ? (t("settings.login_description") || "Enter your Steam account credentials to log in to the parser without opening the browser window.")
-                : (t("settings.login_2fa_description") || "Enter your Steam Guard code or confirm the login on your mobile device.")}
+              {step === "credentials"
+                ? t("settings.login_description") ||
+                  "Enter your Steam account credentials to log in to the parser without opening the browser window."
+                : t("settings.login_2fa_description") ||
+                  "Enter your Steam Guard code or confirm the login on your mobile device."}
             </Dialog.Description>
           </div>
 
@@ -257,15 +317,17 @@ export default function LoginModal({
             {!isPrepared ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
                 <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <span className="text-sm text-muted">{t("labels.loading_dots") || "Loading..."}</span>
+                <span className="text-sm text-muted">
+                  {t("labels.loading_dots") || "Loading..."}
+                </span>
               </div>
             ) : step === "credentials" ? (
               <div className="flex flex-col gap-6">
                 {errorMsg && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
-                      <p className="text-xs">{errorMsg}</p>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
+                    <p className="text-xs">{errorMsg}</p>
+                  </div>
+                )}
                 <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <div className="relative">
@@ -293,16 +355,34 @@ export default function LoginModal({
                   </div>
 
                   <div className="flex justify-between items-center gap-3 pt-4 w-full">
-                    <button type="button" className="btn-secondary text-xs px-3" onClick={handleSystemRelogin} disabled={busy}>
-                      {busy && <span className="inline-block mr-1 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                    <button
+                      type="button"
+                      className="btn-secondary text-xs px-3"
+                      onClick={handleSystemRelogin}
+                      disabled={busy}
+                    >
+                      {busy && (
+                        <span className="inline-block mr-1 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      )}
                       {t("settings.relogin") || "Relogin to system account"}
                     </button>
                     <div className="flex gap-2">
-                      <button type="button" className="btn-ghost" onClick={() => onOpenChange(false)} disabled={busy}>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => onOpenChange(false)}
+                        disabled={busy}
+                      >
                         {t("buttons.cancel") || "Cancel"}
                       </button>
-                      <button type="submit" className="btn-primary flex items-center gap-2" disabled={busy || !username || !password}>
-                        {busy && <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                      <button
+                        type="submit"
+                        className="btn-primary flex items-center gap-2"
+                        disabled={busy || !username || !password}
+                      >
+                        {busy && (
+                          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        )}
                         {t("settings.login_button") || "Login"}
                       </button>
                     </div>
@@ -318,7 +398,8 @@ export default function LoginModal({
                         }}
                         disabled={busy}
                       >
-                        {t("settings.continue_offline") || "Continue without account (Do not ask again)"}
+                        {t("settings.continue_offline") ||
+                          "Continue without account (Do not ask again)"}
                       </button>
                     </div>
                   )}
@@ -328,78 +409,106 @@ export default function LoginModal({
                     <div className="h-[1px] w-full bg-border" />
                     <div className="flex flex-col items-center justify-center gap-3">
                       <div className="p-2.5 bg-white rounded-xl shadow-sm">
-                        <img src={qrCode} alt="Steam QR Login" className="w-40 h-40 object-contain" />
+                        <img
+                          src={qrCode}
+                          alt="Steam QR Login"
+                          className="w-40 h-40 object-contain"
+                        />
                       </div>
                       <span className="text-xs font-medium text-muted text-center max-w-[200px]">
-                        {t("settings.steam_qr_help") || "Use the Steam Mobile App to sign in via QR code"}
+                        {t("settings.steam_qr_help") ||
+                          "Use the Steam Mobile App to sign in via QR code"}
                       </span>
                     </div>
                   </>
                 )}
               </div>
-              ) : (
-                <div className="flex flex-col gap-6">
-                  {errorMsg && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
-                      <p className="text-xs">{errorMsg}</p>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {errorMsg && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
+                    <p className="text-xs">{errorMsg}</p>
+                  </div>
+                )}
+
+                {!showCodeInput ? (
+                  <div className="flex flex-col items-center justify-center py-6 gap-4">
+                    <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10 text-primary w-full justify-center">
+                      <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <span className="text-sm font-medium text-center">
+                        {t("settings.steam_guard_help") ||
+                          "Ожидание подтверждения в мобильном приложении Steam..."}
+                      </span>
                     </div>
-                  )}
 
-                  {!showCodeInput ? (
-                    <div className="flex flex-col items-center justify-center py-6 gap-4">
-                      <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10 text-primary w-full justify-center">
-                        <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        <span className="text-sm font-medium text-center">
-                          {t("settings.steam_guard_help") || "Ожидание подтверждения в мобильном приложении Steam..."}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-2 w-full mt-2">
-                        <button type="button" className="btn-secondary text-sm w-full py-2" onClick={async () => {
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                      <button
+                        type="button"
+                        className="btn-secondary text-sm w-full py-2"
+                        onClick={async () => {
                           setShowCodeInput(true);
-                          await tryInvoke("steam_login_switch_to_code").catch(() => {});
-                        }} disabled={busy}>
-                          Войти с помощью кода
-                        </button>
+                          await tryInvoke("steam_login_switch_to_code").catch(
+                            () => {},
+                          );
+                        }}
+                        disabled={busy}
+                      >
+                        Войти с помощью кода
+                      </button>
 
-                        <button type="button" className="btn-ghost text-sm w-full py-2" onClick={() => setStep("credentials")} disabled={busy}>
-                          {t("buttons.cancel") || "Отмена"}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        className="btn-ghost text-sm w-full py-2"
+                        onClick={() => setStep("credentials")}
+                        disabled={busy}
+                      >
+                        {t("buttons.cancel") || "Отмена"}
+                      </button>
                     </div>
-                  ) : (
-                    <form onSubmit={handle2FASubmit} className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-subtle uppercase tracking-wide">
-                          {t("settings.steam_guard_code") || "Steam Guard Code"}
-                        </label>
-                        <input
-                          autoFocus
-                          className="input w-full text-center tracking-widest font-mono text-lg"
-                          placeholder="XXXXX"
-                          value={code}
-                          onChange={(e) => setCode(e.target.value.toUpperCase())}
-                          disabled={busy}
-                        />
-                      </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handle2FASubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-subtle uppercase tracking-wide">
+                        {t("settings.steam_guard_code") || "Steam Guard Code"}
+                      </label>
+                      <input
+                        autoFocus
+                        className="input w-full text-center tracking-widest font-mono text-lg"
+                        placeholder="XXXXX"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.toUpperCase())}
+                        disabled={busy}
+                      />
+                    </div>
 
-                      <div className="flex justify-end gap-3 pt-4">
-                        <button type="button" className="btn-ghost" onClick={() => setShowCodeInput(false)} disabled={busy}>
-                          {t("buttons.back") || "Back"}
-                        </button>
-                        <button type="submit" className="btn-primary flex items-center gap-2" disabled={busy || !code}>
-                          {busy && <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />}
-                          {t("buttons.submit") || "Submit"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              )}
-            </div>
-
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    );
-  }
+                    <div className="flex justify-end gap-3 pt-4">
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => setShowCodeInput(false)}
+                        disabled={busy}
+                      >
+                        {t("buttons.back") || "Back"}
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn-primary flex items-center gap-2"
+                        disabled={busy || !code}
+                      >
+                        {busy && (
+                          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        )}
+                        {t("buttons.submit") || "Submit"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
