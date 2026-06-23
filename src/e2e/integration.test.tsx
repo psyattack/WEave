@@ -46,7 +46,11 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
 
     registerCommandMock("we_list_installed", () => [mockWallpaper]);
     registerCommandMock("metadata_get_all", () => ({
-      "2000001": { author: "John Doe", tags: ["Nature", "Scene"], posted_date: "2020-01-01" },
+      "2000001": {
+        author: "John Doe",
+        tags: ["Nature", "Scene"],
+        posted_date: "2020-01-01",
+      },
     }));
     registerCommandMock("metadata_get", () => ({
       pubfileid: "2000001",
@@ -72,14 +76,20 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
     await userEvent.click(card);
 
     // Verify Details panel is open
-    expect(await screen.findByRole("heading", { name: "Nature Wallpaper" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Nature Wallpaper" }),
+    ).toBeInTheDocument();
 
     // Click more options in details panel
-    const moreBtn = await screen.findByRole("button", { name: /more options/i });
+    const moreBtn = await screen.findByRole("button", {
+      name: /more options/i,
+    });
     await userEvent.click(moreBtn);
 
     // Click delete in dropdown menu
-    const deleteItem = await screen.findByRole("menuitem", { name: /delete_wallpaper|delete/i });
+    const deleteItem = await screen.findByRole("menuitem", {
+      name: /delete_wallpaper|delete/i,
+    });
     await userEvent.click(deleteItem);
 
     // Confirm dialog
@@ -89,16 +99,16 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
     await waitFor(() => {
       expect(deletedId).toBe("2000001");
       // Check that the heading inside the details sidebar is no longer present
-      expect(screen.queryByRole("heading", { name: "Nature Wallpaper" })).toBeNull();
+      expect(
+        screen.queryByRole("heading", { name: "Nature Wallpaper" }),
+      ).toBeNull();
       // Check that the wallpaper card has been removed from the grid
       expect(screen.queryByText("Nature Wallpaper")).toBeNull();
     });
   });
 
   it("T3.2 (F1 + F3) Directory update: changing WE directory in settings dialog triggers installed view reload", async () => {
-    let listCalled = 0;
     registerCommandMock("we_list_installed", () => {
-      listCalled++;
       return [mockWallpaper];
     });
     registerCommandMock("we_set_directory", () => true);
@@ -110,7 +120,7 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
       <>
         <InstalledView />
         <SettingsDialog open={true} onOpenChange={() => {}} />
-      </>
+      </>,
     );
 
     const details = screen.getByText(/wallpaper engine/i);
@@ -129,18 +139,20 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
 
   it("T3.3 (F1 + F4) Theme card adapt: selecting Light theme alters contrast styles of wallpaper cards", async () => {
     render(<InstalledView />);
-    
+
     // Changing the store theme to light updates classes
     useAppStore.getState().setTheme("light");
 
     await waitFor(() => {
-      expect(document.documentElement.classList.contains("theme-light")).toBe(true);
+      expect(document.documentElement.classList.contains("theme-light")).toBe(
+        true,
+      );
     });
   });
-// 
+  //
   it("T3.4 (F1 + F5) Keyboard grid nav: grid items are focusable and navigable via keyboard tabs", async () => {
     render(<InstalledView />);
-    
+
     await screen.findByText("Nature Wallpaper");
     // Tab focuses elements inside card
     const applyBtn = screen.getByRole("button", { name: /apply/i });
@@ -157,7 +169,7 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
     render(<InstalledView />);
     const searchInput = await screen.findByPlaceholderText(/search/i);
     await userEvent.type(searchInput, "Nature");
-    
+
     expect(await screen.findByText("Nature Wallpaper")).toBeInTheDocument();
 
     // Clear search and type a non-matching query to verify filtering removes item from the DOM
@@ -205,18 +217,20 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
       <DetailsPanel
         kind="installed"
         item={mockWallpaper}
-        onClose={() => { closed = true; }}
+        onClose={() => {
+          closed = true;
+        }}
         onApply={() => {}}
         onExtract={() => {}}
         onDelete={() => {}}
         onOpenFolder={() => {}}
         onCopyId={() => {}}
-      />
+      />,
     );
 
     // Escape triggers onClose
     await userEvent.keyboard("{Escape}");
-    
+
     await waitFor(() => {
       expect(closed).toBe(true);
     });
@@ -233,7 +247,7 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
         onDelete={() => {}}
         onOpenFolder={() => {}}
         onCopyId={() => {}}
-      />
+      />,
     );
 
     expect(await screen.findByText("Nature Wallpaper")).toBeInTheDocument();
@@ -244,13 +258,18 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
       <>
         <App />
         <SettingsDialog open={true} onOpenChange={() => {}} />
-      </>
+      </>,
     );
-    
+
     useAppStore.setState({ accent: "teal" });
-    
+
     await waitFor(() => {
-      expect(window.getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim()).toBe("#14b8a6");
+      expect(
+        window
+          .getComputedStyle(document.documentElement)
+          .getPropertyValue("--accent-color")
+          .trim(),
+      ).toBe("#14b8a6");
     });
   });
 
@@ -272,7 +291,7 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
     render(
       <Tooltip content="Contrast Hint">
         <button>Hover</button>
-      </Tooltip>
+      </Tooltip>,
     );
 
     const btn = screen.getByRole("button", { name: "Hover" });
@@ -281,7 +300,6 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
     const tooltips = await screen.findAllByText("Contrast Hint");
     expect(tooltips[0]).toBeInTheDocument();
   });
-
 
   it("T3.15 (F5 + F6) A11y motion override: reduced motion setting overrides 3D card tilt transform behaviors", async () => {
     const originalMatchMedia = window.matchMedia;

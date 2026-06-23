@@ -1,11 +1,18 @@
 if (typeof window !== "undefined") {
-  (window as any).__TAURI_INTERNALS__ = (window as any).__TAURI_INTERNALS__ || {};
-  window.Element.prototype.hasPointerCapture = window.Element.prototype.hasPointerCapture || (() => false);
-  window.Element.prototype.setPointerCapture = window.Element.prototype.setPointerCapture || (() => {});
-  window.Element.prototype.releasePointerCapture = window.Element.prototype.releasePointerCapture || (() => {});
-  window.HTMLElement.prototype.scrollIntoView = window.HTMLElement.prototype.scrollIntoView || (() => {});
-  window.HTMLElement.prototype.scrollTo = window.HTMLElement.prototype.scrollTo || (() => {});
-  window.Element.prototype.scrollTo = window.Element.prototype.scrollTo || (() => {});
+  (window as any).__TAURI_INTERNALS__ =
+    (window as any).__TAURI_INTERNALS__ || {};
+  window.Element.prototype.hasPointerCapture =
+    window.Element.prototype.hasPointerCapture || (() => false);
+  window.Element.prototype.setPointerCapture =
+    window.Element.prototype.setPointerCapture || (() => {});
+  window.Element.prototype.releasePointerCapture =
+    window.Element.prototype.releasePointerCapture || (() => {});
+  window.HTMLElement.prototype.scrollIntoView =
+    window.HTMLElement.prototype.scrollIntoView || (() => {});
+  window.HTMLElement.prototype.scrollTo =
+    window.HTMLElement.prototype.scrollTo || (() => {});
+  window.Element.prototype.scrollTo =
+    window.Element.prototype.scrollTo || (() => {});
 }
 
 import { afterEach, beforeEach, vi } from "vitest";
@@ -75,7 +82,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const cssPath = path.resolve(__dirname, "../index.css");
-const parsedRules: { selector: string; variables: Record<string, string> }[] = [];
+const parsedRules: { selector: string; variables: Record<string, string> }[] =
+  [];
 
 try {
   const cssContent = fs.readFileSync(cssPath, "utf-8");
@@ -83,7 +91,7 @@ try {
   const selectorStack: string[] = [];
   let currentText = "";
   let i = 0;
-  
+
   while (i < cleanCss.length) {
     const char = cleanCss[i];
     if (char === "{") {
@@ -95,16 +103,16 @@ try {
       const selector = selectorStack.pop() || "";
       currentText = "";
       i++;
-      
+
       const variables: Record<string, string> = {};
       const varRegex = /(--[\w-]+)\s*:\s*([^;/\n]+)/g;
       let varMatch;
       while ((varMatch = varRegex.exec(declarations)) !== null) {
         variables[varMatch[1].trim()] = varMatch[2].trim();
       }
-      
+
       if (Object.keys(variables).length > 0) {
-        const activeSelectors = selector.split(",").map(s => s.trim());
+        const activeSelectors = selector.split(",").map((s) => s.trim());
         for (const sel of activeSelectors) {
           if (sel.startsWith("@") || sel.includes("%") || sel.includes("(")) {
             continue;
@@ -130,18 +138,18 @@ Object.defineProperty(window, "getComputedStyle", {
     if (elt !== document.documentElement) {
       return style;
     }
-    
+
     const computedVars: Record<string, string> = {};
     for (const rule of parsedRules) {
       try {
         if (rule.selector === ":root" || elt.matches(rule.selector)) {
           Object.assign(computedVars, rule.variables);
         }
-      } catch (e) {
+      } catch {
         // Ignore invalid selectors
       }
     }
-    
+
     // Inline style overrides (highest precedence in CSS cascade)
     const inlineStyles: Record<string, string> = {};
     for (let i = 0; i < elt.style.length; i++) {
@@ -149,7 +157,7 @@ Object.defineProperty(window, "getComputedStyle", {
       inlineStyles[name] = elt.style.getPropertyValue(name);
     }
     Object.assign(computedVars, inlineStyles);
-    
+
     return {
       getPropertyValue: (prop: string) => {
         if (prop.startsWith("--")) {
@@ -158,7 +166,7 @@ Object.defineProperty(window, "getComputedStyle", {
         return style.getPropertyValue(prop);
       },
     } as any;
-  }
+  },
 });
 
 vi.mock("@tauri-apps/api/core", async () => {
@@ -173,7 +181,9 @@ vi.mock("@tauri-apps/api/core", async () => {
       if (cmd === "we_list_installed") return [];
       return null;
     }),
-    convertFileSrc: vi.fn().mockImplementation((path) => `asset://localhost/${path}`),
+    convertFileSrc: vi
+      .fn()
+      .mockImplementation((path) => `asset://localhost/${path}`),
   };
 });
 
@@ -188,7 +198,10 @@ vi.mock("@tauri-apps/api/event", async () => {
       return () => {
         const list = eventListeners.get(event);
         if (list) {
-          eventListeners.set(event, list.filter((cb) => cb !== callback));
+          eventListeners.set(
+            event,
+            list.filter((cb) => cb !== callback),
+          );
         }
       };
     }),
@@ -237,7 +250,10 @@ vi.mock("react-i18next", async () => {
       let result = current;
       if (options && typeof options === "object") {
         for (const [k, v] of Object.entries(options)) {
-          result = result.replace(new RegExp(`{{\\s*${k}\\s*}}`, "g"), String(v));
+          result = result.replace(
+            new RegExp(`{{\\s*${k}\\s*}}`, "g"),
+            String(v),
+          );
         }
       }
       return result;
@@ -271,8 +287,3 @@ vi.mock("react-i18next", async () => {
     },
   };
 });
-
-
-
-
-

@@ -18,6 +18,7 @@ import ToastStack from "@/components/common/ToastStack";
 import SetupOverlay from "@/components/common/SetupOverlay";
 import MetadataInitDialog from "@/components/common/MetadataInitDialog";
 import LoginModal from "@/components/dialogs/LoginModal";
+import Download2FAModal from "@/components/dialogs/Download2FAModal";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useApplyTheme, persistTheme, THEME_CODES } from "@/hooks/useTheme";
 import { useProductionProtection } from "@/hooks/useProductionProtection";
@@ -198,6 +199,7 @@ export default function App() {
           onAccept={() => setLegalAccepted(true)}
         />
         <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
+        <Download2FAModal />
         <ToastStack />
         <SetupOverlay />
         <MetadataInitDialog />

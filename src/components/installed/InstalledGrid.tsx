@@ -43,12 +43,27 @@ export default function InstalledGrid({
   const gap = 12;
 
   const { cols, colWidth, itemHeight, totalRows, totalHeight } = useMemo(() => {
-    const c = dimensions.width === 0 ? 4 : Math.max(1, Math.floor((dimensions.width + gap) / (minColWidth + gap)));
-    const cw = dimensions.width === 0 ? minColWidth : (dimensions.width - (c - 1) * gap) / c;
+    const c =
+      dimensions.width === 0
+        ? 4
+        : Math.max(
+            1,
+            Math.floor((dimensions.width + gap) / (minColWidth + gap)),
+          );
+    const cw =
+      dimensions.width === 0
+        ? minColWidth
+        : (dimensions.width - (c - 1) * gap) / c;
     const ih = cw;
     const tr = Math.ceil(items.length / c);
     const th = tr * ih + (tr > 0 ? (tr - 1) * gap : 0);
-    return { cols: c, colWidth: cw, itemHeight: ih, totalRows: tr, totalHeight: th };
+    return {
+      cols: c,
+      colWidth: cw,
+      itemHeight: ih,
+      totalRows: tr,
+      totalHeight: th,
+    };
   }, [dimensions.width, items.length]);
 
   useEffect(() => {
@@ -93,7 +108,7 @@ export default function InstalledGrid({
     if (el.scrollTop > maxScroll) {
       try {
         el.scrollTop = maxScroll;
-      } catch (e) {
+      } catch {
         // JSDOM has read-only scrollTop
       }
       setScrollTop(maxScroll);
@@ -105,10 +120,13 @@ export default function InstalledGrid({
       return items.slice(0, 12).map((item, index) => ({ item, index }));
     }
     const buffer = 2;
-    const startRow = Math.max(0, Math.floor(scrollTop / (itemHeight + gap)) - buffer);
+    const startRow = Math.max(
+      0,
+      Math.floor(scrollTop / (itemHeight + gap)) - buffer,
+    );
     const endRow = Math.min(
       totalRows,
-      Math.ceil((scrollTop + dimensions.height) / (itemHeight + gap)) + buffer
+      Math.ceil((scrollTop + dimensions.height) / (itemHeight + gap)) + buffer,
     );
 
     const result = [];
@@ -119,7 +137,7 @@ export default function InstalledGrid({
       result.push({ item: items[i], index: i });
     }
     return result;
-  }, [items, scrollTop, dimensions.height, cols, totalRows]);
+  }, [items, scrollTop, dimensions.height, cols, totalRows, itemHeight]);
 
   return (
     <div ref={containerRef} className="flex-1 overflow-auto px-4 py-3 relative">
@@ -154,7 +172,9 @@ export default function InstalledGrid({
               <WallpaperCard
                 item={item}
                 index={index}
-                isSelected={selected?.pubfileid === item.pubfileid && !selectionMode}
+                isSelected={
+                  selected?.pubfileid === item.pubfileid && !selectionMode
+                }
                 selectionMode={selectionMode}
                 isBulkSelected={selectedIds.has(item.pubfileid)}
                 onToggleBulk={() => toggleSelection(item.pubfileid)}
@@ -181,7 +201,9 @@ export default function InstalledGrid({
               <WallpaperCard
                 item={item}
                 index={index}
-                isSelected={selected?.pubfileid === item.pubfileid && !selectionMode}
+                isSelected={
+                  selected?.pubfileid === item.pubfileid && !selectionMode
+                }
                 selectionMode={selectionMode}
                 isBulkSelected={selectedIds.has(item.pubfileid)}
                 onToggleBulk={() => toggleSelection(item.pubfileid)}

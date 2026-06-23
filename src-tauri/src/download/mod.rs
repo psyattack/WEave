@@ -143,6 +143,7 @@ impl DownloadManager {
                     &credentials.username,
                     "-password",
                     &credentials.password,
+                    "-remember-password",
                     "-loginid",
                     &login_id.to_string(),
                     "-max-downloads",
@@ -150,6 +151,7 @@ impl DownloadManager {
                     "-dir",
                 ])
                 .arg(&output_dir_string)
+                .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .kill_on_drop(true);
@@ -182,14 +184,36 @@ impl DownloadManager {
 
                 let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(100);
 
-                if let Some(out) = stdout {
+                if let Some(mut out) = stdout {
                     let tx = tx.clone();
                     tokio::spawn(async move {
-                        let mut reader = BufReader::new(out).lines();
-                        while let Ok(Some(line)) = reader.next_line().await {
-                            if !line.trim().is_empty() {
-                                let _ = tx.send(format!("OUT:{}", line)).await;
+                        use tokio::io::AsyncReadExt;
+                        let mut buf = [0u8; 1024];
+                        let mut current_line = String::new();
+                        while let Ok(n) = out.read(&mut buf).await {
+                            if n == 0 {
+                                break;
                             }
+                            let chunk = String::from_utf8_lossy(&buf[..n]);
+                            for c in chunk.chars() {
+                                if c == '\n' {
+                                    let line = std::mem::take(&mut current_line);
+                                    let trimmed = line.trim_end_matches('\r');
+                                    if !trimmed.is_empty() {
+                                        let _ = tx.send(format!("OUT:{}", trimmed)).await;
+                                    }
+                                } else {
+                                    current_line.push(c);
+                                    let lower = current_line.to_lowercase();
+                                    if lower.contains("enter your 2-factor auth code") || lower.contains("auth code sent to your email") {
+                                        let line = std::mem::take(&mut current_line);
+                                        let _ = tx.send(format!("OUT:{}", line)).await;
+                                    }
+                                }
+                            }
+                        }
+                        if !current_line.is_empty() {
+                            let _ = tx.send(format!("OUT:{}", current_line)).await;
                         }
                     });
                 }
@@ -242,6 +266,15 @@ impl DownloadManager {
                                 
                                 if progress.is_some() {
                                     download_started = true;
+                                }
+                                
+                                let lower = cleaned.to_lowercase();
+                                if (lower.contains("enter") && lower.contains("code")) || lower.contains("auth code") || lower.contains("2 factor") || lower.contains("authenticator app") {
+                                    download_started = true; // prevent timeout
+                                    app.emit("download://require_2fa", pubfileid.clone()).ok();
+                                } else if lower.contains("waiting for steam guard app confirmation") {
+                                    download_started = true; // prevent timeout
+                                    app.emit("download://require_app_confirm", pubfileid.clone()).ok();
                                 }
                                 let status = TaskStatus {
                                     pubfileid: pubfileid.clone(),
@@ -352,6 +385,24 @@ impl DownloadManager {
         });
 
         Ok(())
+    }
+
+    pub async fn submit_2fa(&self, pubfileid: &str, code: &str) -> Result<(), String> {
+        let child_opt = self.handles.lock().get(pubfileid).cloned();
+        if let Some(child_holder) = child_opt {
+            let mut child_guard = child_holder.lock().await;
+            if let Some(child) = child_guard.as_mut() {
+                if let Some(stdin) = child.stdin.as_mut() {
+                    use tokio::io::AsyncWriteExt;
+                    if let Err(e) = stdin.write_all(format!("{}\n", code).as_bytes()).await {
+                        return Err(format!("Failed to write to stdin: {}", e));
+                    }
+                    let _ = stdin.flush().await;
+                    return Ok(());
+                }
+            }
+        }
+        Err("Download task not found or stdin unavailable".to_string())
     }
 
     pub async fn cancel(&self, pubfileid: &str, we_directory: &std::path::Path) -> bool {

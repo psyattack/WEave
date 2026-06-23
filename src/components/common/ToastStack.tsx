@@ -20,7 +20,7 @@ const COLORS: Record<ToastKind, string> = {
 export default function ToastStack() {
   const { toasts, dismiss } = useToastStore();
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-[320px] flex-col gap-2">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-[9999] flex w-[320px] flex-col gap-2">
       <AnimatePresence>
         {toasts.map((toast) => {
           const Icon = ICONS[toast.kind];

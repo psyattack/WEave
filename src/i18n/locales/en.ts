@@ -234,6 +234,10 @@ export default {
     download_account: "Download account",
     download_account_description:
       "Pick a Steam account used for downloading. Custom credentials can be added below.",
+    add_custom_account: "Add custom account",
+    add_custom_account_title: "Add download account",
+    add_custom_account_description:
+      "Enter the Steam credentials for an account used for downloading, or scan the QR code with the Steam Mobile App.",
     custom_badge: "custom",
     auto_account: "Auto",
     signed_in: "Signed in",
@@ -267,7 +271,9 @@ export default {
     account_exists: "This account already exists",
     confirm_remove_account: "Remove this account?",
     initialize_now: "Initialize Now",
-    steam_guard_warning: "Steam Guard must be disabled",
+    login_qr: "Login with QR",
+    login_qr_desc: "Scan this code with your Steam Mobile App to sign in.",
+    generating_qr: "Generating QR code…",
   },
   info: {
     description:
@@ -491,7 +497,7 @@ export default {
   },
   faq: {
     login_issues_q: "Steam login error occurs in the app",
-    login_issues_a: "If you do not need 18+ content, you don't have to worry about this and can simply ignore it.\n\nIf you need 18+ content, try these options one by one:\n\n1) Simply restart the program\n2) Go to the settings and click \"Relogin\"\n3) Open the data folder (the \"Open Data folder\" button in the \"About\" window) and delete the «SteamWebView» folder (after closing WEave) (this will reset the built-in browser cache). Restart the program.\n\nIf the issue persists for a long time, there are likely problems with the parser's system account. Try providing your own Steam account in the parser settings (Accounts -> Open Parser). You can use any account (even a dummy one), as long as there are no restrictions on 18+ content in your account settings.\n\nIf necessary, more system accounts with automatic selection will be created in the future.",
+    login_issues_a: "If you do not need 18+ content, you don't have to worry about this and can simply ignore it.\n\nIf you need 18+ content, try these options one by one:\n\n1) Simply restart the program\n2) Go to the settings and click \"Relogin\"\n3) Open the data folder (the \"Open Data folder\" button in the \"About\" window) and delete the «SteamWebView» folder (after closing WEave) (this will reset the built-in browser cache). Restart the program.\n\nIf the issue persists for a long time, there are likely problems with the parser's system account. Try providing your own Steam account in the parser settings (Accounts -> Login). You can use any account (even a dummy one), as long as there are no restrictions on 18+ content in your account settings.\n\nIf necessary, more system accounts with automatic selection will be created in the future.",
     extract_q: "Why does the \"Extract\" button not work for some downloaded wallpapers?",
     extract_a: "Not all wallpapers in the Workshop are full-fledged projects (with a project.json file). There are video wallpapers (MP4) or web wallpapers (HTML). They are already ready to use, and there is no need (and technically impossible) to unpack them as Wallpaper Engine projects.",
     storage_q: "Where are downloaded wallpapers stored?",
@@ -499,6 +505,6 @@ export default {
     visibility_q: "Wallpapers are downloaded, but they are not visible in the original application",
     visibility_a: "Make sure that in the Settings (System & Integration) you have specified the correct path to the Wallpaper Engine folder. The path must point to the root folder where the executable files (wallpaper32.exe / wallpaper64.exe) are located.",
     download_issues_q: "What to do if wallpapers won't download?",
-    download_issues_a: "Try again, maybe wait a little bit.\n\nIt's possible that the passwords for the system download accounts have expired. In this case, you can:\n\n1) Add your personal account without Steam Guard that owns a copy of Wallpaper Engine (Accounts tab in settings) (Though it's unclear why you would need this app then)\n2) Buy an offline activation of Wallpaper Engine without Steam Guard on various marketplaces and add it using the method above (They are very cheap)\n3) Write an Issue in the GitHub repository and I will try to promptly update the working accounts"
+    download_issues_a: "Try again, maybe wait a little bit.\n\nIt's possible that the passwords for the system download accounts have expired. In this case, you can:\n\n1) Add a friend's account or your own account with a copy of Wallpaper Engine (Account -> Add custom account)\n2) Buy an offline activation of Wallpaper Engine on various marketplaces and add it using the method above (They are very cheap)\n3) Write an Issue in the GitHub repository and I will try to promptly update the working accounts"
   },
 } as const;

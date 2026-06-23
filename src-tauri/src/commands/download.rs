@@ -63,3 +63,12 @@ pub async fn download_multi_start(
     }
     Ok(())
 }
+
+#[command]
+pub async fn download_submit_2fa(
+    state: AppStateHandle<'_>,
+    pubfileid: String,
+    code: String,
+) -> Result<(), String> {
+    state.downloads.submit_2fa(&pubfileid, &code).await
+}
