@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 
 import Sidebar, { NavKey } from "@/components/layout/Sidebar";
@@ -17,6 +17,7 @@ import TasksDrawer from "@/components/tasks/TasksDrawer";
 import ToastStack from "@/components/common/ToastStack";
 import SetupOverlay from "@/components/common/SetupOverlay";
 import MetadataInitDialog from "@/components/common/MetadataInitDialog";
+import LoginModal from "@/components/dialogs/LoginModal";
 import { useBootstrap } from "@/hooks/useBootstrap";
 import { useApplyTheme, persistTheme, THEME_CODES } from "@/hooks/useTheme";
 import { useProductionProtection } from "@/hooks/useProductionProtection";
@@ -24,6 +25,7 @@ import { useHotkeys } from "@/hooks/useHotkeys";
 import { useAppStore } from "@/stores/app";
 import { useNavStore } from "@/stores/nav";
 import { useFiltersStore } from "@/stores/filters";
+import { useSteamSessionStore } from "@/stores/steam-session";
 import { triggerGlobalRefresh } from "@/stores/refresh";
 import {
   pagePrev,
@@ -50,6 +52,11 @@ export default function App() {
 
   const legalAccepted = useAppStore((s) => s.legalAccepted);
   const setLegalAccepted = useAppStore((s) => s.setLegalAccepted);
+
+  const loginModalOpen = useAppStore((s) => s.loginModalOpen);
+  const setLoginModalOpen = useAppStore((s) => s.setLoginModalOpen);
+  const showLoginPromptOnFail = useAppStore((s) => s.showLoginPromptOnFail);
+  const sessionPhase = useSteamSessionStore((s) => s.phase);
 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -79,7 +86,13 @@ export default function App() {
     if (ready && !legalAccepted) setLegalOpen(true);
   }, [ready, legalAccepted]);
 
-
+  const hasAutoOpened = useRef(false);
+  useEffect(() => {
+    if (ready && sessionPhase === "error" && showLoginPromptOnFail && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      setLoginModalOpen(true, "auto");
+    }
+  }, [ready, sessionPhase, showLoginPromptOnFail, setLoginModalOpen]);
 
   const setPage = useFiltersStore((s) => s.setPage);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
@@ -184,6 +197,7 @@ export default function App() {
           requireAccept={!legalAccepted}
           onAccept={() => setLegalAccepted(true)}
         />
+        <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
         <ToastStack />
         <SetupOverlay />
         <MetadataInitDialog />

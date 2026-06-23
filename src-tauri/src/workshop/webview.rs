@@ -91,6 +91,17 @@ impl SteamWebview {
         Ok(())
     }
 
+    pub async fn prepare_login(&self) -> Result<(), tauri::Error> {
+        let _g = self.lock.lock().await;
+        self.ensure_window()?;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Ok(());
+        };
+        let _ = w.clear_all_browsing_data();
+        w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))?;
+        Ok(())
+    }
+
     /// Pull all `steamcommunity.com` cookies from the webview and load them
     /// into our reqwest jar. WebView2 persists cookies automatically, so no
     /// additional file storage is needed.
@@ -182,6 +193,10 @@ impl SteamWebview {
             return Ok(false);
         };
 
+        if force {
+            let _ = w.clear_all_browsing_data();
+        }
+
         // Navigate to the login page and wait a moment for the SPA to render.
         w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))
             .map_err(|e| e.to_string())?;
@@ -226,6 +241,58 @@ impl SteamWebview {
         cookies
             .iter()
             .any(|c| c.name() == "steamLoginSecure" && !c.value().is_empty())
+    }
+
+    pub async fn login_fill(&self, username: &str, password: &str) -> Result<(), String> {
+        let _g = self.lock.lock().await;
+        self.ensure_window().map_err(|e| e.to_string())?;
+
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Err("No window".into());
+        };
+
+        let _ = w.clear_all_browsing_data();
+
+        w.eval(format!("window.location.href = {:?}", STEAM_LOGIN_URL))
+            .map_err(|e| e.to_string())?;
+        sleep(Duration::from_millis(2500)).await;
+
+        let script = build_login_script(username, password);
+        for _ in 0..4 {
+            let _ = w.eval(&script);
+            sleep(Duration::from_millis(600)).await;
+        }
+        Ok(())
+    }
+
+    pub async fn login_fill_2fa(&self, code: &str) -> Result<(), String> {
+        let _g = self.lock.lock().await;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Err("No window".into());
+        };
+        let script = build_2fa_script(code);
+        w.eval(&script).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub async fn login_switch_to_code(&self) -> Result<(), String> {
+        let _g = self.lock.lock().await;
+        let Some(w) = self.app.get_webview_window(LABEL) else {
+            return Err("No window".into());
+        };
+        let script = r#"
+        (function() {
+            var switchBtn = Array.from(document.querySelectorAll('div, button, a')).find(el => {
+                var t = el.innerText || '';
+                return (t.includes('кода') || t.includes('code') || t.includes('Code')) && !el.querySelector('div');
+            });
+            if (switchBtn) {
+                switchBtn.click();
+            }
+        })();
+        "#;
+        w.eval(script).map_err(|e| e.to_string())?;
+        Ok(())
     }
 }
 
@@ -281,4 +348,46 @@ fn escape_js_string(s: &str) -> String {
         .replace('"', "\\\"")
         .replace('\n', "\\n")
         .replace('\r', "\\r")
+}
+
+fn build_2fa_script(code: &str) -> String {
+    let code = escape_js_string(code);
+    format!(
+        r#"
+        (function(code) {{
+            try {{
+                var inputs = document.querySelectorAll('input[type="text"]');
+                var seg = Array.from(inputs).filter(i => i.parentElement && i.parentElement.className.includes('Segmented'));
+                if (seg.length === 0) seg = Array.from(document.querySelectorAll('input[class*="SegmentedCharacterInput"]'));
+                if (seg.length === 0) {{
+                     seg = Array.from(inputs).filter(i => !i.disabled && i.style.display !== 'none');
+                }}
+                if (seg.length > 0) {{
+                    if (seg.length >= 5) {{
+                        for (var i = 0; i < code.length && i < seg.length; i++) {{
+                            seg[i].focus();
+                            var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                            if(s) s.call(seg[i], code[i]);
+                            else seg[i].value = code[i];
+                            seg[i].dispatchEvent(new Event('input', {{bubbles:true}}));
+                            seg[i].dispatchEvent(new Event('change', {{bubbles:true}}));
+                            seg[i].dispatchEvent(new KeyboardEvent('keyup', {{bubbles:true, key: code[i]}}));
+                        }}
+                    }} else {{
+                        var i0 = seg[0];
+                        i0.focus();
+                        var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                        if(s) s.call(i0, code);
+                        else i0.value = code;
+                        i0.dispatchEvent(new Event('input', {{bubbles:true}}));
+                        i0.dispatchEvent(new Event('change', {{bubbles:true}}));
+                        i0.dispatchEvent(new KeyboardEvent('keydown', {{bubbles:true, key: 'Enter', keyCode: 13}}));
+                    }}
+                }}
+            }} catch (e) {{
+                console.error(e);
+            }}
+        }})("{code}");
+        "#
+    )
 }
