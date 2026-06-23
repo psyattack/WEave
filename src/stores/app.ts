@@ -20,6 +20,9 @@ interface AppState {
   enable3dCards: boolean;
   enableLayoutAnimations: boolean;
   activeDetailsCover: string | null;
+  showLoginPromptOnFail: boolean;
+  loginModalOpen: boolean;
+  loginModalMode: "auto" | "manual";
   setReady: (v: boolean) => void;
   setLanguage: (lang: string) => void;
   setTheme: (theme: ThemeCode) => void;
@@ -37,6 +40,8 @@ interface AppState {
   setEnable3dCards: (v: boolean) => void;
   setEnableLayoutAnimations: (v: boolean) => void;
   setActiveDetailsCover: (v: string | null) => void;
+  setShowLoginPromptOnFail: (v: boolean) => void;
+  setLoginModalOpen: (open: boolean, mode?: "auto" | "manual") => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -59,6 +64,9 @@ export const useAppStore = create<AppState>()(
       enable3dCards: true,
       enableLayoutAnimations: false,
       activeDetailsCover: null,
+      showLoginPromptOnFail: true,
+      loginModalOpen: false,
+      loginModalMode: "manual",
       setReady: (v) => set({ ready: v }),
       setLanguage: (language) => set({ language }),
       setTheme: (theme) => {
@@ -80,6 +88,8 @@ export const useAppStore = create<AppState>()(
       setEnable3dCards: (enable3dCards) => set({ enable3dCards }),
       setEnableLayoutAnimations: (enableLayoutAnimations) => set({ enableLayoutAnimations }),
       setActiveDetailsCover: (activeDetailsCover) => set({ activeDetailsCover }),
+      setShowLoginPromptOnFail: (showLoginPromptOnFail) => set({ showLoginPromptOnFail }),
+      setLoginModalOpen: (loginModalOpen, mode) => set(s => ({ loginModalOpen, loginModalMode: mode || s.loginModalMode })),
     }),
     {
       name: "weave.ui",
@@ -93,6 +103,7 @@ export const useAppStore = create<AppState>()(
         lowPerformance: state.lowPerformance,
         enable3dCards: state.enable3dCards,
         enableLayoutAnimations: state.enableLayoutAnimations,
+        showLoginPromptOnFail: state.showLoginPromptOnFail,
       }),
     },
   ),

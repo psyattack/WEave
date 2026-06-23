@@ -8,6 +8,9 @@ import { pushToast } from "@/stores/toasts";
 import { useAppStore } from "@/stores/app";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useSteamSessionStore, SteamAccountInfo } from "@/stores/steam-session";
+import { triggerGlobalRefresh } from "@/stores/refresh";
+import { LogIn, RefreshCw } from "lucide-react";
+import { Tooltip } from "@/components/common/Tooltip";
 
 const persist = async (path: string, value: unknown) => {
   if (!inTauri) return;
@@ -138,6 +141,7 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
         >("accounts_list", undefined, []);
         if (list) setAccounts(list);
         await refreshSession();
+        triggerGlobalRefresh();
       }).then((fn) => {
         if (active) {
           unlisten = fn;
@@ -190,6 +194,7 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
         >("accounts_list", undefined, []);
         if (list) setAccounts(list);
         await refreshSession();
+        triggerGlobalRefresh();
       } else {
         pushToast(t("messages.error") || "Relogin failed", "error");
       }
@@ -203,58 +208,80 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
   const loggedIn = sessionPhase === "logged-in" && account;
   const displayName =
     account?.persona_name?.trim() || account?.account_name?.trim() || "";
+  const setLoginModalOpen = useAppStore((s) => s.setLoginModalOpen);
 
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-sunken p-3">
       <div className="flex items-center justify-between gap-3">
         {loggedIn ? (
-          <div className="flex items-center gap-2.5 text-sm">
+          <div className="flex items-center gap-1 text-sm">
             {account.avatar_url && (
               <img
                 src={account.avatar_url}
                 alt=""
-                className="h-8 w-8 rounded-full object-cover"
+                className="h-8 w-8 rounded-full object-cover mr-1"
               />
             )}
-            <span className="font-medium">{displayName}</span>
+            <span className="font-medium leading-none">{displayName}</span>
+            <Tooltip content={t("settings.relogin") || "Relogin"} side="top">
+              <button
+                className="btn-ghost p-1 h-auto text-muted hover:text-foreground"
+                onClick={relogin}
+                disabled={busy || !inTauri}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} />
+              </button>
+            </Tooltip>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-md border border-danger/40 bg-danger/10 px-2.5 py-1.5 text-[11px]">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-danger" />
-            <span className="truncate text-danger">
-              {t("settings.not_signed_in") || "Not signed in"}
-            </span>
+          <div className="flex items-center gap-2 text-[11px]">
+            <div className="flex items-center gap-2 rounded-md border border-danger/40 bg-danger/10 px-2.5 py-1.5">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-danger" />
+              <span className="truncate text-danger">
+                {t("settings.not_signed_in") || "Not signed in"}
+              </span>
+            </div>
+            <Tooltip content={t("settings.relogin") || "Relogin"} side="top">
+              <button
+                className="btn-ghost p-1.5 h-auto text-muted hover:text-foreground"
+                onClick={relogin}
+                disabled={busy || !inTauri}
+              >
+                <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+              </button>
+            </Tooltip>
           </div>
         )}
         <div className="flex gap-2">
-          {/* Login / Relogin — silent background auto-login */}
+          {/* New manual login button */}
           <button
             className="btn-outline inline-flex items-center gap-1.5"
-            onClick={relogin}
-            disabled={busy || !inTauri}
-          >
-            {busy && (
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70" />
-            )}
-            {busy
-              ? `${t("settings.relogin") || "Relogin"}…`
-              : t("settings.relogin") || "Relogin"}
-          </button>
-          {/* Open Parser — always opens the parser window without touching the session */}
-          <button
-            className="btn-outline"
-            onClick={openParser}
+            onClick={() => setLoginModalOpen(true, "manual")}
             disabled={!inTauri}
           >
-            {t("settings.open_parser") || "Open Parser"}
+            <LogIn className="w-4 h-4" />
+            {t("settings.login_button") || "Login"}
           </button>
-          <button
-            className="btn-outline"
-            onClick={onOpenParser}
-            disabled={!inTauri}
-          >
-            {t("settings.parser_logs") || "Parser Logs"}
-          </button>
+          
+          {/* Open Parser & Logs — dev build only */}
+          {import.meta.env.DEV && (
+            <>
+              <button
+                className="btn-outline"
+                onClick={openParser}
+                disabled={!inTauri}
+              >
+                {t("settings.open_parser") || "Open Parser"}
+              </button>
+              <button
+                className="btn-outline"
+                onClick={onOpenParser}
+                disabled={!inTauri}
+              >
+                {t("settings.parser_logs") || "Parser Logs"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

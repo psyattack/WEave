@@ -165,6 +165,14 @@ export default function GeneralSettingsTab() {
           t("settings.auto_apply_hint") || "Automatically apply wallpaper after download completes",
           <SettingSwitch path="settings.general.behavior.auto_apply_last_downloaded" fallback={false} />
         )}
+        {renderRow(
+          t("settings.auto_open_login") || "Automatically open login form on failure",
+          t("settings.auto_open_login_hint") || "Show the login form if Steam session requires authentication on startup",
+          <Switch
+            checked={state.showLoginPromptOnFail}
+            onCheckedChange={(v) => state.setShowLoginPromptOnFail(v)}
+          />
+        )}
       </SectionWrap>
 
       <SectionWrap title={t("settings.system_integration") || "System & Integration"}>
