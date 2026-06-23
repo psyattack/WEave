@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Lock, User, KeyRound } from "lucide-react";
+import { Lock, User, KeyRound } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
 import { invoke, tryInvoke } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
@@ -398,12 +398,6 @@ export default function LoginModal({
               )}
             </div>
 
-            <Dialog.Close asChild>
-              <button className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </button>
-            </Dialog.Close>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
