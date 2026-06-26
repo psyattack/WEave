@@ -231,7 +231,7 @@ export default function DetailsActionButtons({
 
 
         {/* Dropdown Menu (Extra / Danger) */}
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
           <DropdownMenu.Trigger asChild>
             <button
               aria-label="More options"
@@ -243,7 +243,7 @@ export default function DetailsActionButtons({
           <DropdownMenu.Portal>
             <DropdownMenu.Content
               align="end"
-              className="z-50 min-w-[160px] rounded-md bg-surface-raised border border-white/10 p-1 shadow-xl animate-in fade-in zoom-in-95"
+              className="z-50 min-w-[160px] rounded-md bg-black/40 backdrop-blur-xl border border-white/10 p-1 shadow-[0_16px_40px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95"
             >
               <DropdownMenu.Item
                 onClick={() => void openWorkshopPage()}
