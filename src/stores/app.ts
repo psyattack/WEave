@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 
 import { applyThemeClass } from "@/hooks/useTheme";
 
-export type ThemeCode = "dark" | "light" | "nord" | "monokai" | "solarized";
+export type ThemeCode = "dark" | "light" | "nord" | "monokai" | "solarized" | "black";
 
 interface AppState {
   ready: boolean;

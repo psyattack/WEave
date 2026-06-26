@@ -7,6 +7,7 @@ import {
   Leaf,
   ListTodo,
   Moon,
+  MoonStar,
 //   Palette,
   RefreshCw,
   Settings,
@@ -24,6 +25,7 @@ function ThemeIcon({ theme }: { theme: ThemeCode }) {
   if (theme === "light") return <Sun className="h-5 w-5" />;
   if (theme === "nord") return <Droplet className="h-5 w-5" />;
   if (theme === "solarized") return <Leaf className="h-5 w-5" />;
+  if (theme === "black") return <MoonStar className="h-5 w-5" />;
   return <Moon className="h-5 w-5" />;
 }
 

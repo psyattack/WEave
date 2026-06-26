@@ -8,6 +8,7 @@ export const THEME_CODES: ThemeCode[] = [
   "light",
   "nord",
   "solarized",
+  "black",
 ];
 
 // hex → "r g b" triples consumed by Tailwind's `rgb(var(--primary) / X)`.
