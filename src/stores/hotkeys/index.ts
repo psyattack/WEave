@@ -4,7 +4,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { HotkeyAction, HotkeyBinding, HotkeysState } from "./types";
 import { DEFAULT_HOTKEYS } from "./defaults";
 
-export type { HotkeyAction, HotkeyBinding, HotkeyConfig } from "./types";
+export type { HotkeyAction, HotkeyBinding } from "./types";
 export { DEFAULT_HOTKEYS } from "./defaults";
 
 // ─── Code → human-readable name ───────────────────────────────────────────────

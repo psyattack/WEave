@@ -6,7 +6,7 @@ export const eventListeners = new Map<
   string,
   ((...args: unknown[]) => unknown)[]
 >();
-export let mockDialogResult: string | string[] | null = null;
+let mockDialogResult: string | string[] | null = null;
 export const mockOpenUrlFn = vi.fn();
 
 export function getMockDialogResult() {

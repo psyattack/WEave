@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { invoke, inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
+import { useDotnetStore } from "@/stores/dotnet";
+import { pushToast } from "@/stores/toasts";
+import { useUpdaterStore } from "@/stores/updater";
 import { useAppStore, ThemeCode } from "@/stores/app";
 import { TaskPhase, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
@@ -114,12 +118,10 @@ export function useBootstrap() {
           message: string;
           progress?: number | null;
         }>("dotnet://status", (event) => {
-          void import("@/stores/dotnet").then(({ useDotnetStore }) => {
-            useDotnetStore.getState().setStatus({
-              phase: event.payload.phase as any,
-              message: event.payload.message,
-              progress: event.payload.progress ?? null,
-            });
+          useDotnetStore.getState().setStatus({
+            phase: event.payload.phase as any,
+            message: event.payload.message,
+            progress: event.payload.progress ?? null,
           });
         }),
         listen<{
@@ -129,14 +131,12 @@ export function useBootstrap() {
           message: string;
           progress?: number | null;
         }>("plugin://status", (event) => {
-          void import("@/stores/dotnet").then(({ useDotnetStore }) => {
-            useDotnetStore.getState().setPluginStatus({
-              phase: event.payload.phase as any,
-              plugin_id: event.payload.plugin_id,
-              plugin_name: event.payload.plugin_name,
-              message: event.payload.message,
-              progress: event.payload.progress ?? null,
-            });
+          useDotnetStore.getState().setPluginStatus({
+            phase: event.payload.phase as any,
+            plugin_id: event.payload.plugin_id,
+            plugin_name: event.payload.plugin_name,
+            message: event.payload.message,
+            progress: event.payload.progress ?? null,
           });
         }),
         listen<{
@@ -153,33 +153,27 @@ export function useBootstrap() {
             phase: normalizedPhase,
           });
           if (normalizedPhase === "failed") {
-            void import("@/stores/toasts").then(({ pushToast }) => {
-              pushToast(
-                i18n.t("bootstrap.download_failed", {
-                  id: event.payload.pubfileid,
-                  status: event.payload.status,
-                }),
-                "error",
-              );
-            });
+            pushToast(
+              i18n.t("bootstrap.download_failed", {
+                id: event.payload.pubfileid,
+                status: event.payload.status,
+              }),
+              "error",
+            );
           } else if (normalizedPhase === "cancelled") {
-            void import("@/stores/toasts").then(({ pushToast }) => {
-              pushToast(
-                i18n.t("bootstrap.download_cancelled", {
-                  id: event.payload.pubfileid,
-                }),
-                "warning",
-              );
-            });
+            pushToast(
+              i18n.t("bootstrap.download_cancelled", {
+                id: event.payload.pubfileid,
+              }),
+              "warning",
+            );
           } else if (normalizedPhase === "completed") {
-            void import("@/stores/toasts").then(({ pushToast }) => {
-              pushToast(
-                i18n.t("bootstrap.download_completed", {
-                  id: event.payload.pubfileid,
-                }),
-                "success",
-              );
-            });
+            pushToast(
+              i18n.t("bootstrap.download_completed", {
+                id: event.payload.pubfileid,
+              }),
+              "success",
+            );
             // The newly-downloaded item should now show the Installed
             // indicator on cards regardless of which view we're in.
             // We refresh the installed store so cards update their
@@ -193,12 +187,10 @@ export function useBootstrap() {
         listen<{ payload: string }>(
           "download://require_app_confirm",
           () => {
-            void import("@/stores/toasts").then(({ pushToast }) => {
-              pushToast(
-                "Please approve the login in your Steam Mobile App.",
-                "info",
-              );
-            });
+            pushToast(
+              "Please approve the login in your Steam Mobile App.",
+              "info",
+            );
           },
         ),
         listen<{
@@ -215,24 +207,20 @@ export function useBootstrap() {
             phase: normalizedPhase,
           });
           if (normalizedPhase === "failed") {
-            void import("@/stores/toasts").then(({ pushToast }) => {
-              pushToast(
-                i18n.t("bootstrap.extract_failed", {
-                  id: event.payload.pubfileid,
-                  status: event.payload.status,
-                }),
-                "error",
-              );
-            });
+            pushToast(
+              i18n.t("bootstrap.extract_failed", {
+                id: event.payload.pubfileid,
+                status: event.payload.status,
+              }),
+              "error",
+            );
           } else if (normalizedPhase === "completed") {
-            void import("@/stores/toasts").then(({ pushToast }) => {
-              pushToast(
-                i18n.t("bootstrap.extract_completed", {
-                  id: event.payload.pubfileid,
-                }),
-                "success",
-              );
-            });
+            pushToast(
+              i18n.t("bootstrap.extract_completed", {
+                id: event.payload.pubfileid,
+              }),
+              "success",
+            );
           }
         }),
       ]);
@@ -391,7 +379,6 @@ async function maybeCheckForUpdates() {
   if (!enabled) return;
   const info = await tryInvoke<UpdateInfo>("updater_check", undefined);
   if (info?.update_available) {
-    const { useUpdaterStore } = await import("@/stores/updater");
     useUpdaterStore.getState().show(info);
   }
 }
@@ -427,7 +414,6 @@ async function maybeAutoApply(pubfileid: string) {
 async function registerWindowStatePersistence() {
   if (!inTauri) return;
   try {
-    const { getCurrentWindow } = await import("@tauri-apps/api/window");
     const win = getCurrentWindow();
 
     const save = async () => {

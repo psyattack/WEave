@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type MetadataInitPhase = "idle" | "initializing" | "complete" | "error";
+type MetadataInitPhase = "idle" | "initializing" | "complete" | "error";
 
 interface MetadataInitStatus {
   phase: MetadataInitPhase;

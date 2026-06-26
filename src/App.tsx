@@ -59,11 +59,23 @@ export default function App() {
   const showLoginPromptOnFail = useAppStore((s) => s.showLoginPromptOnFail);
   const sessionPhase = useSteamSessionStore((s) => s.phase);
 
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
+  const [prevReady, setPrevReady] = useState(ready);
+  const [prevLegalAccepted, setPrevLegalAccepted] = useState(legalAccepted);
+
+  if (ready !== prevReady || legalAccepted !== prevLegalAccepted) {
+    setPrevReady(ready);
+    setPrevLegalAccepted(legalAccepted);
+    if (ready && !legalAccepted) {
+      setLegalOpen(true);
+    }
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
 
     const listener = (event: MediaQueryListEvent) => {
       setPrefersReducedMotion(event.matches);
@@ -82,10 +94,6 @@ export default function App() {
       document.documentElement.classList.remove("prefers-reduced-motion");
     }
   }, [prefersReducedMotion]);
-
-  useEffect(() => {
-    if (ready && !legalAccepted) setLegalOpen(true);
-  }, [ready, legalAccepted]);
 
   const hasAutoOpened = useRef(false);
   useEffect(() => {

@@ -15,7 +15,7 @@ import { useFiltersStore } from "@/stores/filters";
  *     routes to the in-app Author view (wallpapers + collections tabs).
  */
 
-export type SubView =
+type SubView =
   | { kind: "none" }
   | { kind: "author"; profileUrl: string; displayName: string }
   | { kind: "collection"; collectionId: string; title?: string };

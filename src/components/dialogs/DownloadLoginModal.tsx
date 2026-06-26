@@ -57,17 +57,22 @@ export default function DownloadLoginModal({
     if (list) setAccounts(list);
   };
 
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) {
+      setUsername("");
+      setPassword("");
+      setBusy(false);
+      setErrorMsg(null);
+    }
+  }
+
   // Register the auth:// event listeners while the modal is open. Closing the
   // modal tears them down AND kills any background DepotDownloader login process
   // so it stops running / logging once the window is gone.
   useEffect(() => {
     if (!open) return;
-
-    setUsername("");
-    setPassword("");
-    setBusy(false);
-    setErrorMsg(null);
-
     if (!inTauri) return;
 
     let cancelled = false;

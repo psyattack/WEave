@@ -253,8 +253,7 @@ impl DownloadManager {
 
                     match tokio::time::timeout(current_timeout, rx.recv()).await {
                         Ok(Some(msg)) => {
-                            if msg.starts_with("OUT:") {
-                                let line = &msg[4..];
+                            if let Some(line) = msg.strip_prefix("OUT:") {
                                 let cleaned = line
                                     .replace(&format!("{}\\", output_dir_string), ": ")
                                     .replace(&format!("{}/", output_dir_string), ": ");
@@ -285,8 +284,7 @@ impl DownloadManager {
                                 };
                                 tasks.lock().insert(pubfileid.clone(), status.clone());
                                 app.emit("download://status", &status).ok();
-                            } else if msg.starts_with("ERR:") {
-                                let line = &msg[4..];
+                            } else if let Some(line) = msg.strip_prefix("ERR:") {
                                 log::warn!("[DepotDownloader] {line}");
                                 if stderr_tail.len() >= 10 {
                                     stderr_tail.remove(0);

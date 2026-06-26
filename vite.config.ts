@@ -2,15 +2,19 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import svgr from "vite-plugin-svgr";
+import tailwindcss from "@tailwindcss/vite";
 import pkg from "./package.json";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
+  build: {
+    chunkSizeWarningLimit: 1000,
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
-  plugins: [react(), svgr()],
+  plugins: [react(), svgr(), tailwindcss()],
   test: {
     environment: "jsdom",
     globals: true,

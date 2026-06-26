@@ -8,8 +8,28 @@ import { persistTheme } from "@/hooks/useTheme";
 import { inTauri, invoke, tryInvokeOk } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { ThemeCode, useAppStore } from "@/stores/app";
-import { Row, Section, SettingSwitch, THEMES, ACCENTS } from "./SettingsDialogShared";
+import { Row, Section, SettingSwitch } from "./SettingsDialogShared";
 import { Search } from "lucide-react";
+
+const THEMES: { value: ThemeCode; label: string }[] = [
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "nord", label: "Nord" },
+  { value: "solarized", label: "Solarized" },
+];
+
+const ACCENTS: { value: string; label: string; color: string }[] = [
+  { value: "indigo", label: "Indigo", color: "#6366f1" },
+  { value: "blue", label: "Blue", color: "#3b82f6" },
+  { value: "purple", label: "Purple", color: "#a855f7" },
+  { value: "pink", label: "Pink", color: "#ec4899" },
+  { value: "rose", label: "Rose", color: "#f43f5e" },
+  { value: "orange", label: "Orange", color: "#f97316" },
+  { value: "amber", label: "Amber", color: "#f59e0b" },
+  { value: "emerald", label: "Emerald", color: "#10b981" },
+  { value: "teal", label: "Teal", color: "#14b8a6" },
+  { value: "cyan", label: "Cyan", color: "#06b6d4" },
+];
 
 function SectionWrap({ title, children }: { title: string; children: React.ReactNode }) {
   const visibleChildren = React.Children.toArray(children);
@@ -35,7 +55,7 @@ export default function GeneralSettingsTab() {
     if (query && !match(label) && !match(desc)) return null;
     const path = (node as any)?.props?.path;
     const id = path ? path.replace(/\./g, "-") : (node as any)?.props?.id;
-    const clonedNode = id ? React.cloneElement(node as React.ReactElement, { id }) : node;
+    const clonedNode = id ? React.cloneElement(node as React.ReactElement<any>, { id }) : node;
     return (
       <Row label={label} description={desc} badge={badge} warningBadge={warningBadge} key={label} id={id}>
         {clonedNode}

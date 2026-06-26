@@ -47,7 +47,11 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
   };
 
   useEffect(() => {
-    if (open) void run();
+    if (!open) return;
+    const timer = setTimeout(() => {
+      void run();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [open]);
 
   const skipThisVersion = async () => {

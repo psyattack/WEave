@@ -20,7 +20,7 @@ import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
 import type { WorkshopFilters } from "@/stores/filters";
 import { WorkshopItem, WorkshopPage } from "@/types/workshop";
 
-export interface CollectionInfo {
+interface CollectionInfo {
   rating_star_file?: string;
   num_ratings?: string;
   item_count?: number;
@@ -58,11 +58,30 @@ export default function CollectionsView() {
   const [page, setPageData] = useState<WorkshopPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WorkshopItem | null>(null);
+  const [prevSub, setPrevSub] = useState(sub);
+  const [requestedCollectionId, setRequestedCollectionId] = useState<string | null>(
+    sub.kind === "collection" ? sub.collectionId : null
+  );
+  const [prevRequestedCollectionId, setPrevRequestedCollectionId] = useState<string | null>(
+    sub.kind === "collection" ? sub.collectionId : null
+  );
+
   const [opened, setOpened] = useState<CollectionContents | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 
-  const requestedCollectionId =
-    sub.kind === "collection" ? sub.collectionId : null;
+  if (sub !== prevSub) {
+    setPrevSub(sub);
+    const nextId = sub.kind === "collection" ? sub.collectionId : null;
+    setRequestedCollectionId(nextId);
+  }
+
+  if (requestedCollectionId !== prevRequestedCollectionId) {
+    setPrevRequestedCollectionId(requestedCollectionId);
+    if (!requestedCollectionId) {
+      setOpened(null);
+      setShowInfo(false);
+    }
+  }
 
   // Get the saved page for this collection or main collections view
   const currentPage = requestedCollectionId
@@ -104,9 +123,6 @@ export default function CollectionsView() {
         );
         if (c) setOpened(c);
       })();
-    } else {
-      setOpened(null);
-      setShowInfo(false);
     }
   }, [requestedCollectionId, sub]);
 
@@ -126,67 +142,70 @@ export default function CollectionsView() {
 
   useEffect(() => {
     if (requestedCollectionId) return;
-    if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
-      setLoading(true);
-      return;
-    }
     let active = true;
-
-    const cached = cacheRef.current.get(filtersKey);
-    if (cached) {
-      setPageData(cached);
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-
-    void (async () => {
-      if (!inTauri) {
-        setPageData(makeMockPage(filters.page));
-        setLoading(false);
+    const t = setTimeout(() => {
+      if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
+        setLoading(true);
         return;
       }
-      if (refreshCounter > 0) {
-        await tryInvokeOk("workshop_refresh_cache");
-      }
-      let result = cached;
-      if (!result) {
-        result =
-          (await tryInvoke<WorkshopPage>("workshop_browse_collections", {
-            filters,
-          })) ?? undefined;
-        if (result) cacheRef.current.set(filtersKey, result);
-      }
-      if (!active) return;
-      setPageData(result ?? null);
-      setLoading(false);
 
-      if (result && result.total_pages > filters.page) {
-        const preloadOn = await tryInvoke<boolean>(
-          "config_get",
-          { path: "settings.general.behavior.preload_next_page" },
-          true,
-        );
-        if (preloadOn === false) return;
-        const nextFilters: WorkshopFilters = {
-          ...filters,
-          page: filters.page + 1,
-        };
-        const nextKey = JSON.stringify({
-          f: nextFilters,
-          c: requestedCollectionId,
-        });
-        if (!cacheRef.current.has(nextKey)) {
-          void tryInvoke<WorkshopPage>("workshop_browse_collections", {
-            filters: nextFilters,
-          }).then((next) => {
-            if (next) cacheRef.current.set(nextKey, next);
-          });
-        }
+      const cached = cacheRef.current.get(filtersKey);
+      if (cached) {
+        setPageData(cached);
+        setLoading(false);
+      } else {
+        setLoading(true);
       }
-    })();
+
+      void (async () => {
+        if (!inTauri) {
+          setPageData(makeMockPage(filters.page));
+          setLoading(false);
+          return;
+        }
+        if (refreshCounter > 0) {
+          await tryInvokeOk("workshop_refresh_cache");
+        }
+        let result = cached;
+        if (!result) {
+          result =
+            (await tryInvoke<WorkshopPage>("workshop_browse_collections", {
+              filters,
+            })) ?? undefined;
+          if (result) cacheRef.current.set(filtersKey, result);
+        }
+        if (!active) return;
+        setPageData(result ?? null);
+        setLoading(false);
+
+        if (result && result.total_pages > filters.page) {
+          const preloadOn = await tryInvoke<boolean>(
+            "config_get",
+            { path: "settings.general.behavior.preload_next_page" },
+            true,
+          );
+          if (preloadOn === false) return;
+          const nextFilters: WorkshopFilters = {
+            ...filters,
+            page: filters.page + 1,
+          };
+          const nextKey = JSON.stringify({
+            f: nextFilters,
+            c: requestedCollectionId,
+          });
+          if (!cacheRef.current.has(nextKey)) {
+            void tryInvoke<WorkshopPage>("workshop_browse_collections", {
+              filters: nextFilters,
+            }).then((next) => {
+              if (next) cacheRef.current.set(nextKey, next);
+            });
+          }
+        }
+      })();
+    }, 0);
     return () => {
       active = false;
+      clearTimeout(t);
     };
   }, [filtersKey, filters, requestedCollectionId, refreshCounter, steamPhase]);
 
@@ -443,10 +462,15 @@ function CollectionVirtualGrid({
 
     container.addEventListener("scroll", onScroll, { passive: true });
     ro.observe(container);
-    setDimensions({ width: container.clientWidth, height: container.clientHeight });
+    
+    const animId = requestAnimationFrame(() => {
+      setDimensions({ width: container.clientWidth, height: container.clientHeight });
+    });
+
     return () => {
       container.removeEventListener("scroll", onScroll);
       ro.disconnect();
+      cancelAnimationFrame(animId);
     };
   }, [container]);
 

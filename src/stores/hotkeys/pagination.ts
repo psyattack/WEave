@@ -9,7 +9,7 @@ import { create } from "zustand";
  * unmounts it clears itself.
  */
 
-export interface PaginationContext {
+interface PaginationContext {
   /** Which view is currently active */
   view: string | null;
   /** 1-based current page */

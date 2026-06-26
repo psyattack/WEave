@@ -23,14 +23,13 @@ pub async fn steam_login_show(state: State<'_, Arc<AppState>>) -> Result<(), Str
         tokio::spawn(async move {
             for _ in 0..180 {
                 tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                if steam_webview.is_logged_in().await {
-                    if let Ok(_) = steam_webview.sync_cookies().await {
+                if steam_webview.is_logged_in().await
+                    && steam_webview.sync_cookies().await.is_ok() {
                         workshop.clear_caches();
                         let _ = steam_webview.hide().await;
                         let _ = app_handle.emit("steam-login-success", ());
                         break;
                     }
-                }
             }
             STEAM_LOGIN_POLLING.store(false, std::sync::atomic::Ordering::SeqCst);
         });
@@ -216,9 +215,9 @@ pub async fn steam_qr_login_finalize(
     let steamid = jwt["sub"].as_str().ok_or("No sub in JWT")?;
     let steam_login_secure = format!("{}%7C%7C{}", steamid, access_token);
     
-    use rand::Rng;
-    let sessionid: String = rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    use rand::RngExt;
+    let sessionid: String = rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(32)
         .map(char::from)
         .collect::<String>()

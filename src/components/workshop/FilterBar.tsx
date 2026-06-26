@@ -60,7 +60,13 @@ export default function FilterBar() {
     filters.excluded_genre_tags.length > 0 ||
     filters.required_flags.length > 0;
 
+  const [prevSearch, setPrevSearch] = useState(filters.search);
   const [searchValue, setSearchValue] = useState(filters.search);
+
+  if (filters.search !== prevSearch) {
+    setPrevSearch(filters.search);
+    setSearchValue(filters.search);
+  }
   const sortOptions = toSelectOptionsI18n(
     SORT_KEYS,
     SORT_OPTIONS,
@@ -116,9 +122,6 @@ export default function FilterBar() {
     }),
   }));
 
-  useEffect(() => {
-    setSearchValue(filters.search);
-  }, [filters.search]);
 
   useEffect(() => {
     const t = setTimeout(() => {

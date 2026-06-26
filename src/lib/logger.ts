@@ -6,7 +6,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 
-export enum LogLevel {
+enum LogLevel {
   DEBUG = 'debug',
   INFO = 'info',
   WARN = 'warn',

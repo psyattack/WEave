@@ -1,3 +1,4 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { inTauri, tryInvoke } from "@/lib/tauri";
 
 /**
@@ -13,7 +14,6 @@ export async function maybeMinimize() {
   );
   if (!enabled) return;
   try {
-    const { getCurrentWindow } = await import("@tauri-apps/api/window");
     const win = getCurrentWindow();
     await win.minimize();
   } catch (err) {
