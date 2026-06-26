@@ -78,6 +78,7 @@ impl DownloadManager {
         we_directory: PathBuf,
         plugin_path: PathBuf,
         dotnet_root: Option<PathBuf>,
+        infinite_retry: bool,
     ) -> anyhow::Result<()> {
         if self.tasks.lock().contains_key(pubfileid) {
             return Ok(());
@@ -117,7 +118,7 @@ impl DownloadManager {
             let total_accounts = if is_custom { 1 } else { std::cmp::max(1, accounts.builtin_count()) };
             let mut attempt = 0;
 
-            while attempt < total_accounts {
+            loop {
                 let credentials = accounts.credentials(current_index);
                 let username = credentials.username.clone();
 
@@ -350,9 +351,9 @@ impl DownloadManager {
                 }
 
                 attempt += 1;
-                current_index = (current_index + 1) % total_accounts;
+                current_index = if is_custom { starting_index } else { (current_index + 1) % total_accounts };
 
-                if attempt >= total_accounts {
+                if attempt >= total_accounts && !infinite_retry {
                     let status_text = if !stderr_tail.is_empty() {
                         format!("Failed: {}", stderr_tail.join(" | "))
                     } else {

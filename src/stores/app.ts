@@ -13,6 +13,7 @@ interface AppState {
   weDirectory: string;
   availableLanguages: { code: string; label: string }[];
   accountIndex: number;
+  infiniteRetryAccounts: boolean;
   accounts: { index: number; username: string; is_custom: boolean }[];
   sidebarCollapsed: boolean;
   legalAccepted: boolean;
@@ -30,6 +31,7 @@ interface AppState {
   setWeDirectory: (dir: string) => void;
   setAvailableLanguages: (list: { code: string; label: string }[]) => void;
   setAccountIndex: (index: number) => void;
+  setInfiniteRetryAccounts: (v: boolean) => void;
   setAccounts: (
     accounts: { index: number; username: string; is_custom: boolean }[],
   ) => void;
@@ -57,6 +59,7 @@ export const useAppStore = create<AppState>()(
         { code: "ru", label: "Русский" },
       ],
       accountIndex: 3,
+      infiniteRetryAccounts: false,
       accounts: [],
       sidebarCollapsed: false,
       legalAccepted: false,
@@ -80,6 +83,7 @@ export const useAppStore = create<AppState>()(
       setAvailableLanguages: (availableLanguages) =>
          set({ availableLanguages }),
       setAccountIndex: (accountIndex) => set({ accountIndex }),
+      setInfiniteRetryAccounts: (infiniteRetryAccounts) => set({ infiniteRetryAccounts }),
       setAccounts: (accounts) => set({ accounts }),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),

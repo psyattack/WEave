@@ -11,6 +11,7 @@ import { useSteamSessionStore, SteamAccountInfo } from "@/stores/steam-session";
 import { triggerGlobalRefresh } from "@/stores/refresh";
 import { LogIn, RefreshCw, QrCode } from "lucide-react";
 import { Tooltip } from "@/components/common/Tooltip";
+
 import DownloadLoginModal from "@/components/dialogs/DownloadLoginModal";
 import { DownloadQRModal } from "@/components/dialogs/DownloadQRModal";
 
@@ -409,6 +410,8 @@ function DownloadAccountSection() {
           </div>
         ))}
       </div>
+
+
 
       <div className="flex items-center gap-2">
         <button

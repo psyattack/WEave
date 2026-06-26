@@ -235,6 +235,8 @@ export default {
     download_account: "Аккаунт для загрузки",
     download_account_description:
       "Выберите аккаунт Steam, используемый для загрузки. Пользовательские учётные данные можно добавить ниже.",
+    infinite_retry_accounts: "Загрузка до талого",
+    infinite_retry_accounts_hint: "Перебирать аккаунты бесконечно в цикле (или переподключаться к кастомному)",
     add_custom_account: "Добавить аккаунт",
     add_custom_account_title: "Добавить аккаунт для загрузки",
     add_custom_account_description:
