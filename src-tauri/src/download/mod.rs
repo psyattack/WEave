@@ -321,6 +321,21 @@ impl DownloadManager {
                 }
 
                 if was_cancelled {
+                    let final_status = TaskStatus {
+                        pubfileid: pubfileid.clone(),
+                        status: "Cancelled".to_string(),
+                        account: username,
+                        phase: Phase::Cancelled,
+                        progress: None,
+                    };
+                    app.emit("download://status", &final_status).ok();
+                    app.emit(
+                        "download://completed",
+                        DownloadCompleted {
+                            pubfileid: pubfileid.clone(),
+                            success: false,
+                        },
+                    ).ok();
                     cancelled.lock().remove(&pubfileid);
                     tasks.lock().remove(&pubfileid);
                     return;
@@ -408,28 +423,25 @@ impl DownloadManager {
         // Mark as cancelled and check if task exists BEFORE removing handle
         self.cancelled.lock().insert(pubfileid.to_string());
 
-        let task_exists = self.tasks.lock().contains_key(pubfileid);
+        let status = TaskStatus {
+            pubfileid: pubfileid.into(),
+            status: "Cancelled".into(),
+            account: String::new(),
+            phase: Phase::Cancelled,
+            progress: None,
+        };
+        self.app.emit("download://status", status).ok();
+        self.app
+            .emit(
+                "download://completed",
+                DownloadCompleted {
+                    pubfileid: pubfileid.into(),
+                    success: false,
+                },
+            )
+            .ok();
 
-        // Send cancelled status BEFORE removing handle (which allows main thread to finish)
-        if task_exists {
-            let status = TaskStatus {
-                pubfileid: pubfileid.into(),
-                status: "Cancelled".into(),
-                account: String::new(),
-                phase: Phase::Cancelled,
-                progress: None,
-            };
-            self.app.emit("download://status", status).ok();
-            self.app
-                .emit(
-                    "download://completed",
-                    DownloadCompleted {
-                        pubfileid: pubfileid.into(),
-                        success: false,
-                    },
-                )
-                .ok();
-        }
+        self.tasks.lock().remove(pubfileid);
 
         // NOW remove the handle and kill the process
         let holder = self.handles.lock().remove(pubfileid);
@@ -448,7 +460,7 @@ impl DownloadManager {
             let _ = std::fs::remove_dir_all(&folder);
         }
 
-        task_exists
+        true
     }
 
     fn emit_status(&self, status: &TaskStatus) {
