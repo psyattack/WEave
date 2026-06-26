@@ -197,6 +197,29 @@
         --accent-color: #268bd2;
     }
 
+    :root.theme-black {
+        color-scheme: dark;
+        --bg: 0 0 0;
+        --surface: 10 10 10;
+        --surface-raised: 20 20 20;
+        --surface-sunken: 5 5 5;
+        --border: 30 30 30;
+        --border-strong: 50 50 50;
+        --fg: 255 255 255;
+        --fg-muted: 170 170 170;
+        --fg-subtle: 100 100 100;
+        --primary: 99 127 217;
+        --primary-fg: 255 255 255;
+        --primary-muted: 58 111 201;
+        --success: 91 239 157;
+        --warning: 251 191 36;
+        --danger: 239 91 91;
+        --info: 99 165 250;
+        --titlebar: 0 0 0;
+        --titlebar-fg: 255 255 255;
+        --accent-color: #6366f1;
+    }
+
     /* Accent Selectors */
     :root[data-accent="indigo"] {
         --accent-color: #6366f1;

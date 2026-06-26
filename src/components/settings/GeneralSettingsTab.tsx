@@ -16,6 +16,7 @@ const THEMES: { value: ThemeCode; label: string }[] = [
   { value: "light", label: "Light" },
   { value: "nord", label: "Nord" },
   { value: "solarized", label: "Solarized" },
+  { value: "black", label: "Black" },
 ];
 
 const ACCENTS: { value: string; label: string; color: string }[] = [
