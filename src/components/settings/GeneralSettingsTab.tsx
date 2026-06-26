@@ -187,6 +187,22 @@ export default function GeneralSettingsTab() {
           <SettingSwitch path="settings.general.behavior.auto_apply_last_downloaded" fallback={false} />
         )}
         {renderRow(
+          t("settings.infinite_retry_accounts") || "Infinite retry",
+          t("settings.infinite_retry_accounts_hint") || "Iterate accounts infinitely in a loop (or reconnect to a custom one)",
+          <Switch
+            checked={state.infiniteRetryAccounts}
+            onCheckedChange={(v) => {
+              state.setInfiniteRetryAccounts(v);
+              if (inTauri) {
+                void invoke("config_set", {
+                  path: "settings.account.account.infinite_retry_accounts",
+                  value: v,
+                }).catch(() => undefined);
+              }
+            }}
+          />
+        )}
+        {renderRow(
           t("settings.auto_open_login") || "Automatically open login form on failure",
           t("settings.auto_open_login_hint") || "Show the login form if Steam session requires authentication on startup",
           <Switch

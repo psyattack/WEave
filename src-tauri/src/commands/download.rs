@@ -18,6 +18,7 @@ pub async fn download_start(
     let exe = plugin_paths::depot_downloader()?;
     let index =
         account_index.unwrap_or_else(|| state.settings.read().get_account_number() as usize);
+    let infinite_retry = state.settings.read().get_infinite_retry_accounts();
     let dotnet_root = state.dotnet_root.lock().clone();
     state
         .downloads
@@ -28,6 +29,7 @@ pub async fn download_start(
             PathBuf::from(we_directory),
             exe,
             dotnet_root,
+            infinite_retry,
         )
         .await
         .map_err(map_err)

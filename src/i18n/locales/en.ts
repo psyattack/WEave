@@ -234,6 +234,8 @@ export default {
     download_account: "Download account",
     download_account_description:
       "Pick a Steam account used for downloading. Custom credentials can be added below.",
+    infinite_retry_accounts: "Infinite retry",
+    infinite_retry_accounts_hint: "Iterate accounts infinitely in a loop (or reconnect to a custom one)",
     add_custom_account: "Add custom account",
     add_custom_account_title: "Add download account",
     add_custom_account_description:

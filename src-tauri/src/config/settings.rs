@@ -133,6 +133,20 @@ impl SettingsService {
         .ok();
     }
 
+    pub fn get_infinite_retry_accounts(&self) -> bool {
+        self.get("account.account.infinite_retry_accounts")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+    }
+
+    pub fn set_infinite_retry_accounts(&self, value: bool) {
+        self.set(
+            "account.account.infinite_retry_accounts",
+            Value::Bool(value),
+        )
+        .ok();
+    }
+
     pub fn set_window_geometry(&self, geom: WindowGeometry) {
         if !self.get_save_window_state() {
             return;
@@ -166,7 +180,8 @@ fn default_settings() -> Value {
         },
         "account": {
             "account": {
-                "account_number": 0
+                "account_number": 0,
+                "infinite_retry_accounts": false
             }
         },
         "general": {

@@ -37,6 +37,11 @@ export function useBootstrap() {
         { path: "settings.account.account.account_number" },
         0,
       );
+      const infiniteRetryAccounts = await tryInvoke<boolean>(
+        "config_get",
+        { path: "settings.account.account.infinite_retry_accounts" },
+        false,
+      );
       const accounts = await tryInvoke<
         { index: number; username: string; is_custom: boolean }[]
       >("accounts_list", undefined, []);
@@ -67,6 +72,7 @@ export function useBootstrap() {
         weDirectory: weDirectory ?? "",
         availableLanguages: availableLanguages ?? [],
         accountIndex: typeof accountIndex === "number" ? accountIndex : 0,
+        infiniteRetryAccounts: typeof infiniteRetryAccounts === "boolean" ? infiniteRetryAccounts : false,
         accounts: accounts ?? [],
         language: language,
         ready: true,
