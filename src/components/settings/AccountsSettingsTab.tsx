@@ -3,7 +3,7 @@ import { useTranslation } from "@/i18n/hooks";
 import { Trash2, AlertCircle, UserPlus } from "lucide-react";
 import { listen } from "@tauri-apps/api/event";
 
-import { inTauri, invoke, tryInvoke, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, invoke, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { useAppStore } from "@/stores/app";
 import { useConfirm } from "@/hooks/useConfirm";
@@ -115,11 +115,11 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
     if (!inTauri) return;
     setBusy(true);
     try {
-      const ok = await invoke<boolean>("steam_auto_login", {
+      const res = await tryInvokeAction<boolean>("steam_auto_login", {
         accountIndex: null,
         force: true,
       });
-      if (ok) {
+      if (res.ok && res.value) {
         // Verify the session is actually valid after login.
         const info = await tryInvoke<SteamAccountInfo | null>(
           "steam_current_account",
@@ -145,10 +145,12 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
         await refreshSession();
         triggerGlobalRefresh();
       } else {
-        pushToast(t("messages.error") || "Relogin failed", "error");
+        const err = !res.ok ? res.error : "Unknown error";
+        pushToast(`${t("messages.error") || "Relogin failed"}: ${err}`, "error");
       }
-    } catch {
-      pushToast(t("messages.error") || "Relogin failed", "error");
+    } catch (e) {
+      const err = e instanceof Error ? e.message : String(e);
+      pushToast(`${t("messages.error") || "Relogin failed"}: ${err}`, "error");
     } finally {
       setBusy(false);
     }
@@ -304,10 +306,11 @@ function DownloadAccountSection() {
         await invoke("accounts_login_qr");
       } catch (err) {
         console.error("accounts_login_qr failed", err);
+        const errorMsg = err instanceof Error ? err.message : String(err);
         pushToast(
           typeof err === "string"
             ? err
-            : t("messages.error") || "Could not start QR login",
+            : `${t("messages.error") || "Could not start QR login"}: ${errorMsg}`,
           "error",
         );
         setBusy(false);
@@ -316,7 +319,8 @@ function DownloadAccountSection() {
       }
     } catch (e) {
       console.error(e);
-      pushToast(t("messages.error") || "Could not start QR login", "error");
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      pushToast(`${t("messages.error") || "Could not start QR login"}: ${errorMsg}`, "error");
       setBusy(false);
       setQrModalOpen(false);
       cleanup();
@@ -345,14 +349,16 @@ function DownloadAccountSection() {
       variant: "danger",
     });
     if (!confirmed) return;
-    const ok = await tryInvokeOk("accounts_remove_custom", { username: u });
-    if (ok) {
+    const res = await tryInvokeAction("accounts_remove_custom", { username: u });
+    if (res.ok) {
       pushToast(t("messages.removed"), "success");
       // If the removed account was selected, fall back to Auto.
       if (state.accountIndex === index) {
         selectAuto();
       }
       await refreshAccounts();
+    } else {
+      pushToast(`${t("messages.error") || "Could not remove account"}: ${res.error}`, "error");
     }
   };
 

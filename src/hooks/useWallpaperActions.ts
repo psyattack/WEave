@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "@/i18n/hooks";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { useAppStore } from "@/stores/app";
 import { useInstalledStore } from "@/stores/installed";
 import { useTasksStore } from "@/stores/tasks";
-import { inTauri, tryInvoke, tryInvokeOk, invoke } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction, invoke } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { pushToast } from "@/stores/toasts";
 import { useRefreshStore } from "@/stores/refresh";
@@ -283,16 +283,16 @@ export function useWallpaperActions() {
       pushToast(`Apply ${item.pubfileid}`, "info");
       return;
     }
-    const ok = await tryInvokeOk("we_apply", {
+    const res = await tryInvokeAction("we_apply", {
       projectPath: item.project_json_path,
       monitor: null,
       force: false,
     });
     pushToast(
-      ok ? t("messages.wallpaper_applied") : t("messages.error"),
-      ok ? "success" : "error",
+      res.ok ? t("messages.wallpaper_applied") : `${t("messages.error") || "Error"}: ${res.error}`,
+      res.ok ? "success" : "error",
     );
-    if (ok) {
+    if (res.ok) {
       void maybeMinimize();
     }
   };
@@ -333,21 +333,17 @@ export function useWallpaperActions() {
       return;
     }
 
-    const ok = await tryInvokeOk("we_delete_wallpaper", {
+    const res = await tryInvokeAction("we_delete_wallpaper", {
       pubfileid: item.pubfileid,
     });
 
-    if (ok) {
+    if (res.ok) {
       pushToast(t("messages.wallpaper_deleted"), "success");
       void refresh();
       void refreshInstalledGlobal();
     } else {
       setItems(previousItems);
-      pushToast(
-        t("messages.cannot_delete_active_single") ||
-          "Wallpaper is currently active — switch first.",
-        "error",
-      );
+      pushToast(`${t("messages.error") || "Error"}: ${res.error}`, "error");
     }
   };
 
@@ -401,10 +397,10 @@ export function useWallpaperActions() {
     // Run parallel using Promise.all
     const results = await Promise.all(
       Array.from(toDelete).map((pubfileid) =>
-        tryInvokeOk("we_delete_wallpaper", { pubfileid })
+        tryInvokeAction("we_delete_wallpaper", { pubfileid })
       )
     );
-    const successCount = results.filter(Boolean).length;
+    const successCount = results.filter((r) => r.ok).length;
 
     if (successCount > 0) {
       pushToast(
@@ -415,7 +411,8 @@ export function useWallpaperActions() {
       void refreshInstalledGlobal();
     } else {
       setItems(previousItems);
-      pushToast(t("messages.bulk_delete_success", { count: 0 }), "error");
+      const errorMsg = results.find(r => !r.ok)?.error || "Unknown error";
+      pushToast(`${t("messages.bulk_delete_success", { count: 0 })}: ${errorMsg}`, "error");
     }
   };
 
@@ -446,18 +443,23 @@ export function useWallpaperActions() {
     // Run parallel using Promise.all
     const results = await Promise.all(
       withPkg.map((item) =>
-        tryInvokeOk("extract_start", {
+        tryInvokeAction("extract_start", {
           pubfileid: item.pubfileid,
           outputDir: folder,
         })
       )
     );
-    const successCount = results.filter(Boolean).length;
+    const successCount = results.filter((r) => r.ok).length;
 
-    pushToast(
-      t("messages.bulk_extract_success", { count: successCount }),
-      successCount > 0 ? "success" : "error",
-    );
+    if (successCount > 0) {
+      pushToast(
+        t("messages.bulk_extract_success", { count: successCount }),
+        "success",
+      );
+    } else {
+      const errorMsg = results.find((r) => !r.ok)?.error || "Unknown error";
+      pushToast(`${t("messages.bulk_extract_success", { count: 0 })}: ${errorMsg}`, "error");
+    }
     setSelectedIds(new Set());
     setSelectionMode(false);
   };
@@ -494,13 +496,13 @@ export function useWallpaperActions() {
     }
     const folder = await openPath({ directory: true });
     if (!folder || Array.isArray(folder)) return;
-    const ok = await tryInvokeOk("extract_start", {
+    const res = await tryInvokeAction("extract_start", {
       pubfileid: item.pubfileid,
       outputDir: folder,
     });
     pushToast(
-      ok ? t("messages.extraction_started") : t("messages.error"),
-      ok ? "success" : "error",
+      res.ok ? t("messages.extraction_started") : `${t("messages.error") || "Error"}: ${res.error}`,
+      res.ok ? "success" : "error",
     );
   };
 

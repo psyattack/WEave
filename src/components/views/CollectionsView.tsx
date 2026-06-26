@@ -16,7 +16,7 @@ import { useNavStore } from "@/stores/nav";
 import { pushToast } from "@/stores/toasts";
 import { useSteamSessionStore } from "@/stores/steam-session";
 import { usePaginationContext } from "@/hooks/usePaginationContext";
-import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import type { WorkshopFilters } from "@/stores/filters";
 import { WorkshopItem, WorkshopPage } from "@/types/workshop";
 
@@ -259,15 +259,15 @@ export default function CollectionsView() {
       pushToast(t("messages.download_started"), "success");
       return;
     }
-    const ok = await tryInvokeOk("download_start", {
+    const res = await tryInvokeAction("download_start", {
       pubfileid: item.pubfileid,
       accountIndex,
     });
 
-    if (ok) {
+    if (res.ok) {
       pushToast(t("messages.download_started"), "success");
     } else {
-      pushToast(t("messages.error"), "error");
+      pushToast(`${t("messages.error") || "Error"}: ${res.error}`, "error");
     }
   };
 

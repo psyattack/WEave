@@ -7,7 +7,7 @@ import {
   RawTag,
   WorkshopItem,
 } from "@/types/workshop";
-import { inTauri, invoke, tryInvoke } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeAction, invoke } from "@/lib/tauri";
 import { useNavStore } from "@/stores/nav";
 import { useInstalledStore } from "@/stores/installed";
 import { formatBytes, formatTimestamp } from "@/lib/utils";
@@ -230,16 +230,17 @@ export function useDetailsMeta({ kind, item, onClose }: UseDetailsMetaProps) {
     if (!inTauri) return;
     setTranslating(true);
     try {
-      const out = await tryInvoke<string>("translator_translate", {
+      const res = await tryInvokeAction<string>("translator_translate", {
         text: description,
         sourceLang: "auto",
         targetLang: i18n.language || "en",
       });
-      if (out) {
-        setTranslated(out);
+      if (res.ok && res.value) {
+        setTranslated(res.value);
         setShowTranslation(true);
       } else {
-        pushToast(t("messages.translation_error"), "error");
+        const errorMsg = !res.ok ? res.error : "Unknown error";
+        pushToast(`${t("messages.translation_error") || "Translation failed"}: ${errorMsg}`, "error");
       }
     } finally {
       setTranslating(false);

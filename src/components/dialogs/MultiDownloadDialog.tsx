@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
 
 import Dialog from "@/components/common/Dialog";
-import { inTauri, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { extractWorkshopIds } from "@/lib/workshop";
 import { pushToast } from "@/stores/toasts";
 import { useAppStore } from "@/stores/app";
@@ -28,15 +28,15 @@ export default function MultiDownloadDialog({ open, onOpenChange }: Props) {
       onOpenChange(false);
       return;
     }
-    const ok = await tryInvokeOk("download_multi_start", {
+    const res = await tryInvokeAction("download_multi_start", {
       pubfileids: ids,
       accountIndex,
     });
     pushToast(
-      ok
+      res.ok
         ? t("labels.started_n_downloads", { count: ids.length })
-        : t("messages.error"),
-      ok ? "success" : "error",
+        : `${t("messages.error") || "Error"}: ${res.error}`,
+      res.ok ? "success" : "error",
     );
     onOpenChange(false);
   };
