@@ -13,7 +13,7 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "@/i18n/hooks";
-import { inTauri, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { maybeMinimize } from "@/lib/window";
 import { useConfirm } from "@/hooks/useConfirm";
@@ -73,16 +73,16 @@ export default function DetailsActionButtons({
 
   const overlayApply = async () => {
     if (!installedHandle) return;
-    const ok = await tryInvokeOk("we_apply", {
+    const res = await tryInvokeAction("we_apply", {
       projectPath: installedHandle.project_json_path,
       monitor: null,
       force: false,
     });
-    if (ok) {
+    if (res.ok) {
       pushToast(t("messages.applied") || "Applied", "success");
       void maybeMinimize();
     } else {
-      pushToast(t("messages.apply_failed") || "Apply failed", "error");
+      pushToast(`${t("messages.apply_failed") || "Apply failed"}: ${res.error}`, "error");
     }
   };
 
@@ -99,15 +99,15 @@ export default function DetailsActionButtons({
     }
     const folder = await pickDir();
     if (!folder) return;
-    const ok = await tryInvokeOk("extract_start", {
+    const res = await tryInvokeAction("extract_start", {
       pubfileid: installedHandle.pubfileid,
       outputDir: folder,
     });
     pushToast(
-      ok
+      res.ok
         ? t("messages.extraction_started") || "Extract started"
-        : t("messages.error") || "Extract failed",
-      ok ? "success" : "error",
+        : `${t("messages.error") || "Extract failed"}: ${res.error}`,
+      res.ok ? "success" : "error",
     );
   };
 
@@ -143,19 +143,17 @@ export default function DetailsActionButtons({
     removeOptimistic(installedHandle.pubfileid);
     onClose();
 
-    const ok = await tryInvokeOk("we_delete_wallpaper", {
+    const res = await tryInvokeAction("we_delete_wallpaper", {
       pubfileid: installedHandle.pubfileid,
     });
 
-    if (ok) {
+    if (res.ok) {
       pushToast(t("messages.deleted") || "Deleted", "success");
       void refreshInstalled();
     } else {
       addOptimistic(installedHandle.pubfileid, installedHandle);
       pushToast(
-        t("messages.cannot_delete_active_single") ||
-          t("messages.delete_failed") ||
-          "Delete failed",
+        `${t("messages.delete_failed") || "Delete failed"}: ${res.error}`,
         "error",
       );
     }

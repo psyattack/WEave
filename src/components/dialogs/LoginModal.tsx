@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Lock, User, KeyRound } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
-import { invoke, tryInvoke } from "@/lib/tauri";
+import { inTauri, invoke, tryInvoke, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { useSteamSessionStore, SteamAccountInfo } from "@/stores/steam-session";
 import { useAppStore } from "@/stores/app";
@@ -198,15 +198,11 @@ export default function LoginModal({
     setBusy(true);
     busyRef.current = true;
     try {
-      const ok = await tryInvoke<boolean>(
-        "steam_auto_login",
-        {
-          accountIndex: null,
-          force: true,
-        },
-        false,
-      );
-      if (ok) {
+      const res = await tryInvokeAction<boolean>("steam_auto_login", {
+        accountIndex: null,
+        force: true,
+      });
+      if (res.ok && res.value) {
         const list = await tryInvoke<
           { index: number; username: string; is_custom: boolean }[]
         >("accounts_list", undefined, []);
@@ -215,7 +211,8 @@ export default function LoginModal({
         triggerGlobalRefresh();
         onOpenChange(false);
       } else {
-        pushToast(t("messages.error") || "Relogin failed", "error");
+        const error = !res.ok ? res.error : "Unknown error";
+        pushToast(`${t("messages.error") || "Relogin failed"}: ${error}`, "error");
       }
     } finally {
       if (open) {

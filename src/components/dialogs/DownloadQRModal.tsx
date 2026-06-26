@@ -29,8 +29,8 @@ export function DownloadQRModal({
     let unlistenSuccess: (() => void) | undefined;
 
     const setup = async () => {
-      const u1 = await listen<string>("auth://qr_failed", () => {
-        pushToast(t("messages.error") || "QR Authentication Failed", "error");
+      const u1 = await listen<string>("auth://qr_failed", (ev) => {
+        pushToast(`${t("messages.error") || "QR Authentication Failed"}: ${ev.payload}`, "error");
         onOpenChange(false);
       });
       unlistenFailed = u1;

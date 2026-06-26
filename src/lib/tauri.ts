@@ -27,6 +27,30 @@ export async function tryInvoke<T>(
   }
 }
 
+export type ActionResult<T = void> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
+
+export async function tryInvokeAction<T = void>(
+  cmd: string,
+  args?: Record<string, unknown>,
+): Promise<ActionResult<T>> {
+  if (!inTauri) return { ok: false, error: "Not running in Tauri" };
+  try {
+    const value = await tauriInvoke<T>(cmd, args);
+    return { ok: true, value };
+  } catch (err) {
+    console.warn(`invoke ${cmd} failed`, err);
+    const error =
+      typeof err === "string"
+        ? err
+        : err instanceof Error
+          ? err.message
+          : String(err);
+    return { ok: false, error };
+  }
+}
+
 /**
  * Like `tryInvoke`, but specifically for commands that return `()` /
  * `Result<(), _>` on the Rust side. Returns `true` on success and `false`

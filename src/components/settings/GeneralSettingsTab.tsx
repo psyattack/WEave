@@ -5,7 +5,7 @@ import Select from "@/components/common/Select";
 import { Switch } from "@/components/common/Switch";
 import { changeLanguageTo } from "@/hooks/useBootstrap";
 import { persistTheme } from "@/hooks/useTheme";
-import { inTauri, invoke, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, invoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { ThemeCode, useAppStore } from "@/stores/app";
 import { Row, Section, SettingSwitch } from "./SettingsDialogShared";
@@ -228,9 +228,9 @@ export default function GeneralSettingsTab() {
                 const folder = await openPath({ directory: true });
                 if (!folder || Array.isArray(folder)) return;
                 if (!inTauri) return;
-                const ok = await tryInvokeOk("we_set_directory", { path: folder });
-                if (ok) state.setWeDirectory(folder);
-                else pushToast(t("messages.invalid_we_directory"), "error");
+                const res = await tryInvokeAction("we_set_directory", { path: folder });
+                if (res.ok) state.setWeDirectory(folder);
+                else pushToast(`${t("messages.invalid_we_directory")}: ${res.error}`, "error");
               }}
             >
               {t("buttons.browse") || "Browse"}

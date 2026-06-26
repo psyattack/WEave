@@ -16,7 +16,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Drawer from "@/components/common/Drawer";
 import PreviewImage from "@/components/common/PreviewImage";
 import * as Progress from "@radix-ui/react-progress";
-import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { TaskStatus, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
 import { useAppStore } from "@/stores/app";
@@ -39,16 +39,18 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
   const handleRetry = async (task: TaskStatus) => {
     if (!inTauri) return;
     if (task.kind === "download") {
-      const ok = await tryInvokeOk("download_start", {
+      const res = await tryInvokeAction("download_start", {
         pubfileid: task.pubfileid,
         accountIndex,
       });
-      if (ok) pushToast(t("messages.download_started"), "success");
+      if (res.ok) pushToast(t("messages.download_started"), "success");
+      else pushToast(`${t("messages.error") || "Error"}: ${res.error}`, "error");
     } else if (task.kind === "extract") {
-      const ok = await tryInvokeOk("pkg_extract", {
+      const res = await tryInvokeAction("pkg_extract", {
         pubfileid: task.pubfileid,
       });
-      if (ok) pushToast(t("messages.extraction_started") || "Extraction started!", "success");
+      if (res.ok) pushToast(t("messages.extraction_started") || "Extraction started!", "success");
+      else pushToast(`${t("messages.error") || "Error"}: ${res.error}`, "error");
     }
   };
 
