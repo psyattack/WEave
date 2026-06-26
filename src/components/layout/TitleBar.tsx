@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
 import { Maximize2, Minus, Square, X } from "lucide-react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { inTauri, tryInvokeOk } from "@/lib/tauri";
 
 async function getWindow() {
   if (!inTauri) return null;
   try {
-    const mod = await import("@tauri-apps/api/window");
-    return mod.getCurrentWindow();
+    return getCurrentWindow();
   } catch {
     return null;
   }

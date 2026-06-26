@@ -162,10 +162,10 @@ cd src-tauri && cargo test  # Тесты backend
 <td width="50%">
 
 ### Frontend
-- **React 18** + TypeScript
+- **React 19** + TypeScript
 - **Tauri 2** (Десктопный фреймворк)
 - **Vite** (Сборщик)
-- **TailwindCSS** (Стилизация)
+- **TailwindCSS v4** (Стилизация)
 - **Framer Motion** (Анимации с поддержкой режима уменьшения движения)
 - **Radix UI** (Компоненты)
 - **Zustand** (Управление состоянием)

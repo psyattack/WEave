@@ -80,40 +80,43 @@ export default function AuthorView() {
 
   useEffect(() => {
     if (!profileUrl) return;
-    if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
-      setLoading(true);
-      return;
-    }
     let active = true;
-    setLoading(true);
-    void (async () => {
-      if (!inTauri) {
-        setPageData({
-          items: [],
-          total_items: 0,
-          total_pages: 1,
-          current_page: 1,
-        });
-        setLoading(false);
+    const t = setTimeout(() => {
+      if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
+        setLoading(true);
         return;
       }
-      if (refreshCounter > 0) {
-        await tryInvokeOk("workshop_refresh_cache");
-      }
-      const cmd =
-        tab === "items"
-          ? "workshop_get_author_items"
-          : "workshop_get_author_collections";
-      const result = await tryInvoke<WorkshopPage>(cmd, {
-        profileUrl,
-        filters,
-      });
-      if (!active) return;
-      setPageData(result ?? null);
-      setLoading(false);
-    })();
+      setLoading(true);
+      void (async () => {
+        if (!inTauri) {
+          setPageData({
+            items: [],
+            total_items: 0,
+            total_pages: 1,
+            current_page: 1,
+          });
+          setLoading(false);
+          return;
+        }
+        if (refreshCounter > 0) {
+          await tryInvokeOk("workshop_refresh_cache");
+        }
+        const cmd =
+          tab === "items"
+            ? "workshop_get_author_items"
+            : "workshop_get_author_collections";
+        const result = await tryInvoke<WorkshopPage>(cmd, {
+          profileUrl,
+          filters,
+        });
+        if (!active) return;
+        setPageData(result ?? null);
+        setLoading(false);
+      })();
+    }, 0);
     return () => {
       active = false;
+      clearTimeout(t);
     };
   }, [key, profileUrl, tab, filters, refreshCounter, steamPhase]);
 

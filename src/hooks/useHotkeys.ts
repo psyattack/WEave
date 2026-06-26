@@ -20,7 +20,9 @@ export function useHotkeys(
   handlers: Partial<Record<HotkeyAction, ActionHandler>>,
 ) {
   const handlersRef = useRef<Partial<Record<HotkeyAction, ActionHandler>>>({});
-  handlersRef.current = handlers;
+  useEffect(() => {
+    handlersRef.current = handlers;
+  });
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {

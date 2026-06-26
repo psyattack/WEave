@@ -211,13 +211,18 @@ function TaskPreview({
   small?: boolean;
 }) {
   const installed = useInstalledStore((s) => s.byId[pubfileid]);
-  const [src, setSrc] = useState<string>("");
+  const [prevPubfileid, setPrevPubfileid] = useState(pubfileid);
+  const [prevInstalledPreview, setPrevInstalledPreview] = useState<string | undefined>(installed?.preview);
+  const [src, setSrc] = useState<string>(installed?.preview || "");
+
+  if (pubfileid !== prevPubfileid || installed?.preview !== prevInstalledPreview) {
+    setPrevPubfileid(pubfileid);
+    setPrevInstalledPreview(installed?.preview);
+    setSrc(installed?.preview || "");
+  }
+
   useEffect(() => {
-    if (installed?.preview) {
-      setSrc(installed.preview);
-      return;
-    }
-    setSrc("");
+    if (installed?.preview) return;
     if (!inTauri) return;
     let cancelled = false;
     void (async () => {

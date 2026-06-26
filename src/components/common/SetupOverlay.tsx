@@ -10,9 +10,6 @@ export default function SetupOverlay() {
   const currentPhase = useDotnetStore((s) => s.currentPhase);
   const hide = useDotnetStore((s) => s.hide);
   const queue = useDotnetStore((s) => s.queue);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Determine if any operation is active
   const hasActive = queue.some(
     (e) => e.phase !== "ready" && e.phase !== "error",
@@ -20,10 +17,20 @@ export default function SetupOverlay() {
   const hasErrors = queue.some((e) => e.phase === "error");
   const allDone = queue.length > 0 && !hasActive;
 
+  const [showOverlay, setShowOverlay] = useState(hasActive);
+  const [prevHasActive, setPrevHasActive] = useState(hasActive);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (hasActive !== prevHasActive) {
+    setPrevHasActive(hasActive);
+    if (hasActive) {
+      setShowOverlay(true);
+    }
+  }
+
   // Show overlay when there's activity
   useEffect(() => {
     if (hasActive) {
-      setShowOverlay(true);
       if (hideTimer.current) {
         clearTimeout(hideTimer.current);
         hideTimer.current = null;

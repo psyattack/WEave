@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
+import { listen } from "@tauri-apps/api/event";
 import { useAppStore } from "@/stores/app";
 import { useInstalledStore } from "@/stores/installed";
 import { useTasksStore } from "@/stores/tasks";
-import { inTauri, tryInvoke, tryInvokeOk } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeOk, invoke } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { pushToast } from "@/stores/toasts";
 import { useRefreshStore } from "@/stores/refresh";
@@ -76,18 +77,27 @@ export function useWallpaperActions() {
   };
 
   useEffect(() => {
-    void refresh();
+    const t = setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => clearTimeout(t);
   }, [weDirectory]);
 
   const refreshCounter = useRefreshStore((s) => s.counter);
   useEffect(() => {
     if (refreshCounter === 0) return;
-    void refresh();
+    const t = setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => clearTimeout(t);
   }, [refreshCounter, weDirectory]);
 
   useEffect(() => {
     if (installedUpdateCounter > 0) {
-      void refresh();
+      const t = setTimeout(() => {
+        void refresh();
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [installedUpdateCounter]);
 
@@ -517,7 +527,6 @@ export function useWallpaperActions() {
       total: items.length,
     });
 
-    const { listen } = await import("@tauri-apps/api/event");
     const unlisten = await listen<{ current: number; total: number }>(
       "metadata-init-progress",
       (event) => {
@@ -533,7 +542,6 @@ export function useWallpaperActions() {
     );
 
     try {
-      const { invoke } = await import("@tauri-apps/api/core");
       const count = await invoke<number>("app_init_metadata");
 
       setStatus({

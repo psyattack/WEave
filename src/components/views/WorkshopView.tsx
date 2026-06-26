@@ -58,64 +58,68 @@ export default function WorkshopView() {
   }, [filters.page]);
 
   useEffect(() => {
-    if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
-      setLoading(true);
-      return;
-    }
     let active = true;
-
-    const cached = cacheRef.current.get(filtersKey);
-    if (cached) {
-      setPageData(cached);
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-
-    void (async () => {
-      if (!inTauri) {
-        setPageData(makeMockPage(filters.page));
-        setLoading(false);
+    const t = setTimeout(() => {
+      if (inTauri && (steamPhase === "idle" || steamPhase === "logging-in")) {
+        setLoading(true);
         return;
       }
-      if (refreshCounter > 0) {
-        await tryInvokeOk("workshop_refresh_cache");
-      }
-      let result = cached;
-      if (!result) {
-        result =
-          (await tryInvoke<WorkshopPage>("workshop_browse", { filters })) ??
-          undefined;
-        if (result) cacheRef.current.set(filtersKey, result);
-      }
-      if (!active) return;
-      setPageData(result ?? null);
-      setLoading(false);
 
-      // Background preload of the next page (if enabled + available).
-      if (result && result.total_pages > filters.page) {
-        const preloadOn = await tryInvoke<boolean>(
-          "config_get",
-          { path: "settings.general.behavior.preload_next_page" },
-          true,
-        );
-        if (preloadOn === false) return;
-        const nextFilters: WorkshopFilters = {
-          ...filters,
-          page: filters.page + 1,
-        };
-        const nextKey = JSON.stringify(nextFilters);
-        if (!cacheRef.current.has(nextKey)) {
-          void tryInvoke<WorkshopPage>("workshop_browse", {
-            filters: nextFilters,
-          }).then((next) => {
-            if (next) cacheRef.current.set(nextKey, next);
-          });
-        }
+      const cached = cacheRef.current.get(filtersKey);
+      if (cached) {
+        setPageData(cached);
+        setLoading(false);
+      } else {
+        setLoading(true);
       }
-    })();
+
+      void (async () => {
+        if (!inTauri) {
+          setPageData(makeMockPage(filters.page));
+          setLoading(false);
+          return;
+        }
+        if (refreshCounter > 0) {
+          await tryInvokeOk("workshop_refresh_cache");
+        }
+        let result = cached;
+        if (!result) {
+          result =
+            (await tryInvoke<WorkshopPage>("workshop_browse", { filters })) ??
+            undefined;
+          if (result) cacheRef.current.set(filtersKey, result);
+        }
+        if (!active) return;
+        setPageData(result ?? null);
+        setLoading(false);
+
+        // Background preload of the next page (if enabled + available).
+        if (result && result.total_pages > filters.page) {
+          const preloadOn = await tryInvoke<boolean>(
+            "config_get",
+            { path: "settings.general.behavior.preload_next_page" },
+            true,
+          );
+          if (preloadOn === false) return;
+          const nextFilters: WorkshopFilters = {
+            ...filters,
+            page: filters.page + 1,
+          };
+          const nextKey = JSON.stringify(nextFilters);
+          if (!cacheRef.current.has(nextKey)) {
+            void tryInvoke<WorkshopPage>("workshop_browse", {
+              filters: nextFilters,
+            }).then((next) => {
+              if (next) cacheRef.current.set(nextKey, next);
+            });
+          }
+        }
+      })();
+    }, 0);
+
     return () => {
       active = false;
+      clearTimeout(t);
     };
   }, [filters, filtersKey, refreshCounter, steamPhase]);
 

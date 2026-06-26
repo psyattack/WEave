@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { Image as ImageIcon } from "lucide-react";
 
@@ -38,15 +38,17 @@ export default function PreviewImage({
   fallback,
   fit = "cover",
 }: Props) {
+  const [prevSrc, setPrevSrc] = useState(src);
   const [resolved, setResolved] = useState<string | undefined>(
     toDisplaySrc(src),
   );
   const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
+  if (src !== prevSrc) {
+    setPrevSrc(src);
     setFailed(false);
     setResolved(toDisplaySrc(src));
-  }, [src]);
+  }
 
   if (!src || failed) {
     return (

@@ -22,8 +22,8 @@ export class WEaveError extends Error {
     this.originalError = originalError;
 
     // Maintain proper stack trace
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
+    if ((Error as any).captureStackTrace) {
+      (Error as any).captureStackTrace(this, this.constructor);
     }
   }
 
@@ -92,7 +92,7 @@ export class WorkshopError extends WEaveError {
 /**
  * Wallpaper Engine errors
  */
-export class WallpaperEngineError extends WEaveError {
+class WallpaperEngineError extends WEaveError {
   constructor(message: string, originalError?: unknown) {
     super(message, 'WallpaperEngine', originalError);
     this.name = 'WallpaperEngineError';
@@ -102,7 +102,7 @@ export class WallpaperEngineError extends WEaveError {
 /**
  * Download errors
  */
-export class DownloadError extends WEaveError {
+class DownloadError extends WEaveError {
   constructor(message: string, originalError?: unknown) {
     super(message, 'Download', originalError);
     this.name = 'DownloadError';
@@ -112,7 +112,7 @@ export class DownloadError extends WEaveError {
 /**
  * Authentication errors
  */
-export class AuthenticationError extends WEaveError {
+class AuthenticationError extends WEaveError {
   constructor(message: string, originalError?: unknown) {
     super(message, 'Authentication', originalError);
     this.name = 'AuthenticationError';

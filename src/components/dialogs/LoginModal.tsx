@@ -39,8 +39,9 @@ export default function LoginModal({
   const setAccounts = useAppStore((s) => s.setAccounts);
   const setSessionLoggedIn = useSteamSessionStore((s) => s.setLoggedIn);
 
-  // Reset state when opened
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setStep("credentials");
       setUsername("");
@@ -52,33 +53,38 @@ export default function LoginModal({
       setQrCode(null);
       setQrSession(null);
       setIsPrepared(false);
-
-      tryInvoke("steam_login_prepare").then(() => {
-        setIsPrepared(true);
-      });
-
-      // Init QR Session
-      tryInvoke<{
-        client_id: string;
-        challenge_url: string;
-        request_id: string;
-      }>("steam_qr_begin").then((res) => {
-        if (res) {
-          setQrSession({
-            clientId: res.client_id,
-            requestId: res.request_id,
-            createdAt: Date.now(),
-          });
-          setQrCode(
-            "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" +
-              encodeURIComponent(res.challenge_url),
-          );
-        }
-      });
     } else {
       setIsPrepared(false);
       setQrSession(null);
     }
+  }
+
+  // Reset state when opened
+  useEffect(() => {
+    if (!open) return;
+
+    tryInvoke("steam_login_prepare").then(() => {
+      setIsPrepared(true);
+    });
+
+    // Init QR Session
+    tryInvoke<{
+      client_id: string;
+      challenge_url: string;
+      request_id: string;
+    }>("steam_qr_begin").then((res) => {
+      if (res) {
+        setQrSession({
+          clientId: res.client_id,
+          requestId: res.request_id,
+          createdAt: Date.now(),
+        });
+        setQrCode(
+          "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" +
+            encodeURIComponent(res.challenge_url),
+        );
+      }
+    });
   }, [open]);
 
   const refreshSession = useCallback(async () => {

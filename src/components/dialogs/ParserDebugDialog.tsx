@@ -34,9 +34,14 @@ export default function ParserDebugDialog({
 
   useEffect(() => {
     if (!open) return;
-    void refresh();
+    const timer = setTimeout(() => {
+      void refresh();
+    }, 0);
     const id = window.setInterval(() => void refresh(), 1500);
-    return () => window.clearInterval(id);
+    return () => {
+      clearTimeout(timer);
+      window.clearInterval(id);
+    };
   }, [open]);
 
   const clear = async () => {

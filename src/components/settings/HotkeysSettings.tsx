@@ -60,7 +60,6 @@ function KeyCapture({
   value: string | null;
   onChange: (key: string | null) => void;
   label: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (key: any, params?: Record<string, string | number>) => string;
 }) {
   const [capturing, setCapturing] = useState(false);
@@ -198,7 +197,6 @@ function HotkeyRow({
   onSetPrimary: (key: string | null) => void;
   onSetSecondary: (key: string | null) => void;
   onClear: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (key: any, params?: Record<string, string | number>) => string;
 }) {
   const fallback: HotkeyBinding = { primary: null, secondary: null };
@@ -267,7 +265,6 @@ export default function HotkeysSettings() {
       {ACTION_GROUPS.map((group) => (
         <div key={group.labelKey} className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wide text-subtle">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {t(group.labelKey as any) || group.fallback}
           </p>
           <div className="divide-y divide-border rounded-md border border-border bg-surface-sunken px-3">

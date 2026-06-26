@@ -1,6 +1,55 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-border: rgb(var(--border));
+  --color-border-strong: rgb(var(--border-strong));
+  --color-background: rgb(var(--bg));
+  --color-surface: rgb(var(--surface));
+  --color-surface-raised: rgb(var(--surface-raised));
+  --color-surface-sunken: rgb(var(--surface-sunken));
+  --color-foreground: rgb(var(--fg));
+  --color-muted: rgb(var(--fg-muted));
+  --color-subtle: rgb(var(--fg-subtle));
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-fg));
+  --color-primary-muted: rgb(var(--primary-muted));
+  --color-success: rgb(var(--success));
+  --color-warning: rgb(var(--warning));
+  --color-danger: rgb(var(--danger));
+  --color-info: rgb(var(--info));
+
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 16px -6px rgb(0 0 0 / 0.18);
+  --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.08), 0 20px 36px -14px rgb(0 0 0 / 0.35);
+  --shadow-glow: 0 0 0 1px rgb(var(--primary) / 0.4), 0 0 24px 0 rgb(var(--primary) / 0.25);
+
+  --animate-shimmer: shimmer 1.8s infinite;
+  --animate-fade-in: fade-in 180ms ease-out;
+  --animate-slide-in-right: slide-in-right 240ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+  @keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes slide-in-right {
+    0% { transform: translateX(100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
 
 @layer base {
     /* Default palette (dark) — applied to :root so variables are ALWAYS
@@ -321,7 +370,7 @@
         @apply transition-all duration-200 hover:shadow-card-hover hover:border-border-strong;
     }
 
-    .btn {
+    .btn, .btn-primary, .btn-ghost, .btn-outline, .btn-icon {
         @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2
       text-sm font-medium transition-colors outline-none focus-visible:ring-2
       focus-visible:ring-primary/60 focus-visible:ring-offset-2
@@ -330,19 +379,19 @@
     }
 
     .btn-primary {
-        @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+        @apply bg-primary text-primary-foreground hover:bg-primary/90;
     }
 
     .btn-ghost {
-        @apply btn hover:bg-surface-raised text-foreground;
+        @apply hover:bg-surface-raised text-foreground;
     }
 
     .btn-outline {
-        @apply btn border border-border-strong text-foreground hover:bg-surface-raised;
+        @apply border border-border-strong text-foreground hover:bg-surface-raised;
     }
 
     .btn-icon {
-        @apply btn h-9 w-9 p-0 text-muted hover:text-foreground hover:bg-surface-raised;
+        @apply h-9 w-9 p-0 text-muted hover:text-foreground hover:bg-surface-raised;
     }
 
     .input {

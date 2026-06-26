@@ -15,7 +15,7 @@ import { groupTags, parseRatingStars, workshopUrl } from "@/lib/workshop";
 import { pushToast } from "@/stores/toasts";
 import { useAppStore } from "@/stores/app";
 
-export type DetailsKind = "workshop" | "installed";
+type DetailsKind = "workshop" | "installed";
 
 export type MetaRow =
   | [string, string | ReactNode]
@@ -160,12 +160,17 @@ export function useDetailsMeta({ kind, item, onClose }: UseDetailsMetaProps) {
   const [rateLimited, setRateLimited] = useState(false);
 
   const pubfileid = item?.pubfileid ?? null;
+  const [prevPubfileid, setPrevPubfileid] = useState<string | null>(pubfileid);
 
-  useEffect(() => {
+  if (pubfileid !== prevPubfileid) {
+    setPrevPubfileid(pubfileid);
     setFresh(null);
     setTranslated("");
     setShowTranslation(false);
     setRateLimited(false);
+  }
+
+  useEffect(() => {
     if (!pubfileid || !inTauri) return;
     let cancelled = false;
     void (async () => {

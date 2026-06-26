@@ -160,11 +160,7 @@ pub async fn accounts_login_qr(
             // glyph (U+2588) across reads and corrupt the QR code.
             let mut buf = [0u8; 1024];
             let mut pending: Vec<u8> = Vec::new();
-            loop {
-                let n = match out.read(&mut buf).await {
-                    Ok(n) => n,
-                    Err(_) => break,
-                };
+            while let Ok(n) = out.read(&mut buf).await {
                 if n == 0 { break; }
                 pending.extend_from_slice(&buf[..n]);
                 while let Some(pos) = pending.iter().position(|&b| b == b'\n') {
@@ -649,11 +645,10 @@ pub async fn accounts_verify_custom(
                     app.emit("auth://require_app_confirm", &username_clone).ok();
                     prompted = true;
                     // Don't break — keep reading
-                } else if lower.starts_with("logging") && lower.contains("done!") && lower.contains("steam3") {
-                    app.emit("auth://success", &username_clone).ok();
-                    got_result = true;
-                    break;
-                } else if lower.contains("got appinfo") || lower.contains("depot 0 not found") {
+                } else if (lower.starts_with("logging") && lower.contains("done!") && lower.contains("steam3"))
+                    || lower.contains("got appinfo")
+                    || lower.contains("depot 0 not found")
+                {
                     app.emit("auth://success", &username_clone).ok();
                     got_result = true;
                     break;

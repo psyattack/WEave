@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Props {
   page: number;
@@ -14,11 +14,13 @@ export default function Pagination({ page, totalPages, onChange, infoText }: Pro
   const safeTotal = Math.max(1, totalPages || 1);
   const hasPrev = page > 1;
   const hasNext = page < safeTotal;
+  const [prevPage, setPrevPage] = useState(page);
   const [inputValue, setInputValue] = useState(String(page));
 
-  useEffect(() => {
+  if (page !== prevPage) {
+    setPrevPage(page);
     setInputValue(String(page));
-  }, [page]);
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);

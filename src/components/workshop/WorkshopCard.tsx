@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import {
@@ -52,11 +52,9 @@ export default function WorkshopCard({
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Reset isDeleting when item is no longer installed
-  useEffect(() => {
-    if (isDeleting && !installed) {
-      setIsDeleting(false);
-    }
-  }, [isDeleting, installed]);
+  if (isDeleting && !installed) {
+    setIsDeleting(false);
+  }
   const downloadTask = useTasksStore(
     (s) => s.tasks[`download:${item.pubfileid}`],
   );

@@ -36,6 +36,7 @@ const BUILTIN_ACCOUNT_BUNDLE: &str = concat!(
 );
 
 #[derive(Debug, Deserialize)]
+#[derive(Default)]
 struct BuiltinAccountsBundle {
     download: Vec<(String, String)>,
     parser: (String, String),
@@ -167,11 +168,3 @@ fn load_builtin_bundle() -> Result<BuiltinAccountsBundle, String> {
     serde_json::from_slice(&plaintext).map_err(|e| e.to_string())
 }
 
-impl Default for BuiltinAccountsBundle {
-    fn default() -> Self {
-        Self {
-            download: Vec::new(),
-            parser: (String::new(), String::new()),
-        }
-    }
-}

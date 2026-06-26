@@ -129,11 +129,10 @@ fn is_dotnet_installed() -> anyhow::Result<bool> {
 
     // Look for Microsoft.NETCore.App 8.x, 9.x, or 10.x
     for line in stdout.lines() {
-        if line.contains("Microsoft.NETCore.App") {
-            if line.contains(" 8.") || line.contains(" 9.") || line.contains(" 10.") {
+        if line.contains("Microsoft.NETCore.App")
+            && (line.contains(" 8.") || line.contains(" 9.") || line.contains(" 10.")) {
                 return Ok(true);
             }
-        }
     }
 
     Ok(false)
