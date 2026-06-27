@@ -24,6 +24,9 @@ interface AppState {
   showLoginPromptOnFail: boolean;
   loginModalOpen: boolean;
   loginModalMode: "auto" | "manual";
+  tasksOpen: boolean;
+  detailsOpen: boolean;
+  paginationWidth: number;
   setReady: (v: boolean) => void;
   setLanguage: (lang: string) => void;
   setTheme: (theme: ThemeCode) => void;
@@ -44,6 +47,9 @@ interface AppState {
   setActiveDetailsCover: (v: string | null) => void;
   setShowLoginPromptOnFail: (v: boolean) => void;
   setLoginModalOpen: (open: boolean, mode?: "auto" | "manual") => void;
+  setTasksOpen: (open: boolean) => void;
+  setDetailsOpen: (open: boolean) => void;
+  setPaginationWidth: (width: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -70,6 +76,9 @@ export const useAppStore = create<AppState>()(
       showLoginPromptOnFail: true,
       loginModalOpen: false,
       loginModalMode: "manual",
+      tasksOpen: false,
+      detailsOpen: false,
+      paginationWidth: 0,
       setReady: (v) => set({ ready: v }),
       setLanguage: (language) => set({ language }),
       setTheme: (theme) => {
@@ -94,6 +103,9 @@ export const useAppStore = create<AppState>()(
       setActiveDetailsCover: (activeDetailsCover) => set({ activeDetailsCover }),
       setShowLoginPromptOnFail: (showLoginPromptOnFail) => set({ showLoginPromptOnFail }),
       setLoginModalOpen: (loginModalOpen, mode) => set(s => ({ loginModalOpen, loginModalMode: mode || s.loginModalMode })),
+      setTasksOpen: (tasksOpen) => set({ tasksOpen }),
+      setDetailsOpen: (detailsOpen) => set({ detailsOpen }),
+      setPaginationWidth: (paginationWidth) => set({ paginationWidth }),
     }),
     {
       name: "weave.ui",
