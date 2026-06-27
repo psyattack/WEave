@@ -96,16 +96,16 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    className="flex gap-3 p-3 rounded-xl border border-white/5 bg-white/5 backdrop-blur-md shadow-lg"
+                    className="flex gap-3 rounded-xl border border-white/5 bg-white/5 p-3 shadow-lg backdrop-blur-md"
                   >
                     <TaskPreview pubfileid={task.pubfileid} />
                     <div className="min-w-0 flex-1">
                       <div className="mb-0.5 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-sm font-medium">
                           {task.kind === "download" ? (
-                            <Download className="h-4 w-4 text-primary" />
+                            <Download className="size-4 text-primary" />
                           ) : (
-                            <FileArchive className="h-4 w-4 text-info" />
+                            <FileArchive className="size-4 text-info" />
                           )}
                           {t(
                             task.kind === "download"
@@ -119,11 +119,11 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                           onClick={() => handleCancel(task)}
                           title={t("tooltips.cancel_task")}
                         >
-                          <X className="h-4 w-4" />
+                          <X className="size-4" />
                         </button>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted">
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2 className="size-3 animate-spin" />
                         <span className="line-clamp-1">{task.status}</span>
                       </div>
                       {task.progress != null && task.progress > 0 && (
@@ -136,7 +136,7 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                               transform: `translateX(-${100 - task.progress}%)`,
                               transition: "transform 240ms",
                             }}
-                            className="h-full w-full bg-primary"
+                            className="size-full bg-primary"
                           />
                         </Progress.Root>
                       )}
@@ -146,22 +146,22 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
               </AnimatePresence>
 
               {history.length > 0 && (
-                <div className="mt-2 text-[11px] uppercase tracking-wide text-subtle">
+                <div className="mt-2 text-[11px] tracking-wide text-subtle uppercase">
                   {t("labels.tasks_history")}
                 </div>
               )}
               {history.map((task, i) => (
                 <div
                   key={`${task.kind}-${task.pubfileid}-${i}`}
-                  className="flex items-center gap-2 p-2 text-xs text-muted rounded-lg border border-white/5 bg-white/5 backdrop-blur-sm"
+                  className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 p-2 text-xs text-muted backdrop-blur-sm"
                 >
                   <TaskPreview pubfileid={task.pubfileid} small />
                   {task.phase === "completed" ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                    <CheckCircle2 className="size-4 shrink-0 text-success" />
                   ) : task.phase === "cancelled" ? (
-                    <MinusCircle className="h-4 w-4 shrink-0 text-warning" />
+                    <MinusCircle className="size-4 shrink-0 text-warning" />
                   ) : (
-                    <XCircle className="h-4 w-4 shrink-0 text-danger" />
+                    <XCircle className="size-4 shrink-0 text-danger" />
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-foreground">
@@ -183,7 +183,7 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
                       className="ml-auto inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:bg-surface-raised hover:text-foreground"
                       title={t("buttons.retry")}
                     >
-                      <RotateCcw className="h-4 w-4" />
+                      <RotateCcw className="size-4" />
                     </button>
                   )}
                 </div>
@@ -263,7 +263,7 @@ function TaskPreview({
           key={src}
           src={src}
           alt={pubfileid}
-          className="h-full w-full object-cover"
+          className="size-full object-cover"
         />
       ) : null}
     </div>

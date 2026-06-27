@@ -41,19 +41,19 @@ function ExpandableDescription({ text, noDescText }: { text: string, noDescText:
   const isLong = text && text.length > 150 || text.split("\n").length > 3;
 
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex w-full flex-col gap-1">
       <motion.div 
         animate={{ height: expanded ? "auto" : (isLong ? 60 : "auto") }}
-        className="overflow-hidden relative w-full"
+        className="relative w-full overflow-hidden"
       >
-        <div className="text-[13px] text-white/50 italic leading-relaxed whitespace-pre-wrap pr-2 pb-1">
+        <div className="pr-2 pb-1 text-[13px] leading-relaxed whitespace-pre-wrap text-white/50 italic">
           {text || noDescText}
         </div>
       </motion.div>
       {isLong && (
         <button 
           onClick={() => setExpanded(!expanded)}
-          className="text-[10px] uppercase font-semibold tracking-wider text-primary hover:text-primary-muted self-start mt-1"
+          className="mt-1 self-start text-[10px] font-semibold tracking-wider text-primary uppercase hover:text-primary-muted"
         >
           {expanded ? "Show less" : "Show more"}
         </button>
@@ -66,16 +66,16 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
   const { t, i18n } = useTranslation();
   const setDetailsOpen = useAppStore((s) => s.setDetailsOpen);
   
+  const hasItem = !!props.item;
   useEffect(() => {
-    const isOpen = !!props.item;
-    setDetailsOpen(isOpen);
-    if (isOpen) {
+    setDetailsOpen(hasItem);
+    if (hasItem) {
       dismissAllToasts();
     }
     return () => {
       setDetailsOpen(false);
     };
-  }, [!!props.item, setDetailsOpen]);
+  }, [hasItem, setDetailsOpen]);
 
   const {
     meta,
@@ -111,12 +111,12 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
       {meta && (
         <div className="flex flex-col gap-2.5 p-3 text-[13px]">
           {rateLimited && (
-            <div className="rounded-md border border-warning/30 bg-warning/10 p-2.5 text-xs text-warning-foreground">
+            <div className="text-warning-foreground rounded-md border border-warning/30 bg-warning/10 p-2.5 text-xs">
               {t("metadata_init.rate_limit_error") ||
                 "Rate limit exceeded. Please try again in a few minutes."}
             </div>
           )}
-          <div className="overflow-hidden rounded-md border border-white/5 bg-white/5 backdrop-blur-md shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
+          <div className="overflow-hidden rounded-md border border-white/5 bg-white/5 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] backdrop-blur-md">
             <PreviewImage
               key={meta.preview}
               src={meta.preview}
@@ -149,10 +149,10 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
                 type="button"
                 onClick={goToAuthor}
                 disabled={!meta.author_url}
-                className="hover-shimmer flex items-center justify-between gap-2 rounded-md border border-white/5 bg-white/5 px-2.5 py-1.5 hover:bg-white/10 transition-colors shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"
+                className="hover-shimmer flex items-center justify-between gap-2 rounded-md border border-white/5 bg-white/5 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] transition-colors hover:bg-white/10"
               >
                 <div className="flex items-center gap-1.5 text-xs">
-                  <User className="h-3.5 w-3.5 text-primary" />
+                  <User className="size-3.5 text-primary" />
                   <span className="text-white/70">
                     {t("labels.author", { author: "" })}{" "}
                     <span className="font-semibold text-foreground">
@@ -172,14 +172,14 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
             <div className="flex flex-col gap-1">
               {groupedTags.map((g) => (
                 <div key={g.category}>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                  <div className="mb-1.5 text-[10px] font-semibold tracking-wide text-white/40 uppercase">
                     {translateTagCategory(g.category, i18n)}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {g.values.map((v, i) => (
                       <button
                         key={`${v}-${i}`}
-                        className="hover-shimmer rounded-full border border-white/5 bg-white/5 px-3.5 py-1 text-xs text-white/90 hover:bg-white/10 transition-colors shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"
+                        className="hover-shimmer rounded-full border border-white/5 bg-white/5 px-3.5 py-1 text-xs text-white/90 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] transition-colors hover:bg-white/10"
                       >
                         {translateTagValue(v, g.category, i18n)}
                       </button>
@@ -192,7 +192,7 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
 
           {meta.collections && meta.collections.length > 0 && (
             <div>
-              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+              <div className="mb-1.5 text-[10px] font-semibold tracking-wide text-white/40 uppercase">
                 {t("labels.collections") || "Collections"}
               </div>
               <div className="flex flex-col gap-1">
@@ -201,7 +201,7 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
                     key={c.id}
                     type="button"
                     onClick={() => goToCollection(c)}
-                    className="hover-shimmer flex items-center justify-between gap-2 rounded-md border border-white/5 bg-white/5 px-2.5 py-1.5 text-left hover:bg-white/10 transition-colors shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"
+                    className="hover-shimmer flex items-center justify-between gap-2 rounded-md border border-white/5 bg-white/5 px-2.5 py-1.5 text-left shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] transition-colors hover:bg-white/10"
                   >
                     <span className="line-clamp-1 text-xs font-medium text-foreground/90">
                       {c.title}
@@ -219,7 +219,7 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
+              <span className="text-[10px] font-semibold tracking-wide text-white/40 uppercase">
                 {t("labels.description")}
               </span>
               <div className="flex items-center gap-0.5">
@@ -227,11 +227,11 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
                   <button
                     type="button"
                     aria-label="Translate"
-                    className="hover-shimmer inline-flex items-center justify-center rounded-md p-1.5 hover:bg-white/10 text-white/60 hover:text-white disabled:opacity-50 transition-colors"
+                    className="hover-shimmer inline-flex items-center justify-center rounded-md p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
                     onClick={handleTranslate}
                     disabled={!description || translating}
                   >
-                    <Languages className="h-3.5 w-3.5" />
+                    <Languages className="size-3.5" />
                   </button>
                 </Tooltip>
               </div>

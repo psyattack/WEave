@@ -48,7 +48,7 @@ export default function Drawer({
                 }}
                 style={{ width }}
                 className={cn(
-                  "fixed top-0 z-50 flex h-full flex-col border-white/10 bg-background/50 backdrop-blur-3xl shadow-2xl",
+                  "fixed top-0 z-50 flex h-full flex-col border-white/10 bg-background/50 shadow-2xl backdrop-blur-3xl",
                   isRight ? "right-0 border-l" : "left-0 border-r",
                 )}
               >

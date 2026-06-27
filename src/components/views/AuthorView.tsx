@@ -168,24 +168,24 @@ export default function AuthorView() {
     <div className="flex h-full flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface/60 px-4 py-3">
         <button className="btn-ghost" onClick={navBack}>
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           {t("labels.back")}
         </button>
-        <User className="h-4 w-4 text-primary" />
-        <span className="font-medium truncate">
+        <User className="size-4 text-primary" />
+        <span className="truncate font-medium">
           {displayName || t("labels.author", { author: "" }).replace(/:$/, "")}
         </span>
 
         <div className="ml-auto flex items-center gap-1 rounded-md border border-border bg-surface-sunken p-0.5">
           <TabButton active={tab === "items"} onClick={() => handleTabChange("items")}>
-            <User className="h-3.5 w-3.5" />
+            <User className="size-3.5" />
             {t("labels.wallpapers")}
           </TabButton>
           <TabButton
             active={tab === "collections"}
             onClick={() => handleTabChange("collections")}
           >
-            <Layers className="h-3.5 w-3.5" />
+            <Layers className="size-3.5" />
             {t("labels.author_collections")}
           </TabButton>
         </div>
@@ -270,7 +270,7 @@ function TabButton({
         "flex items-center gap-1 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground"
-          : "text-muted hover:text-foreground hover:bg-surface-raised",
+          : "text-muted hover:bg-surface-raised hover:text-foreground",
       )}
     >
       {children}

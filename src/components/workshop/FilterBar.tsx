@@ -162,8 +162,8 @@ export default function FilterBar() {
   return (
     <div className="flex flex-col gap-2 px-4 py-3 pb-1.5">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+        <div className="relative min-w-50 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" />
           <input
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
@@ -175,7 +175,7 @@ export default function FilterBar() {
           value={filters.sort}
           onValueChange={(v) => setFilters({ sort: v, page: 1 })}
           options={sortOptions}
-          icon={<SortAsc className="h-4 w-4 text-muted" />}
+          icon={<SortAsc className="size-4 text-muted" />}
         />
         {filters.sort === "trend" && (
           <Select
@@ -228,34 +228,34 @@ export default function FilterBar() {
           options={ageRatingOptions}
         />
         <div className={cn(
-          "flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/50 rounded-md",
+          "flex items-center rounded-md transition-all focus-within:ring-2 focus-within:ring-primary/50",
           hasActiveFilters && "border border-border/80"
         )}>
           <button
             onClick={toggleAdvanced}
             className={cn(
-              "relative flex h-[38px] w-[38px] items-center justify-center outline-none transition-colors",
-              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-surface-raised",
+              "relative flex size-9.5 items-center justify-center transition-colors outline-none",
+              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:bg-surface-raised hover:text-foreground",
               hasActiveFilters ? "rounded-l-[5px]" : "rounded-md"
             )}
             aria-expanded={showAdvanced}
           >
-            <Filter className="h-5 w-5" />
+            <Filter className="size-5" />
             {activeFiltersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
                 {activeFiltersCount}
               </span>
             )}
           </button>
           {hasActiveFilters && (
             <>
-              <div className="h-[22px] w-[1px] bg-border/80" />
+              <div className="h-5.5 w-px bg-border/80" />
               <button
                 onClick={resetFilters}
-                className="flex h-[38px] w-[38px] items-center justify-center rounded-r-[5px] outline-none transition-colors text-muted hover:bg-danger/15 hover:text-danger"
+                className="flex size-9.5 items-center justify-center rounded-r-[5px] text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger"
                 aria-label={t("labels.clear")}
               >
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </>
           )}
@@ -341,12 +341,12 @@ function TagBlock({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5 px-0 py-0",
+        "flex flex-wrap items-center gap-1.5 p-0",
         isFirst && "pt-1",
         isLast && "pb-0",
       )}
     >
-      <span className="text-[11px] uppercase tracking-wide text-subtle">
+      <span className="text-[11px] tracking-wide text-subtle uppercase">
         {title}
       </span>
       {tags.map((tag) => {
@@ -368,7 +368,7 @@ function TagBlock({
               }
             }}
             className={cn(
-              "chip cursor-pointer select-none text-[11px] transition-colors",
+              "chip cursor-pointer text-[11px] transition-colors select-none",
               !isIncluded && !isExcluded && "hover:bg-surface",
               isIncluded && "border-primary/60 bg-primary/15 text-foreground",
               isExcluded &&

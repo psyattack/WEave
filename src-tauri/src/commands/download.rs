@@ -22,15 +22,15 @@ pub async fn download_start(
     let dotnet_root = state.dotnet_root.lock().clone();
     state
         .downloads
-        .start(
-            &pubfileid,
-            index,
-            state.accounts.clone(),
-            PathBuf::from(we_directory),
-            exe,
+        .start(crate::download::DownloadOptions {
+            pubfileid,
+            starting_index: index,
+            accounts: state.accounts.clone(),
+            we_directory: PathBuf::from(we_directory),
+            plugin_path: exe,
             dotnet_root,
             infinite_retry,
-        )
+        })
         .await
         .map_err(map_err)
 }

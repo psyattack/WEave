@@ -163,11 +163,11 @@ export default function DownloadLoginModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-sm translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-surface shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl overflow-hidden">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content className="fixed top-[50%] left-[50%] z-50 grid w-full max-w-sm translate-[-50%] gap-4 overflow-hidden border border-border bg-surface shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[state=open]:zoom-in-95 sm:rounded-xl">
           <div className="flex flex-col space-y-1.5 p-6 pb-4">
-            <Dialog.Title className="text-xl font-semibold leading-none tracking-tight flex items-center gap-2">
-              <Lock className="w-5 h-5 text-primary" />
+            <Dialog.Title className="flex items-center gap-2 text-xl leading-none font-semibold tracking-tight">
+              <Lock className="size-5 text-primary" />
               {t("settings.add_custom_account_title") || "Add download account"}
             </Dialog.Title>
             <Dialog.Description className="text-sm text-muted">
@@ -179,17 +179,17 @@ export default function DownloadLoginModal({
           <div className="px-6 pb-6">
             <div className="flex flex-col gap-6">
               {errorMsg && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
+                <div className="mb-0 flex items-center gap-3 rounded-lg bg-red-500/10 p-3 text-red-500">
                   <p className="text-xs">{errorMsg}</p>
                 </div>
               )}
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <div className="relative">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
+                    <User className="absolute top-2.5 left-3 size-4 text-muted" />
                     <input
                       autoFocus
-                      className="input pl-9 w-full"
+                      className="input w-full pl-9"
                       placeholder={t("settings.username") || "Username"}
                       aria-label={t("settings.username") || "Username"}
                       value={username}
@@ -198,10 +198,10 @@ export default function DownloadLoginModal({
                     />
                   </div>
                   <div className="relative">
-                    <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
+                    <KeyRound className="absolute top-2.5 left-3 size-4 text-muted" />
                     <input
                       type="password"
-                      className="input pl-9 w-full"
+                      className="input w-full pl-9"
                       placeholder={t("settings.password") || "Password"}
                       aria-label={t("settings.password") || "Password"}
                       value={password}
@@ -211,7 +211,7 @@ export default function DownloadLoginModal({
                   </div>
                 </div>
 
-                <div className="flex justify-end items-center gap-3 pt-4 w-full">
+                <div className="flex w-full items-center justify-end gap-3 pt-4">
                   {/* Cancel stays enabled during login so the user can always
                       abort (which kills the background DepotDownloader). */}
                   <button
@@ -227,7 +227,7 @@ export default function DownloadLoginModal({
                     disabled={busy || !username.trim() || !password}
                   >
                     {busy && (
-                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      <span className="inline-block size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     )}
                     {t("settings.add_account_button") || "Add"}
                   </button>

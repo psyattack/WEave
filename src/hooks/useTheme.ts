@@ -54,7 +54,7 @@ export function applyThemeClass(theme: ThemeCode) {
   }
 }
 
-export function applyAccent(accent: string) {
+function applyAccent(accent: string) {
   const root = document.documentElement;
   // If the accent is valid, or is "theme", use it. Otherwise fall back to "indigo".
   const hasAccent = VALID_ACCENT_NAMES.includes(accent);

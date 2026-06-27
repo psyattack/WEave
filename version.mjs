@@ -47,7 +47,7 @@ const files = [
     replace: `$1${newVersion}$2`,
   },
   {
-    path: "src-tauri/src/constants.rs",
+    path: "src-tauri/src/core/constants.rs",
     // pub const APP_VERSION: &str = "x.y.z";
     pattern: new RegExp(
       '^(pub const APP_VERSION: &str = ")\\d+\\.\\d+\\.\\d+(")',

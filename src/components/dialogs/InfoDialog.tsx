@@ -59,14 +59,14 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div className="border-b border-white/5 last:border-0">
       <button 
         type="button" 
-        className="w-full flex items-center justify-between text-left py-2.5 text-sm font-medium hover:text-primary transition-colors"
+        className="flex w-full items-center justify-between py-2.5 text-left text-sm font-medium transition-colors hover:text-primary"
         onClick={() => setOpen(!open)}
       >
         <span className="pr-4">{q}</span>
-        {open ? <ChevronUp className="h-4 w-4 shrink-0 opacity-50" /> : <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />}
+        {open ? <ChevronUp className="size-4 shrink-0 opacity-50" /> : <ChevronDown className="size-4 shrink-0 opacity-50" />}
       </button>
       {open && (
-        <div className="pb-3 text-xs text-muted whitespace-pre-wrap leading-relaxed">
+        <div className="pb-3 text-xs leading-relaxed whitespace-pre-wrap text-muted">
           {a}
         </div>
       )}
@@ -97,7 +97,6 @@ export default function InfoDialog({
 }: Props) {
   const { t } = useTranslation();
   const [version, setVersion] = useState<string>(__APP_VERSION__);
-  const [dataDir, setDataDir] = useState<string>("");
   const [showChangelog, setShowChangelog] = useState(false);
   const [releases, setReleases] = useState<GithubRelease[] | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>("");
@@ -112,9 +111,6 @@ export default function InfoDialog({
         if (v?.version) setVersion(v.version);
       },
     );
-    void tryInvoke<string>("app_get_data_dir", undefined, "").then((p) => {
-      if (p) setDataDir(p);
-    });
   }, [open]);
 
   const [prevOpen, setPrevOpen] = useState(open);
@@ -188,7 +184,7 @@ export default function InfoDialog({
       size="sm"
     >
       <div className="flex flex-col items-center gap-3 text-center">
-        <AppIcon className="h-32 w-32" />
+        <AppIcon className="size-32" />
         <div className="space-y-1">
           <div className="text-lg font-semibold">{t("info.app_full_name")}</div>
           <div className="text-xs text-muted">
@@ -201,14 +197,14 @@ export default function InfoDialog({
 
         <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button
-            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
             onClick={() => openLink("https://github.com/psyattack/WEave")}
           >
-            <Github className="h-4 w-4" />
+            <Github className="size-4" />
             {t("buttons.github")}
           </button>
           <button
-            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
             onClick={() => {
               if (onCheckUpdates) {
                 onOpenChange(false);
@@ -216,45 +212,45 @@ export default function InfoDialog({
               }
             }}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="size-4" />
             {t("buttons.check_updates")}
           </button>
           <button
-            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
             onClick={openDataFolder}
             disabled={!inTauri}
           >
-            <FolderOpen className="h-4 w-4" />
+            <FolderOpen className="size-4" />
             {t("buttons.open_data_folder")}
           </button>
           <button
-            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
             onClick={toggleChangelog}
             aria-expanded={showChangelog}
           >
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="size-4" />
             {t("buttons.changelog") || "Changelog"}
             {showChangelog ? (
-              <ChevronUp className="h-3.5 w-3.5" />
+              <ChevronUp className="size-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="size-3.5" />
             )}
           </button>
           <button
-            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
             onClick={toggleFaq}
             aria-expanded={showFaq}
           >
-            <HelpCircle className="h-4 w-4" />
+            <HelpCircle className="size-4" />
             {t("buttons.faq") || "FAQ"}
             {showFaq ? (
-              <ChevronUp className="h-3.5 w-3.5" />
+              <ChevronUp className="size-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="size-3.5" />
             )}
           </button>
           <button
-            className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
+            className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
             onClick={() => {
               if (onOpenLegal) {
                 onOpenChange(false);
@@ -262,7 +258,7 @@ export default function InfoDialog({
               }
             }}
           >
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="size-4" />
             {t("buttons.legal")}
           </button>
         </div>
@@ -270,12 +266,12 @@ export default function InfoDialog({
         {showChangelog && (
           <div className="w-full rounded-md border border-border bg-surface-sunken p-3 text-left">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-subtle">
+              <div className="text-[11px] font-semibold tracking-wide text-subtle uppercase">
                 {t("info.changelog_title") || "Release notes"}
               </div>
               <div className="flex items-center gap-1">
                 <select
-                  className="input h-9 w-auto min-w-[80px] text-xs disabled:opacity-50"
+                  className="input h-9 w-auto min-w-20 text-xs disabled:opacity-50"
                   style={{
                     width: selectedTag
                       ? `${Math.max(80, (selectedTag.length + (selectedRelease?.prerelease ? 6 : 0)) * 6.5 + 24)}px`
@@ -300,7 +296,7 @@ export default function InfoDialog({
                   title={t("buttons.refresh") || "Refresh"}
                 >
                   <RefreshCw
-                    className={`h-3.5 w-3.5 ${
+                    className={`size-3.5 ${
                       loadingReleases ? "animate-spin" : ""
                     }`}
                   />
@@ -310,7 +306,7 @@ export default function InfoDialog({
 
             {loadingReleases && !releases && (
               <div className="flex items-center gap-2 py-2 text-xs text-muted">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="size-3.5 animate-spin" />
                 {t("labels.loading") || "Loading…"}
               </div>
             )}
@@ -340,12 +336,12 @@ export default function InfoDialog({
                     onClick={() => openLink(selectedRelease.html_url)}
                     title={selectedRelease.html_url}
                   >
-                    <ExternalLink className="inline h-3 w-3" />{" "}
+                    <ExternalLink className="inline size-3" />{" "}
                     {t("buttons.view_on_github") || "GitHub"}
                   </button>
                 </div>
                 {selectedRelease.published_at && (
-                  <div className="mb-2 text-[10px] uppercase tracking-wide text-subtle">
+                  <div className="mb-2 text-[10px] tracking-wide text-subtle uppercase">
                     {new Date(
                       selectedRelease.published_at,
                     ).toLocaleDateString()}
@@ -359,7 +355,7 @@ export default function InfoDialog({
 
         {showFaq && (
           <div className="w-full rounded-md border border-border bg-surface-sunken p-3 text-left">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-subtle">
+            <div className="mb-2 text-[11px] font-semibold tracking-wide text-subtle uppercase">
               {t("info.faq_title") || "Frequently Asked Questions"}
             </div>
             <div className="flex flex-col">
@@ -388,7 +384,7 @@ export default function InfoDialog({
         )}
 
         <div className="w-full pt-3">
-          <div className="mb-1 text-[11px] uppercase tracking-wide text-subtle">
+          <div className="mb-1 text-[11px] tracking-wide text-subtle uppercase">
             {t("info.tools_section_title")}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs">
@@ -406,7 +402,7 @@ export default function InfoDialog({
                     ({tool.license})
                   </span>
                 )}
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="size-3" />
               </button>
             ))}
           </div>

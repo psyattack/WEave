@@ -31,13 +31,13 @@ export default function InstalledSelectionBar({
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="px-4 pb-1.5"
         >
-          <div className="flex flex-wrap items-center gap-2 rounded-md bg-surface-sunken/50 px-3 py-2 border border-border">
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface-sunken/50 px-3 py-2">
             <button
               type="button"
               onClick={clearSelection}
               className="btn-secondary flex items-center gap-2 text-sm"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
               {t("labels.clear_selection")}
             </button>
             <button
@@ -45,7 +45,7 @@ export default function InstalledSelectionBar({
               onClick={selectAll}
               className="btn-secondary flex items-center gap-2 text-sm"
             >
-              <Check className="h-4 w-4" />
+              <Check className="size-4" />
               {t("labels.select_all")}
             </button>
             <div
@@ -63,7 +63,7 @@ export default function InstalledSelectionBar({
                     onClick={handleBulkExtract}
                     className="btn-primary flex items-center gap-2 text-sm"
                   >
-                    <Package className="h-4 w-4" />
+                    <Package className="size-4" />
                     {t("labels.extract_selected")}
                   </button>
                   <button
@@ -71,7 +71,7 @@ export default function InstalledSelectionBar({
                     onClick={handleBulkDelete}
                     className="btn-danger flex items-center gap-2 text-sm"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="size-4" />
                     {t("labels.delete_selected")}
                   </button>
                 </div>

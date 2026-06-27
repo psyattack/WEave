@@ -61,8 +61,8 @@ export default function Download2FAModal() {
       <AnimatePresence>
         {open && (
           <Dialog.Portal forceMount>
-            <Dialog.Overlay className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity" />
-            <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <Dialog.Overlay className="fixed inset-0 z-100 bg-background/80 backdrop-blur-sm transition-opacity" />
+            <div className="pointer-events-none fixed inset-0 z-100 flex items-center justify-center p-4">
               <Dialog.Content
                 asChild
                 onInteractOutside={(e) => {
@@ -77,8 +77,8 @@ export default function Download2FAModal() {
                 >
                   <form onSubmit={handleSubmit} className="p-6">
                     <div className="mb-6 flex flex-col items-center text-center">
-                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/50 text-accent-foreground ring-4 ring-background">
-                        <KeyRound className="h-6 w-6" />
+                      <div className="bg-accent/50 text-accent-foreground mb-4 flex size-12 items-center justify-center rounded-full ring-4 ring-background">
+                        <KeyRound className="size-6" />
                       </div>
                       <Dialog.Title className="mb-1 text-lg font-semibold tracking-tight">
                         Steam Guard 2FA
@@ -95,7 +95,7 @@ export default function Download2FAModal() {
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         placeholder="XXXXX"
-                        className="w-full rounded-md border border-input bg-background/50 px-3 py-2 text-center text-lg font-medium tracking-widest placeholder:tracking-normal focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+                        className="border-input focus:border-accent focus:ring-accent w-full rounded-md border bg-background/50 px-3 py-2 text-center text-lg font-medium tracking-widest placeholder:tracking-normal focus:ring-1 focus:outline-none disabled:opacity-50"
                         disabled={busy}
                         maxLength={10}
                       />
@@ -116,7 +116,7 @@ export default function Download2FAModal() {
                         className="btn-primary flex-1"
                         disabled={busy || !code.trim()}
                       >
-                        {busy && <span className="inline-block mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                        {busy && <span className="mr-2 inline-block size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
                         Submit
                       </button>
                     </div>

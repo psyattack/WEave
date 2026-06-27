@@ -46,6 +46,16 @@ pub struct DownloadCompleted {
     pub success: bool,
 }
 
+pub struct DownloadOptions {
+    pub pubfileid: String,
+    pub starting_index: usize,
+    pub accounts: Arc<crate::accounts::AccountManager>,
+    pub we_directory: PathBuf,
+    pub plugin_path: PathBuf,
+    pub dotnet_root: Option<PathBuf>,
+    pub infinite_retry: bool,
+}
+
 type ChildHandle = Arc<AsyncMutex<Option<Child>>>;
 type HandleMap = HashMap<String, ChildHandle>;
 
@@ -70,16 +80,15 @@ impl DownloadManager {
         self.tasks.lock().values().cloned().collect()
     }
 
-    pub async fn start(
-        &self,
-        pubfileid: &str,
-        starting_index: usize,
-        accounts: Arc<crate::accounts::AccountManager>,
-        we_directory: PathBuf,
-        plugin_path: PathBuf,
-        dotnet_root: Option<PathBuf>,
-        infinite_retry: bool,
-    ) -> anyhow::Result<()> {
+    pub async fn start(&self, opts: DownloadOptions) -> anyhow::Result<()> {
+        let pubfileid = &opts.pubfileid;
+        let starting_index = opts.starting_index;
+        let accounts = opts.accounts;
+        let we_directory = opts.we_directory;
+        let plugin_path = opts.plugin_path;
+        let dotnet_root = opts.dotnet_root;
+        let infinite_retry = opts.infinite_retry;
+
         if self.tasks.lock().contains_key(pubfileid) {
             return Ok(());
         }

@@ -61,7 +61,7 @@ export default function LegalDialog({
                 type="checkbox"
                 checked={accepted}
                 onChange={(e) => setAccepted(e.target.checked)}
-                className="h-4 w-4 cursor-pointer accent-primary"
+                className="size-4 cursor-pointer accent-primary"
               />
               <span className="text-muted">{t("legal.accept_terms")}</span>
             </label>
@@ -91,7 +91,7 @@ export default function LegalDialog({
             }`}
             onClick={() => setActiveTab("disclaimer")}
           >
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="size-4" />
             {t("legal.disclaimer_tab")}
           </button>
           <button
@@ -102,13 +102,13 @@ export default function LegalDialog({
             }`}
             onClick={() => setActiveTab("license")}
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="size-4" />
             {t("legal.license_tab")}
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="min-h-[400px] max-h-[500px] overflow-auto rounded-md border border-border bg-surface-sunken p-4">
+        <div className="max-h-125 min-h-100 overflow-auto rounded-md border border-border bg-surface-sunken p-4">
           {activeTab === "disclaimer" && (
             <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
               <h3>{t("legal.no_affiliation_title")}</h3>
@@ -128,9 +128,9 @@ export default function LegalDialog({
           {activeTab === "license" && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <div className="mb-6 flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-4">
-                <BookOpen className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+                <BookOpen className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div>
-                  <h3 className="mb-1 mt-0 text-base font-semibold text-primary">
+                  <h3 className="mt-0 mb-1 text-base font-semibold text-primary">
                     {t("legal.opensource_title")}
                   </h3>
                   <p className="mb-0 text-sm text-foreground">

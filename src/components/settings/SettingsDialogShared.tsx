@@ -27,16 +27,16 @@ export function Row({
         <label htmlFor={id} className="flex items-center gap-2 text-[13px] font-medium text-foreground">
           {label}
           {badge && (
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-inset ring-primary/20">
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-primary uppercase ring-1 ring-primary/20 ring-inset">
               {badge}
             </span>
           )}
           {warningBadge && (
             <Tooltip content={warningBadge.tooltip} side="top">
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning ring-1 ring-inset ring-warning/30 cursor-help"
+                className="inline-flex cursor-help items-center gap-1 rounded-full bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-warning uppercase ring-1 ring-warning/30 ring-inset"
               >
-                <HelpCircle className="h-2.5 w-2.5" />
+                <HelpCircle className="size-2.5" />
                 {warningBadge.text}
               </span>
             </Tooltip>
@@ -48,7 +48,7 @@ export function Row({
           </div>
         ) : null}
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      <div className="shrink-0">{children}</div>
     </div>
   );
 }
@@ -63,10 +63,10 @@ export function Section({
 }) {
   return (
     <div className="rounded-lg border border-border bg-surface-sunken/40">
-      <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-subtle border-b border-border/40 bg-surface-raised/30 rounded-t-lg">
+      <div className="rounded-t-lg border-b border-border/40 bg-surface-raised/30 px-4 py-3 text-xs font-semibold tracking-wide text-subtle uppercase">
         {title}
       </div>
-      <div className="divide-y divide-border/40 px-4 pb-3 pt-1">{children}</div>
+      <div className="divide-y divide-border/40 px-4 pt-1 pb-3">{children}</div>
     </div>
   );
 }

@@ -73,7 +73,7 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
       <div className="space-y-3">
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
             {t("labels.loading_dots")}
           </div>
         ) : info ? (
@@ -112,13 +112,13 @@ export default function UpdateDialog({ open, onOpenChange }: Props) {
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-md border border-success/40 bg-success/10 p-3 text-sm text-success">
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="size-4" />
                 {t("labels.up_to_date")}
               </div>
             )}
             {info.error && <p className="text-xs text-danger">{info.error}</p>}
             <button className="btn-ghost w-full" onClick={run}>
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="size-4" />
               {t("tooltips.refresh")}
             </button>
           </>

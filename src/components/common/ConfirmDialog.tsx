@@ -69,17 +69,17 @@ export default function ConfirmDialog({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
                   transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
-                  className="pointer-events-auto relative flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-white/10 bg-background/50 backdrop-blur-3xl shadow-2xl"
+                  className="pointer-events-auto relative flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-white/10 bg-background/50 shadow-2xl backdrop-blur-3xl"
                 >
                   <div className="flex items-start gap-3 px-5 py-4">
-                    <div className={`mt-0.5 flex-shrink-0 ${styles.icon}`}>
-                      <AlertTriangle className="h-5 w-5" />
+                    <div className={`mt-0.5 shrink-0 ${styles.icon}`}>
+                      <AlertTriangle className="size-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <RadixDialog.Title className="text-base font-semibold leading-tight">
+                      <RadixDialog.Title className="text-base leading-tight font-semibold">
                         {title}
                       </RadixDialog.Title>
-                      <RadixDialog.Description className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
+                      <RadixDialog.Description className="mt-2 text-sm leading-relaxed whitespace-pre-line text-muted">
                         {message}
                       </RadixDialog.Description>
                     </div>

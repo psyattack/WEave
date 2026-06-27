@@ -173,9 +173,9 @@ export default function DetailsActionButtons({
                   ? onApply(installedHandle)
                   : void overlayApply()
               }
-              className="hover-shimmer w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-semibold text-sm transition-colors shadow-lg"
+              className="hover-shimmer flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
             >
-              <Play className="h-4 w-4" />
+              <Play className="size-4" />
               {t("tooltips.install_wallpaper")}
             </button>
           ) : kind === "workshop" ? (
@@ -187,9 +187,9 @@ export default function DetailsActionButtons({
                   onClose();
                 }
               }}
-              className="hover-shimmer w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-semibold text-sm transition-colors disabled:opacity-50 shadow-lg"
+              className="hover-shimmer flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              <Download className="h-4 w-4" />
+              <Download className="size-4" />
               {t("buttons.install")}
             </button>
           ) : (
@@ -202,9 +202,9 @@ export default function DetailsActionButtons({
             <button
               onClick={() => void overlayOpenWe()}
               aria-label="Open in Wallpaper Engine"
-              className="hover-shimmer flex items-center justify-center h-9 w-9 rounded-md bg-white/5 hover:bg-white/10 text-foreground transition-colors"
+              className="hover-shimmer flex size-9 items-center justify-center rounded-md bg-white/5 text-foreground transition-colors hover:bg-white/10"
             >
-              <MonitorPlay className="h-4 w-4" />
+              <MonitorPlay className="size-4" />
             </button>
           </Tooltip>
         )}
@@ -219,9 +219,9 @@ export default function DetailsActionButtons({
                   : void overlayExtract()
               }
               aria-label="Extract"
-              className="hover-shimmer flex items-center justify-center h-9 w-9 rounded-md bg-white/5 hover:bg-white/10 text-foreground transition-colors disabled:opacity-50"
+              className="hover-shimmer flex size-9 items-center justify-center rounded-md bg-white/5 text-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
             >
-              <Package className="h-4 w-4" />
+              <Package className="size-4" />
             </button>
           </Tooltip>
         )}
@@ -233,21 +233,21 @@ export default function DetailsActionButtons({
           <DropdownMenu.Trigger asChild>
             <button
               aria-label="More options"
-              className="hover-shimmer flex items-center justify-center h-9 w-9 rounded-md bg-white/5 hover:bg-white/10 text-foreground transition-colors"
+              className="hover-shimmer flex size-9 items-center justify-center rounded-md bg-white/5 text-foreground transition-colors hover:bg-white/10"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="size-4" />
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
               align="end"
-              className="z-50 min-w-[160px] rounded-md bg-black/40 backdrop-blur-xl border border-white/10 p-1 shadow-[0_16px_40px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95"
+              className="z-50 min-w-40 rounded-md border border-white/10 bg-black/40 p-1 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in zoom-in-95"
             >
               <DropdownMenu.Item
                 onClick={() => void openWorkshopPage()}
-                className="flex items-center gap-2 px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-white/10 rounded-sm"
+                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="size-4" />
                 {t("buttons.open_workshop")}
               </DropdownMenu.Item>
 
@@ -258,9 +258,9 @@ export default function DetailsActionButtons({
                       ? onOpenFolder(installedHandle)
                       : void overlayOpenFolder()
                   }
-                  className="flex items-center gap-2 px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-white/10 rounded-sm"
+                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
                 >
-                  <FolderOpen className="h-4 w-4" />
+                  <FolderOpen className="size-4" />
                   {t("tooltips.open_folder")}
                 </DropdownMenu.Item>
               )}
@@ -273,24 +273,24 @@ export default function DetailsActionButtons({
                       pushToast(t("messages.copied") || "Copied", "success");
                     }
                   }}
-                  className="flex items-center gap-2 px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-white/10 rounded-sm"
+                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className="size-4" />
                   Copy ID
                 </DropdownMenu.Item>
               )}
               {showInstalledActions && installedHandle && (
                 <>
-                  <DropdownMenu.Separator className="h-px bg-white/10 my-1" />
+                  <DropdownMenu.Separator className="my-1 h-px bg-white/10" />
                   <DropdownMenu.Item
                     onClick={() =>
                       kind === "installed" && onDelete
                         ? onDelete(installedHandle)
                         : void overlayDelete()
                     }
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-danger/20 text-danger rounded-sm focus:bg-danger/20"
+                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-danger outline-none hover:bg-danger/20 focus:bg-danger/20"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="size-4" />
                     {t("tooltips.delete_wallpaper")}
                   </DropdownMenu.Item>
                 </>

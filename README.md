@@ -137,6 +137,17 @@ npm run tauri build
 # Run tests
 npm run test  # Frontend tests
 cd src-tauri && cargo test  # Backend tests
+
+# Checks backend
+cargo check
+cargo machete
+cargo clippy -- -W dead_code
+cargo +nightly udeps
+
+# Checks frontend
+npx knip
+npm run typecheck
+npm run lint
 ```
 
 </details>

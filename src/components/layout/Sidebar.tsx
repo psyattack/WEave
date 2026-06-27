@@ -43,10 +43,10 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex shrink-0 flex-col gap-2 border-r border-white/5 bg-surface-sunken/70 backdrop-blur-md py-4 transition-[width] duration-200 ease-out",
+        "flex shrink-0 flex-col gap-2 border-r border-white/5 bg-surface-sunken/70 py-4 backdrop-blur-md transition-[width] duration-200 ease-out",
         collapsed
-          ? "w-[64px] items-center px-1"
-          : "w-[165px] items-stretch px-3",
+          ? "w-16 items-center px-1"
+          : "w-41.25 items-stretch px-3",
       )}
     >
       <div
@@ -55,8 +55,8 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
           collapsed ? "justify-center px-0" : "px-1",
         )}
       >
-        <div className="flex h-9 w-9 items-center justify-center">
-          <AppIcon className="h-9 w-9" />
+        <div className="flex size-9 items-center justify-center">
+          <AppIcon className="size-9" />
         </div>
         {!collapsed && (
           <div className="flex flex-col">
@@ -93,7 +93,7 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
                   }}
                 />
               )}
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className="size-5 shrink-0" />
               {!collapsed && <span>{i18n.t(item.labelKey as any)}</span>}
             </button>
           );
@@ -117,9 +117,9 @@ export default function Sidebar({ current, onChange }: SidebarProps) {
           }
         >
           {collapsed ? (
-            <PanelLeftOpen className="h-5 w-5 shrink-0" />
+            <PanelLeftOpen className="size-5 shrink-0" />
           ) : (
-            <PanelLeftClose className="h-5 w-5 shrink-0" />
+            <PanelLeftClose className="size-5 shrink-0" />
           )}
           {!collapsed && <span>{t("tooltips.collapse_sidebar")}</span>}
         </button>
@@ -194,13 +194,13 @@ function SteamSessionStatus({ collapsed }: { collapsed: boolean }) {
         collapsed ? "relative justify-center" : "justify-start",
       )}
     >
-      <Icon className={cn("h-4 w-4 shrink-0", tone, spin && "animate-spin")} />
+      <Icon className={cn("size-4 shrink-0", tone, spin && "animate-spin")} />
       {collapsed ? (
         // Tiny state dot in the corner reinforces the phase when only the
         // icon is visible (and keeps error/unknown legible at a glance).
         <span
           className={cn(
-            "absolute right-1 top-1 h-1.5 w-1.5 rounded-full",
+            "absolute top-1 right-1 size-1.5 rounded-full",
             dotTone,
             spin && "animate-pulse",
           )}

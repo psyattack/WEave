@@ -30,7 +30,7 @@ export default function AccountsSettingsTab({
   return (
     <div className="space-y-5 p-4">
       <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-subtle">
+        <p className="text-xs font-medium tracking-wide text-subtle uppercase">
           {t("settings.steam_session") || "Steam web session"}
         </p>
         <p className="text-xs text-muted">
@@ -170,35 +170,35 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
               <img
                 src={account.avatar_url}
                 alt=""
-                className="h-8 w-8 rounded-full object-cover mr-1"
+                className="mr-1 size-8 rounded-full object-cover"
               />
             )}
-            <span className="font-medium leading-none">{displayName}</span>
+            <span className="leading-none font-medium">{displayName}</span>
             <Tooltip content={t("settings.relogin") || "Relogin"} side="top">
               <button
-                className="btn-ghost p-1.5 h-auto text-muted hover:text-foreground"
+                className="btn-ghost h-auto p-1.5 text-muted hover:text-foreground"
                 onClick={relogin}
                 disabled={busy || !inTauri}
               >
-                <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+                <RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} />
               </button>
             </Tooltip>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-[11px]">
             <div className="flex items-center gap-2 rounded-md border border-danger/40 bg-danger/10 px-2.5 py-1.5">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-danger" />
+              <AlertCircle className="size-3.5 shrink-0 text-danger" />
               <span className="truncate text-danger">
                 {t("settings.not_signed_in") || "Not signed in"}
               </span>
             </div>
             <Tooltip content={t("settings.relogin") || "Relogin"} side="top">
               <button
-                className="btn-ghost p-2 h-auto text-muted hover:text-foreground"
+                className="btn-ghost h-auto p-2 text-muted hover:text-foreground"
                 onClick={relogin}
                 disabled={busy || !inTauri}
               >
-                <RefreshCw className={`w-5 h-5 ${busy ? "animate-spin" : ""}`} />
+                <RefreshCw className={`size-5 ${busy ? "animate-spin" : ""}`} />
               </button>
             </Tooltip>
           </div>
@@ -210,7 +210,7 @@ function SteamSessionRow({ onOpenParser }: { onOpenParser: () => void }) {
             onClick={() => setLoginModalOpen(true, "manual")}
             disabled={!inTauri}
           >
-            <LogIn className="w-4 h-4" />
+            <LogIn className="size-4" />
             {t("settings.login_button") || "Login"}
           </button>
           
@@ -369,7 +369,7 @@ function DownloadAccountSection() {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-subtle">
+      <p className="text-xs font-medium tracking-wide text-subtle uppercase">
         {t("settings.download_account") || "Download account"}
       </p>
       <p className="text-xs text-muted">
@@ -411,7 +411,7 @@ function DownloadAccountSection() {
               onClick={() => remove(a.username, a.index)}
               title={t("settings.remove_account") || "Remove account"}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
             </button>
           </div>
         ))}
@@ -425,7 +425,7 @@ function DownloadAccountSection() {
           onClick={() => setModalOpen(true)}
           disabled={!inTauri}
         >
-          <UserPlus className="w-4 h-4" />
+          <UserPlus className="size-4" />
           {t("settings.add_custom_account") || "Add custom account"}
         </button>
         <Tooltip content={t("settings.login_qr") || "Login with QR"} side="top">

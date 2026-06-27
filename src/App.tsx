@@ -151,10 +151,10 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion={prefersReducedMotion ? "always" : "never"}>
-      <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground relative">
+      <div className="relative flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
 
         <TitleBar />
-        <div className="flex flex-1 overflow-hidden z-10">
+        <div className="z-10 flex flex-1 overflow-hidden">
           <Sidebar current={view} onChange={changeView} />
           <div className="flex flex-1 flex-col overflow-hidden">
             <TopBar
@@ -235,7 +235,7 @@ function BootLoader() {
   return (
     <div className="flex h-full items-center justify-center">
       <motion.div
-        className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent"
+        className="size-10 rounded-full border-2 border-primary border-t-transparent"
         animate={{ rotate: 360 }}
         transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
       />

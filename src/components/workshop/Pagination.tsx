@@ -59,56 +59,56 @@ export default function Pagination({ page, totalPages, onChange, infoText }: Pro
   return (
     <div 
       ref={containerRef}
-      className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex h-10 items-center rounded-full bg-background/50 backdrop-blur-2xl border border-white/10 px-3 shadow-2xl transition-all"
+      className="absolute bottom-3 left-1/2 z-30 flex h-10 -translate-x-1/2 items-center rounded-full border border-white/10 bg-background/50 px-3 shadow-2xl backdrop-blur-2xl transition-all"
     >
       <div className="flex items-center gap-1.5">
         <button 
-          className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-white/10 text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none" 
+          className="flex size-7 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-30" 
           disabled={!hasPrev} 
           onClick={() => onChange(1)}
         >
-          <ChevronsLeft className="h-4 w-4" />
+          <ChevronsLeft className="size-4" />
         </button>
         <button
-          className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-white/10 text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          className="flex size-7 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-30"
           disabled={!hasPrev}
           onClick={() => onChange(page - 1)}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
         </button>
         
-        <div className="flex items-center justify-center gap-1 min-w-[5rem] px-6 text-[11px] font-medium text-foreground/80">
+        <div className="flex min-w-20 items-center justify-center gap-1 px-6 text-[11px] font-medium text-foreground/80">
           <input
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             onKeyDown={handleInputKeyDown}
-            className="w-6 bg-transparent text-center text-foreground focus:outline-none font-bold placeholder-white/30 selection:bg-primary/50"
+            className="w-6 bg-transparent text-center font-bold text-foreground placeholder-white/30 selection:bg-primary/50 focus:outline-none"
           />
           <span className="opacity-50">/ {safeTotal}</span>
         </div>
 
         <button
-          className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-white/10 text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          className="flex size-7 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-30"
           disabled={!hasNext}
           onClick={() => onChange(page + 1)}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </button>
         <button
-          className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-white/10 text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          className="flex size-7 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-30"
           disabled={!hasNext}
           onClick={() => onChange(safeTotal)}
         >
-          <ChevronsRight className="h-4 w-4" />
+          <ChevronsRight className="size-4" />
         </button>
       </div>
 
       {infoText && (
         <>
-          <div className="w-[1px] h-4 bg-white/10 mx-2" />
-          <div className="text-[11px] font-medium text-white/70 px-2 whitespace-nowrap">
+          <div className="mx-2 h-4 w-px bg-white/10" />
+          <div className="px-2 text-[11px] font-medium whitespace-nowrap text-white/70">
             {infoText}
           </div>
         </>

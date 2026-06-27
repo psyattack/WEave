@@ -54,11 +54,11 @@ export default function PreviewImage({
     return (
       <div
         className={cn(
-          "flex h-full w-full items-center justify-center bg-surface-sunken text-subtle",
+          "flex size-full items-center justify-center bg-surface-sunken text-subtle",
           className,
         )}
       >
-        {fallback ?? <ImageIcon className="h-6 w-6" />}
+        {fallback ?? <ImageIcon className="size-6" />}
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function PreviewImage({
         setFailed(true);
       }}
       className={cn(
-        "h-full w-full animate-fade-in",
+        "size-full animate-fade-in",
         fit === "cover" ? "object-cover" : "object-contain",
         className,
       )}

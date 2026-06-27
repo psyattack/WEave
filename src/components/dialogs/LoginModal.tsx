@@ -300,11 +300,11 @@ export default function LoginModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-sm translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-surface shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl overflow-hidden">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content className="fixed top-[50%] left-[50%] z-50 grid w-full max-w-sm translate-[-50%] gap-4 overflow-hidden border border-border bg-surface shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[state=open]:zoom-in-95 sm:rounded-xl">
           <div className="flex flex-col space-y-1.5 p-6 pb-4">
-            <Dialog.Title className="text-xl font-semibold leading-none tracking-tight flex items-center gap-2">
-              <Lock className="w-5 h-5 text-primary" />
+            <Dialog.Title className="flex items-center gap-2 text-xl leading-none font-semibold tracking-tight">
+              <Lock className="size-5 text-primary" />
               {t("settings.login_title") || "Steam Login"}
             </Dialog.Title>
             <Dialog.Description className="text-sm text-muted">
@@ -318,8 +318,8 @@ export default function LoginModal({
 
           <div className="px-6 pb-6">
             {!isPrepared ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="flex flex-col items-center justify-center gap-3 py-10">
+                <span className="inline-block size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 <span className="text-sm text-muted">
                   {t("labels.loading_dots") || "Loading..."}
                 </span>
@@ -327,17 +327,17 @@ export default function LoginModal({
             ) : step === "credentials" ? (
               <div className="flex flex-col gap-6">
                 {errorMsg && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
+                  <div className="mb-0 flex items-center gap-3 rounded-lg bg-red-500/10 p-3 text-red-500">
                     <p className="text-xs">{errorMsg}</p>
                   </div>
                 )}
                 <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <div className="relative">
-                      <User className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
+                      <User className="absolute top-2.5 left-3 size-4 text-muted" />
                       <input
                         autoFocus
-                        className="input pl-9 w-full"
+                        className="input w-full pl-9"
                         placeholder={t("settings.username") || "Username"}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -345,10 +345,10 @@ export default function LoginModal({
                       />
                     </div>
                     <div className="relative">
-                      <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
+                      <KeyRound className="absolute top-2.5 left-3 size-4 text-muted" />
                       <input
                         type="password"
-                        className="input pl-9 w-full"
+                        className="input w-full pl-9"
                         placeholder={t("settings.password") || "Password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -357,15 +357,15 @@ export default function LoginModal({
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center gap-3 pt-4 w-full">
+                  <div className="flex w-full items-center justify-between gap-3 pt-4">
                     <button
                       type="button"
-                      className="btn-secondary text-xs px-3"
+                      className="btn-secondary px-3 text-xs"
                       onClick={handleSystemRelogin}
                       disabled={busy}
                     >
                       {busy && (
-                        <span className="inline-block mr-1 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        <span className="mr-1 inline-block size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                       )}
                       {t("settings.relogin") || "Relogin to system account"}
                     </button>
@@ -384,17 +384,17 @@ export default function LoginModal({
                         disabled={busy || !username || !password}
                       >
                         {busy && (
-                          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          <span className="inline-block size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         )}
                         {t("settings.login_button") || "Login"}
                       </button>
                     </div>
                   </div>
                   {loginModalMode === "auto" && (
-                    <div className="flex justify-center mt-5 mb-1">
+                    <div className="mt-5 mb-1 flex justify-center">
                       <button
                         type="button"
-                        className="text-[11px] text-muted hover:text-primary transition-colors opacity-60 hover:opacity-100 uppercase tracking-wide font-medium"
+                        className="text-[11px] font-medium tracking-wide text-muted uppercase opacity-60 transition-colors hover:text-primary hover:opacity-100"
                         onClick={() => {
                           setShowLoginPromptOnFail(false);
                           onOpenChange(false);
@@ -409,16 +409,16 @@ export default function LoginModal({
                 </form>
                 {qrCode && (
                   <>
-                    <div className="h-[1px] w-full bg-border" />
+                    <div className="h-px w-full bg-border" />
                     <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="p-2.5 bg-white rounded-xl shadow-sm">
+                      <div className="rounded-xl bg-white p-2.5 shadow-sm">
                         <img
                           src={qrCode}
                           alt="Steam QR Login"
-                          className="w-40 h-40 object-contain"
+                          className="size-40 object-contain"
                         />
                       </div>
-                      <span className="text-xs font-medium text-muted text-center max-w-[200px]">
+                      <span className="max-w-50 text-center text-xs font-medium text-muted">
                         {t("settings.steam_qr_help") ||
                           "Use the Steam Mobile App to sign in via QR code"}
                       </span>
@@ -429,25 +429,25 @@ export default function LoginModal({
             ) : (
               <div className="flex flex-col gap-6">
                 {errorMsg && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 text-red-500 mb-0">
+                  <div className="mb-0 flex items-center gap-3 rounded-lg bg-red-500/10 p-3 text-red-500">
                     <p className="text-xs">{errorMsg}</p>
                   </div>
                 )}
 
                 {!showCodeInput ? (
-                  <div className="flex flex-col items-center justify-center py-6 gap-4">
-                    <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10 text-primary w-full justify-center">
-                      <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      <span className="text-sm font-medium text-center">
+                  <div className="flex flex-col items-center justify-center gap-4 py-6">
+                    <div className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-primary/10 bg-primary/5 p-4 text-primary">
+                      <span className="inline-block size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <span className="text-center text-sm font-medium">
                         {t("settings.steam_guard_help") ||
                           "Ожидание подтверждения в мобильном приложении Steam..."}
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2 w-full mt-2">
+                    <div className="mt-2 flex w-full flex-col gap-2">
                       <button
                         type="button"
-                        className="btn-secondary text-sm w-full py-2"
+                        className="btn-secondary w-full py-2 text-sm"
                         onClick={async () => {
                           setShowCodeInput(true);
                           await tryInvoke("steam_login_switch_to_code").catch(
@@ -461,7 +461,7 @@ export default function LoginModal({
 
                       <button
                         type="button"
-                        className="btn-ghost text-sm w-full py-2"
+                        className="btn-ghost w-full py-2 text-sm"
                         onClick={() => setStep("credentials")}
                         disabled={busy}
                       >
@@ -472,12 +472,12 @@ export default function LoginModal({
                 ) : (
                   <form onSubmit={handle2FASubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-subtle uppercase tracking-wide">
+                      <label className="text-xs font-medium tracking-wide text-subtle uppercase">
                         {t("settings.steam_guard_code") || "Steam Guard Code"}
                       </label>
                       <input
                         autoFocus
-                        className="input w-full text-center tracking-widest font-mono text-lg"
+                        className="input w-full text-center font-mono text-lg tracking-widest"
                         placeholder="XXXXX"
                         value={code}
                         onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -500,7 +500,7 @@ export default function LoginModal({
                         disabled={busy || !code}
                       >
                         {busy && (
-                          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          <span className="inline-block size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         )}
                         {t("buttons.submit") || "Submit"}
                       </button>

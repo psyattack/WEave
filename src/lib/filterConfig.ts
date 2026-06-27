@@ -240,16 +240,6 @@ export const SCRIPT_TYPES: Record<ScriptTypeKey, string> = {
   Oversized: "Oversized",
 };
 
-export const REQUIRED_FLAG_OPTIONS = [
-  { value: "notags:exclusive_content", label: "Exclude NSFW" },
-] as const;
-
-export function toSelectOptions<T extends string>(
-  keys: readonly T[],
-  labels: Record<T, string>,
-): { value: T; label: string }[] {
-  return keys.map((value) => ({ value, label: labels[value] }));
-}
 
 /**
  * Translates select options using i18n.

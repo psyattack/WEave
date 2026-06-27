@@ -69,13 +69,13 @@ export default function GeneralSettingsTab() {
   return (
     <div className="space-y-6 p-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
         <input
           type="text"
           placeholder={t("labels.search_placeholder") || "Search settings..."}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-full bg-surface-sunken/40 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder-white/30"
+          className="w-full rounded-full border border-white/10 bg-surface-sunken/40 py-2 pr-4 pl-9 text-sm placeholder-white/30 transition-all focus:ring-1 focus:ring-primary/50 focus:outline-none"
         />
       </div>
 
@@ -111,7 +111,7 @@ export default function GeneralSettingsTab() {
         {renderRow(
           t("settings.accent_color") || "Accent color",
           t("settings.accent_hint") || "Highlight color used throughout the interface",
-          <div className="flex flex-wrap gap-2.5 justify-end">
+          <div className="flex flex-wrap justify-end gap-2.5">
             {ACCENTS.map((a) => (
               <button
                 key={a.value}
@@ -128,8 +128,8 @@ export default function GeneralSettingsTab() {
                 }}
                 className={
                   state.accent === a.value
-                    ? "h-7 w-7 rounded-full ring-2 ring-offset-2 ring-offset-surface-sunken ring-foreground transition-all"
-                    : "h-7 w-7 rounded-full ring-1 ring-border hover:ring-foreground hover:scale-110 transition-all"
+                    ? "size-7 rounded-full ring-2 ring-foreground ring-offset-2 ring-offset-surface-sunken transition-all"
+                    : "size-7 rounded-full ring-1 ring-border transition-all hover:scale-110 hover:ring-foreground"
                 }
                 style={{ backgroundColor: a.color }}
               />
@@ -218,12 +218,12 @@ export default function GeneralSettingsTab() {
           t("settings.we_directory_hint") || "Path to your Wallpaper Engine install folder. Required for Apply / Extract.",
           <div className="flex flex-wrap gap-2">
             <input
-              className="input min-w-[220px] bg-white/5 border-white/10"
+              className="input min-w-55 border-white/10 bg-white/5"
               readOnly
               value={state.weDirectory}
             />
             <button
-              className="hover-shimmer px-4 py-2 bg-white/10 hover:bg-white/20 transition-all rounded-md text-sm font-medium border border-white/10"
+              className="hover-shimmer rounded-md border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium transition-all hover:bg-white/20"
               onClick={async () => {
                 const folder = await openPath({ directory: true });
                 if (!folder || Array.isArray(folder)) return;
@@ -240,7 +240,7 @@ export default function GeneralSettingsTab() {
       </SectionWrap>
 
       {query && (
-        <div className="text-center text-muted text-sm py-8 opacity-50">
+        <div className="py-8 text-center text-sm text-muted opacity-50">
           {t("labels.end_of_search") || "End of search results."}
         </div>
       )}
