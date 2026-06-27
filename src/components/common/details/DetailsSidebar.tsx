@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Languages, User } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
 import { motion } from "framer-motion";
@@ -11,6 +11,8 @@ import { useDetailsMeta, } from "@/hooks/useDetailsMeta";
 import { InstalledWallpaper, WorkshopItem } from "@/types/workshop";
 import { translateTagCategory, translateTagValue } from "@/lib/filterConfig";
 import { Tooltip } from "@/components/common/Tooltip";
+import { useAppStore } from "@/stores/app";
+import { dismissAllToasts } from "@/stores/toasts";
 
 interface CommonProps {
   onClose: () => void;
@@ -62,6 +64,19 @@ function ExpandableDescription({ text, noDescText }: { text: string, noDescText:
 
 export default function DetailsSidebar(props: DetailsSidebarProps) {
   const { t, i18n } = useTranslation();
+  const setDetailsOpen = useAppStore((s) => s.setDetailsOpen);
+  
+  useEffect(() => {
+    const isOpen = !!props.item;
+    setDetailsOpen(isOpen);
+    if (isOpen) {
+      dismissAllToasts();
+    }
+    return () => {
+      setDetailsOpen(false);
+    };
+  }, [!!props.item, setDetailsOpen]);
+
   const {
     meta,
     rateLimited,

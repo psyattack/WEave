@@ -48,7 +48,8 @@ export default function App() {
   const [multiOpen, setMultiOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
-  const [tasksOpen, setTasksOpen] = useState(false);
+  const tasksOpen = useAppStore((s) => s.tasksOpen);
+  const setTasksOpen = useAppStore((s) => s.setTasksOpen);
   const [legalOpen, setLegalOpen] = useState(false);
 
   const legalAccepted = useAppStore((s) => s.legalAccepted);

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useAppStore } from "./app";
 
 export type ToastKind = "info" | "success" | "warning" | "error";
 
@@ -13,6 +14,7 @@ interface ToastState {
   toasts: Toast[];
   push: (t: Omit<Toast, "id">) => string;
   dismiss: (id: string) => void;
+  dismissAll: () => void;
 }
 
 // Drop duplicates of the same message+kind that arrive within this many
@@ -23,6 +25,11 @@ const DEDUP_WINDOW_MS = 1500;
 export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
   push: ({ kind = "info", message, duration = 3500 }) => {
+    // Suppress toasts if TasksDrawer or DetailsSidebar is open to prevent duplicate info overlay
+    const state = useAppStore.getState();
+    if (state.tasksOpen || state.detailsOpen) {
+      return "suppressed";
+    }
     const now = Date.now();
     const existing = get().toasts.find(
       (t) =>
@@ -42,6 +49,7 @@ export const useToastStore = create<ToastState>((set, get) => ({
   },
   dismiss: (id) =>
     set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+  dismissAll: () => set({ toasts: [] }),
 }));
 
 export function pushToast(
@@ -50,4 +58,8 @@ export function pushToast(
   duration?: number,
 ) {
   return useToastStore.getState().push({ message, kind, duration });
+}
+
+export function dismissAllToasts() {
+  useToastStore.getState().dismissAll();
 }

@@ -1,7 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { ToastKind, useToastStore } from "@/stores/toasts";
+import { useAppStore } from "@/stores/app";
+import { cn } from "@/lib/utils";
 
 const ICONS: Record<ToastKind, typeof Info> = {
   info: Info,
@@ -19,8 +22,31 @@ const COLORS: Record<ToastKind, string> = {
 
 export default function ToastStack() {
   const { toasts, dismiss } = useToastStore();
+  const paginationWidth = useAppStore((s) => s.paginationWidth);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1920
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Pagination right edge: windowWidth / 2 + paginationWidth / 2
+  // Toast left edge: windowWidth - 320 - 16
+  // Overlap + safe buffer (about ~128px extra gap):
+  const isOverlapping = windowWidth < paginationWidth + 770;
+
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-9999 flex w-[320px] flex-col gap-2">
+    <div 
+      className={cn(
+        "pointer-events-none fixed right-4 z-9999 flex w-[320px] max-w-[calc(100vw-32px)] gap-2 transition-all duration-300",
+        isOverlapping 
+          ? "top-40 flex-col bottom-auto" 
+          : "bottom-4 flex-col-reverse top-auto"
+      )}
+    >
       <AnimatePresence>
         {toasts.map((toast) => {
           const Icon = ICONS[toast.kind];

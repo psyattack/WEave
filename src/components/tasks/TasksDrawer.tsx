@@ -20,7 +20,7 @@ import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { TaskStatus, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
 import { useAppStore } from "@/stores/app";
-import { pushToast } from "@/stores/toasts";
+import { pushToast, dismissAllToasts } from "@/stores/toasts";
 
 interface Props {
   open: boolean;
@@ -35,6 +35,12 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
 
   const active = Object.values(tasks);
   const accountIndex = useAppStore((s) => s.accountIndex);
+
+  useEffect(() => {
+    if (open) {
+      dismissAllToasts();
+    }
+  }, [open]);
 
   const handleRetry = async (task: TaskStatus) => {
     if (!inTauri) return;

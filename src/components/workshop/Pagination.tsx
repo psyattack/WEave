@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useAppStore } from "@/stores/app";
 
 interface Props {
   page: number;
@@ -16,6 +17,20 @@ export default function Pagination({ page, totalPages, onChange, infoText }: Pro
   const hasNext = page < safeTotal;
   const [prevPage, setPrevPage] = useState(page);
   const [inputValue, setInputValue] = useState(String(page));
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const setPaginationWidth = useAppStore((s) => s.setPaginationWidth);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setPaginationWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [setPaginationWidth]);
 
   if (page !== prevPage) {
     setPrevPage(page);
@@ -42,7 +57,10 @@ export default function Pagination({ page, totalPages, onChange, infoText }: Pro
   };
 
   return (
-    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex h-10 items-center rounded-full bg-background/50 backdrop-blur-2xl border border-white/10 px-3 shadow-2xl transition-all">
+    <div 
+      ref={containerRef}
+      className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex h-10 items-center rounded-full bg-background/50 backdrop-blur-2xl border border-white/10 px-3 shadow-2xl transition-all"
+    >
       <div className="flex items-center gap-1.5">
         <button 
           className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-white/10 text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none" 
