@@ -191,6 +191,7 @@ export default function DownloadLoginModal({
                       autoFocus
                       className="input pl-9 w-full"
                       placeholder={t("settings.username") || "Username"}
+                      aria-label={t("settings.username") || "Username"}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       disabled={busy}
@@ -202,6 +203,7 @@ export default function DownloadLoginModal({
                       type="password"
                       className="input pl-9 w-full"
                       placeholder={t("settings.password") || "Password"}
+                      aria-label={t("settings.password") || "Password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={busy}

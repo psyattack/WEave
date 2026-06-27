@@ -116,3 +116,27 @@ fn is_metadata_complete(cached: &Value, pubfileid: &str) -> bool {
         .unwrap_or(false);
     title_ok && tags_ok
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_is_metadata_complete() {
+        let cached = json!({
+            "123": {
+                "title": "A Title",
+                "tags": ["tag1"]
+            },
+            "456": {
+                "title": "",
+                "tags": []
+            }
+        });
+        
+        assert!(is_metadata_complete(&cached, "123"));
+        assert!(!is_metadata_complete(&cached, "456"));
+        assert!(!is_metadata_complete(&cached, "999"));
+    }
+}
