@@ -62,16 +62,20 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 - Active wallpaper detection
 - Open folders in Explorer
 - Extract .pkg files with RePKG
+- **Interactive Preset & Property Settings**: Customize wallpaper properties (playback rate, alignment, volume, audio responsiveness, colors, brightness, contrast, saturation, hue, post-processing filters, and custom project-defined properties)
+- **Live Preview & Persistence**: Apply adjustments live to the active wallpaper. Use "Fixate Changes" to write the settings directly into `project.json` (auto-backups created) or "Restore Defaults" to reset all settings
 
 </details>
 
 <details>
-<summary><b>⚙️ Wallpaper Engine Integration</b></summary>
+<summary><b>⚙️ Wallpaper Engine Integration & Control</b></summary>
 
 - Auto-detect WE installation
 - Apply wallpapers to monitors
 - Read current configuration
 - Detect active wallpapers across monitors
+- **Integrated Media Control Center**: Animated control bar to play, pause, stop, switch next/previous wallpapers, mute/unmute, and toggle desktop icons visibility (show/hide)
+- **Playlist & Profile Loader**: Quickly load Wallpaper Engine playlists or profiles by name from the control bar
 
 </details>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Languages, User } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
 import { motion } from "framer-motion";
+import PresetSettings from "./PresetSettings";
 
 import Drawer from "@/components/common/Drawer";
 import PreviewImage from "@/components/common/PreviewImage";
@@ -67,11 +68,21 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
   const setDetailsOpen = useAppStore((s) => s.setDetailsOpen);
   
   const hasItem = !!props.item;
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // Track previous hasItem to detect when drawer opens
+  const [prevHasItem, setPrevHasItem] = useState(hasItem);
+  if (hasItem !== prevHasItem) {
+    setPrevHasItem(hasItem);
+    setShowSettings(false);
+  }
+
   useEffect(() => {
     setDetailsOpen(hasItem);
     if (hasItem) {
       dismissAllToasts();
     }
+    
     return () => {
       setDetailsOpen(false);
     };
@@ -101,12 +112,32 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
     onClose: props.onClose,
   });
 
+  const [lastInstalled, setLastInstalled] = useState<InstalledWallpaper | null>(null);
+  
+  const currentInstalled = installedEntry 
+    ? installedEntry 
+    : (props.kind === "installed" && props.item ? (props.item as InstalledWallpaper) : null);
+
+  if (currentInstalled && currentInstalled !== lastInstalled) {
+    setLastInstalled(currentInstalled);
+  }
+
   return (
     <Drawer
       open={!!props.item}
       onOpenChange={(o) => !o && props.onClose()}
       title={meta?.title ?? ""}
       width="min(340px, 92vw)"
+      preventClose={showSettings}
+      onPreventedClose={() => setShowSettings(false)}
+      asideContent={
+        lastInstalled ? (
+          <PresetSettings 
+            open={showSettings}
+            item={lastInstalled} 
+          />
+        ) : null
+      }
     >
       {meta && (
         <div className="flex flex-col gap-2.5 p-3 text-[13px]">
@@ -141,6 +172,7 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
             onExtract={props.kind === "installed" ? props.onExtract : undefined}
             onDelete={props.kind === "installed" ? props.onDelete : undefined}
             onOpenFolder={props.kind === "installed" ? props.onOpenFolder : undefined}
+            onToggleSettings={() => setShowSettings(s => !s)}
           />
 
           <div className="flex flex-col gap-1">

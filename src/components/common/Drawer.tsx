@@ -9,8 +9,11 @@ interface DrawerProps {
   onOpenChange: (open: boolean) => void;
   title?: ReactNode;
   children: ReactNode;
+  asideContent?: ReactNode;
   side?: "right" | "left";
   width?: string;
+  preventClose?: boolean;
+  onPreventedClose?: () => void;
 }
 
 export default function Drawer({
@@ -18,8 +21,11 @@ export default function Drawer({
   onOpenChange,
   title,
   children,
+  asideContent,
   side = "right",
   width = "420px",
+  preventClose = false,
+  onPreventedClose,
 }: DrawerProps) {
   const isRight = side === "right";
   return (
@@ -36,7 +42,21 @@ export default function Drawer({
                 className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md"
               />
             </RadixDialog.Overlay>
-            <RadixDialog.Content asChild>
+            <RadixDialog.Content 
+              asChild
+              onInteractOutside={(e) => {
+                if (preventClose) {
+                  e.preventDefault();
+                  onPreventedClose?.();
+                }
+              }}
+              onEscapeKeyDown={(e) => {
+                if (preventClose) {
+                  e.preventDefault();
+                  onPreventedClose?.();
+                }
+              }}
+            >
               <motion.aside
                 initial={{ x: isRight ? "100%" : "-100%" }}
                 animate={{ x: 0 }}
@@ -63,6 +83,7 @@ export default function Drawer({
                 <div className="drawer-scroll flex-1 overflow-auto">
                   {children}
                 </div>
+                {asideContent}
               </motion.aside>
             </RadixDialog.Content>
           </RadixDialog.Portal>

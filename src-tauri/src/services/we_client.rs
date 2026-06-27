@@ -215,6 +215,32 @@ impl WallpaperEngineClient {
         out
     }
 
+    pub fn get_config_key(&self, project_path: &Path) -> Option<String> {
+        let is_workshop = project_path.to_string_lossy().contains("workshop\\content\\431960") || 
+                          project_path.to_string_lossy().contains("workshop/content/431960");
+                          
+        if is_workshop {
+            return project_path.file_name().map(|n| n.to_string_lossy().to_string());
+        }
+        
+        // For local projects, the key is the absolute path to the main file with forward slashes
+        let json_path = project_path.join("project.json");
+        if let Ok(raw) = std::fs::read_to_string(&json_path) {
+            if let Ok(config) = serde_json::from_str::<serde_json::Value>(&raw) {
+                let file = config.get("file").and_then(|v| v.as_str()).unwrap_or("scene.pkg");
+                let main_file = project_path.join(file);
+                let mut path_str = main_file.to_string_lossy().replace("\\", "/");
+                // Remove UNC prefix if present
+                if path_str.starts_with("//?/") {
+                    path_str = path_str[4..].to_string();
+                }
+                return Some(path_str);
+            }
+        }
+        
+        None
+    }
+
     pub fn apply(
         &self,
         project_path: &Path,
@@ -245,17 +271,161 @@ impl WallpaperEngineClient {
             }
         }
 
-        let mut cmd = Command::new(executable);
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
         cmd.arg("-control")
             .arg("openWallpaper")
             .arg("-file")
-            .arg(json_path.canonicalize().unwrap_or(json_path));
+            .arg(&json_path);
         if let Some(m) = monitor {
             cmd.arg("-monitor").arg(m.to_string());
         }
         spawn_detached(cmd)?;
         Ok(())
     }
+
+    pub fn apply_properties(
+        &self,
+        properties: &serde_json::Map<String, serde_json::Value>,
+        monitor: Option<u32>,
+    ) -> anyhow::Result<()> {
+        let executable = self
+            .executable()
+            .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
+
+        let properties_json = serde_json::to_string(properties)?;
+        let raw_properties = format!("-properties RAW~({})~END", properties_json);
+
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
+        cmd.arg("-control").arg("applyProperties");
+        if let Some(m) = monitor {
+            cmd.arg("-monitor").arg(m.to_string());
+        }
+        
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            cmd.raw_arg(raw_properties.clone());
+        }
+        
+        #[cfg(not(windows))]
+        {
+            cmd.arg("-properties").arg(format!("RAW~({})~END", properties_json));
+        }
+        
+        spawn_detached(cmd)?;
+        Ok(())
+    }
+
+    pub fn save_properties(
+        &self,
+        json_path: &Path,
+        properties: &serde_json::Map<String, serde_json::Value>,
+    ) -> anyhow::Result<()> {
+        let executable = self
+            .executable()
+            .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
+
+        let properties_json = serde_json::to_string(properties)?;
+        let raw_properties = format!("-properties RAW~({})~END", properties_json);
+
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
+        cmd.arg("-control")
+            .arg("openWallpaper")
+            .arg("-file")
+            .arg(json_path);
+            
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            cmd.raw_arg(raw_properties.clone());
+        }
+        
+        #[cfg(not(windows))]
+        {
+            cmd.arg("-properties").arg(format!("RAW~({})~END", properties_json));
+        }
+        
+        spawn_detached(cmd)?;
+        Ok(())
+    }
+
+    pub fn send_control(&self, control: &str, monitor: Option<u32>) -> anyhow::Result<()> {
+        let executable = self
+            .executable()
+            .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
+        cmd.arg("-control").arg(control);
+        if let Some(m) = monitor {
+            cmd.arg("-monitor").arg(m.to_string());
+        }
+        spawn_detached(cmd)?;
+        Ok(())
+    }
+
+    pub fn play(&self, monitor: Option<u32>) -> anyhow::Result<()> { self.send_control("play", monitor) }
+    pub fn pause(&self, monitor: Option<u32>) -> anyhow::Result<()> { self.send_control("pause", monitor) }
+    pub fn stop(&self, monitor: Option<u32>) -> anyhow::Result<()> { self.send_control("stop", monitor) }
+    pub fn mute(&self) -> anyhow::Result<()> { self.send_control("mute", None) }
+    pub fn unmute(&self) -> anyhow::Result<()> { self.send_control("unmute", None) }
+    pub fn next_wallpaper(&self, monitor: Option<u32>) -> anyhow::Result<()> { self.send_control("nextWallpaper", monitor) }
+    pub fn previous_wallpaper(&self, monitor: Option<u32>) -> anyhow::Result<()> { self.send_control("previousWallpaper", monitor) }
+    pub fn show_icons(&self) -> anyhow::Result<()> { self.send_control("showIcons", None) }
+    pub fn hide_icons(&self) -> anyhow::Result<()> { self.send_control("hideIcons", None) }
+
+    pub fn set_volume(&self, volume: u32) -> anyhow::Result<()> {
+        let executable = self
+            .executable()
+            .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
+        cmd.arg("-control").arg("setVolume").arg("-volume").arg(volume.to_string());
+        spawn_detached(cmd)?;
+        Ok(())
+    }
+
+    pub fn open_playlist(&self, playlist: &str, monitor: Option<u32>) -> anyhow::Result<()> {
+        let executable = self
+            .executable()
+            .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
+        cmd.arg("-control").arg("openPlaylist").arg("-playlist").arg(playlist);
+        if let Some(m) = monitor {
+            cmd.arg("-monitor").arg(m.to_string());
+        }
+        spawn_detached(cmd)?;
+        Ok(())
+    }
+
+    pub fn open_profile(&self, profile: &str) -> anyhow::Result<()> {
+        let executable = self
+            .executable()
+            .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
+        cmd.arg("-control").arg("openProfile").arg("-profile").arg(profile);
+        spawn_detached(cmd)?;
+        Ok(())
+    }
+
 
     pub fn open_wallpaper_engine(&self, show_window: bool) -> anyhow::Result<()> {
         let executable = self
@@ -275,7 +445,10 @@ impl WallpaperEngineClient {
             .iter()
             .any(|(_, p)| p.name().to_string_lossy().to_ascii_lowercase() == name);
 
-        let mut cmd = Command::new(executable);
+        let mut cmd = Command::new(executable.clone());
+        if let Some(parent) = executable.parent() {
+            cmd.current_dir(parent);
+        }
         if is_running && show_window {
             cmd.arg("-showwindow");
         }

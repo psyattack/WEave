@@ -9,6 +9,7 @@ import {
   Trash2,
   MoreHorizontal,
   MonitorPlay,
+  Settings2,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
@@ -37,6 +38,7 @@ interface DetailsActionButtonsProps {
   onExtract?: (item: InstalledWallpaper) => void;
   onDelete?: (item: InstalledWallpaper) => void;
   onOpenFolder?: (item: InstalledWallpaper) => void;
+  onToggleSettings?: () => void;
 }
 
 async function pickDir(): Promise<string | null> {
@@ -62,6 +64,7 @@ export default function DetailsActionButtons({
   onExtract,
   onDelete,
   onOpenFolder,
+  onToggleSettings,
 }: DetailsActionButtonsProps) {
   const { t } = useTranslation();
   const { confirm, ConfirmDialog } = useConfirm();
@@ -197,14 +200,16 @@ export default function DetailsActionButtons({
           )}
         </div>
 
+        {/* Moved Open WE to dropdown */}
+
         {showInstalledActions && installedHandle && (
-          <Tooltip content={t("tooltips.open_we") || "Open in WE"} side="top">
+          <Tooltip content={(t as any)("tooltips.preset_settings") || "Preset Settings"} side="top">
             <button
-              onClick={() => void overlayOpenWe()}
-              aria-label="Open in Wallpaper Engine"
+              onClick={onToggleSettings}
+              aria-label="Preset Settings"
               className="hover-shimmer flex size-9 items-center justify-center rounded-md bg-white/5 text-foreground transition-colors hover:bg-white/10"
             >
-              <MonitorPlay className="size-4" />
+              <Settings2 className="size-4" />
             </button>
           </Tooltip>
         )}
@@ -250,6 +255,16 @@ export default function DetailsActionButtons({
                 <ExternalLink className="size-4" />
                 {t("buttons.open_workshop")}
               </DropdownMenu.Item>
+
+              {showInstalledActions && installedHandle && (
+                <DropdownMenu.Item
+                  onClick={() => void overlayOpenWe()}
+                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
+                >
+                  <MonitorPlay className="size-4" />
+                  {t("tooltips.open_we") || "Open in WE"}
+                </DropdownMenu.Item>
+              )}
 
               {showInstalledActions && installedHandle && (
                 <DropdownMenu.Item

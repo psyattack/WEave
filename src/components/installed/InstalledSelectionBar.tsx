@@ -1,4 +1,3 @@
-
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import { Check, Package, Trash2, X } from "lucide-react";
@@ -21,6 +20,7 @@ export default function InstalledSelectionBar({
   handleBulkDelete,
 }: InstalledSelectionBarProps) {
   const { t } = useTranslation();
+
   return (
     <AnimatePresence>
       {selectionMode && (
@@ -55,9 +55,9 @@ export default function InstalledSelectionBar({
             >
               {t("labels.selected_count", { count: selectedIds.size })}
             </div>
-            {selectedIds.size > 0 && (
-              <>
-                <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <>
                   <button
                     type="button"
                     onClick={handleBulkExtract}
@@ -74,9 +74,9 @@ export default function InstalledSelectionBar({
                     <Trash2 className="size-4" />
                     {t("labels.delete_selected")}
                   </button>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </motion.div>
       )}
