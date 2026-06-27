@@ -223,7 +223,6 @@ export default function InfoDialog({
             className="hover-shimmer px-3 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-md border border-white/10 text-sm flex items-center gap-2 transition-all"
             onClick={openDataFolder}
             disabled={!inTauri}
-            title={dataDir}
           >
             <FolderOpen className="h-4 w-4" />
             {t("buttons.open_data_folder")}

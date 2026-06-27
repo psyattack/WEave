@@ -5,7 +5,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useAppStore } from "@/stores/app";
 import { useInstalledStore } from "@/stores/installed";
 import { useTasksStore } from "@/stores/tasks";
-import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction, invoke } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeAction, invoke } from "@/lib/tauri";
 import { maybeMinimize } from "@/lib/window";
 import { pushToast } from "@/stores/toasts";
 import { useRefreshStore } from "@/stores/refresh";

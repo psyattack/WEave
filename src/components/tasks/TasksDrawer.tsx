@@ -16,7 +16,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Drawer from "@/components/common/Drawer";
 import PreviewImage from "@/components/common/PreviewImage";
 import * as Progress from "@radix-ui/react-progress";
-import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeAction } from "@/lib/tauri";
 import { TaskStatus, useTasksStore } from "@/stores/tasks";
 import { useInstalledStore } from "@/stores/installed";
 import { useAppStore } from "@/stores/app";

@@ -5,7 +5,7 @@ import Select from "@/components/common/Select";
 import { Switch } from "@/components/common/Switch";
 import { changeLanguageTo } from "@/hooks/useBootstrap";
 import { persistTheme } from "@/hooks/useTheme";
-import { inTauri, invoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
+import { inTauri, invoke, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { ThemeCode, useAppStore } from "@/stores/app";
 import { Row, Section, SettingSwitch } from "./SettingsDialogShared";

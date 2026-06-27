@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
 
 import Dialog from "@/components/common/Dialog";
-import { inTauri, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
+import { inTauri, tryInvokeAction } from "@/lib/tauri";
 import { extractWorkshopIds } from "@/lib/workshop";
 import { pushToast } from "@/stores/toasts";
 import { useAppStore } from "@/stores/app";
