@@ -507,6 +507,6 @@ export default {
     visibility_q: "Wallpapers are downloaded, but they are not visible in the original application",
     visibility_a: "Make sure that in the Settings you have specified the correct path to the Wallpaper Engine folder. The path must point to the root folder where the executable files (wallpaper32.exe / wallpaper64.exe) are located.",
     download_issues_q: "What to do if wallpapers won't download?",
-    download_issues_a: "Try again, maybe wait a little bit.\n\nIt's possible that the passwords for the system download accounts have expired. In this case, you can:\n\n1) Add a friend's account or your own account with a copy of Wallpaper Engine in settings\n2) Buy an offline activation of Wallpaper Engine on various marketplaces and add it using the method above (They are very cheap)\n3) Write an Issue in the GitHub repository and I will try to promptly update the working accounts"
+    download_issues_a: "Try again, maybe wait a little bit.\nYou can also try to turn on the VPN.\n\nIt's possible that the passwords for the system download accounts have expired. In this case, you can:\n\n1) Add a friend's account or your own account with a copy of Wallpaper Engine in settings\n2) Buy an offline activation of Wallpaper Engine on various marketplaces and add it using the method above (They are very cheap)\n3) Write an Issue in the GitHub repository and I will try to promptly update the working accounts"
   },
 } as const;
