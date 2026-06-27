@@ -22,11 +22,11 @@ import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/common/Tooltip";
 
 function ThemeIcon({ theme }: { theme: ThemeCode }) {
-  if (theme === "light") return <Sun className="h-5 w-5" />;
-  if (theme === "nord") return <Droplet className="h-5 w-5" />;
-  if (theme === "solarized") return <Leaf className="h-5 w-5" />;
-  if (theme === "black") return <MoonStar className="h-5 w-5" />;
-  return <Moon className="h-5 w-5" />;
+  if (theme === "light") return <Sun className="size-5" />;
+  if (theme === "nord") return <Droplet className="size-5" />;
+  if (theme === "solarized") return <Leaf className="size-5" />;
+  if (theme === "black") return <MoonStar className="size-5" />;
+  return <Moon className="size-5" />;
 }
 
 interface Props {
@@ -73,7 +73,7 @@ export default function TopBar({
             onClick={() => triggerGlobalRefresh()}
             aria-label={t("tooltips.refresh") || "Refresh"}
           >
-            <RefreshCw className="h-5 w-5" />
+            <RefreshCw className="size-5" />
           </button>
         </Tooltip>
       </div>
@@ -85,11 +85,11 @@ export default function TopBar({
             onClick={onOpenTasks}
             aria-label={t("dialog.tasks")}
           >
-            <ListTodo className="h-5 w-5" />
+            <ListTodo className="size-5" />
             {activeCount > 0 && (
               <span
                 className={cn(
-                  "absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground",
+                  "absolute -top-0.5 -right-0.5 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground",
                 )}
               >
                 {activeCount}
@@ -103,7 +103,7 @@ export default function TopBar({
             onClick={onOpenMulti}
             aria-label={t("tooltips.multi_download") || "Multi-Download"}
           >
-            <Layers className="h-5 w-5" />
+            <Layers className="size-5" />
           </button>
         </Tooltip>
         <Tooltip content={t("tooltips.info")} side="bottom">
@@ -112,7 +112,7 @@ export default function TopBar({
             onClick={onOpenInfo}
             aria-label={t("tooltips.info") || "Information"}
           >
-            <Info className="h-5 w-5" />
+            <Info className="size-5" />
           </button>
         </Tooltip>
         <Tooltip content={t("tooltips.settings")} side="bottom">
@@ -121,7 +121,7 @@ export default function TopBar({
             onClick={onOpenSettings}
             aria-label={t("tooltips.settings") || "Settings"}
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="size-5" />
           </button>
         </Tooltip>
       </div>

@@ -1,13 +1,13 @@
 import { create } from "zustand";
 
-export type SetupPhase =
+type SetupPhase =
   | "checking"
   | "downloading"
   | "extracting"
   | "ready"
   | "error";
 
-export type PluginPhase = SetupPhase;
+type PluginPhase = SetupPhase;
 
 interface DotnetStatus {
   phase: SetupPhase;

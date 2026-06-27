@@ -3,7 +3,7 @@ import { useAppStore } from "./app";
 
 export type ToastKind = "info" | "success" | "warning" | "error";
 
-export interface Toast {
+interface Toast {
   id: string;
   kind: ToastKind;
   message: string;

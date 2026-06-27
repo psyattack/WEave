@@ -26,7 +26,7 @@ export function Tooltip({
           <RadixTooltip.Content
             side={side}
             sideOffset={8}
-            className="z-[99999] pointer-events-none animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 duration-200"
+            className="pointer-events-none z-99999 duration-200 animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95"
           >
             <div className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
               <div className="rounded-md bg-surface-raised/95 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">

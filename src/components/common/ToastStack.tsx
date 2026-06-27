@@ -41,10 +41,10 @@ export default function ToastStack() {
   return (
     <div 
       className={cn(
-        "pointer-events-none fixed right-4 z-9999 flex w-[320px] max-w-[calc(100vw-32px)] gap-2 transition-all duration-300",
+        "pointer-events-none fixed right-4 z-9999 flex w-80 max-w-[calc(100vw-32px)] gap-2 transition-all duration-300",
         isOverlapping 
-          ? "top-40 flex-col bottom-auto" 
-          : "bottom-4 flex-col-reverse top-auto"
+          ? "top-40 bottom-auto flex-col" 
+          : "top-auto bottom-4 flex-col-reverse"
       )}
     >
       <AnimatePresence>
@@ -57,10 +57,10 @@ export default function ToastStack() {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 60, scale: 0.96 }}
               transition={{ duration: 0.2 }}
-              className={`pointer-events-auto flex items-start gap-3 rounded-md border backdrop-blur-2xl px-3 py-2.5 shadow-2xl ${COLORS[toast.kind]}`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-md border px-3 py-2.5 shadow-2xl backdrop-blur-2xl ${COLORS[toast.kind]}`}
               onClick={() => dismiss(toast.id)}
             >
-              <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+              <Icon className="mt-0.5 size-4 shrink-0" />
               <span className="flex-1 text-sm text-foreground">
                 {toast.message}
               </span>

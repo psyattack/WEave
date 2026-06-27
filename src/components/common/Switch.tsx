@@ -28,7 +28,7 @@ export function Switch({
         className,
       )}
     >
-      <RadixSwitch.Thumb className="block h-4 w-4 translate-x-0.5 rounded-full bg-surface shadow transition-transform data-[state=checked]:translate-x-[18px] data-[state=checked]:bg-primary-foreground" />
+      <RadixSwitch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-surface shadow transition-transform data-[state=checked]:translate-x-4.5 data-[state=checked]:bg-primary-foreground" />
     </RadixSwitch.Root>
   );
 }

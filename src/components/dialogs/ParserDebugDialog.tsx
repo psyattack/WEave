@@ -70,11 +70,11 @@ export default function ParserDebugDialog({
         </div>
         <div className="flex items-center gap-2">
           <button className="btn-ghost text-xs" onClick={() => void refresh()}>
-            <RefreshCw className="mr-1 inline h-3 w-3" />
+            <RefreshCw className="mr-1 inline size-3" />
             {t("common.refresh") || "Refresh"}
           </button>
           <button className="btn-ghost text-xs" onClick={() => void clear()}>
-            <Trash2 className="mr-1 inline h-3 w-3" />
+            <Trash2 className="mr-1 inline size-3" />
             {t("common.clear") || "Clear"}
           </button>
         </div>
@@ -106,7 +106,7 @@ export default function ParserDebugDialog({
                 <span className="text-[10px] text-muted">{e.elapsed_ms}ms</span>
               </div>
               <div className="mt-0.5 flex items-center gap-1">
-                <span className="rounded bg-surface-raised px-1 py-px text-[9px] uppercase text-muted">
+                <span className="rounded bg-surface-raised px-1 py-px text-[9px] text-muted uppercase">
                   {e.kind}
                 </span>
                 <span className="text-[10px] text-muted">

@@ -3,15 +3,9 @@ import { initReactI18next } from "react-i18next";
 import en from "./locales/en";
 import ru from "./locales/ru";
 
-// Supported languages
-export const LANGUAGES = {
-  en: "English",
-  ru: "Русский",
-} as const;
+export type SupportedLanguage = "en" | "ru";
 
-export type SupportedLanguage = keyof typeof LANGUAGES;
-
-export const DEFAULT_LANGUAGE: SupportedLanguage = "en";
+const DEFAULT_LANGUAGE: SupportedLanguage = "en";
 
 // Initialize i18next
 void i18n.use(initReactI18next).init({

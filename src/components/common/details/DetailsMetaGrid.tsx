@@ -15,17 +15,17 @@ export default function DetailsMetaGrid({ rows }: { rows: MetaRow[] }) {
             key={label + (typeof value === "string" ? value : "")}
             className="flex flex-col gap-0.5 rounded-md border border-white/5 bg-white/5 px-2 py-1 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"
           >
-            <span className="text-[9px] uppercase tracking-wide text-white/50">
+            <span className="text-[9px] tracking-wide text-white/50 uppercase">
               {label}
             </span>
             {isNode ? (
-              <div className="truncate text-foreground/90 font-medium">{value}</div>
+              <div className="truncate font-medium text-foreground/90">{value}</div>
             ) : (
               <span
                 className={
                   tone === "warning"
                     ? "truncate font-semibold text-warning"
-                    : "truncate text-foreground font-medium"
+                    : "truncate font-medium text-foreground"
                 }
               >
                 {(value as string) || "—"}

@@ -217,7 +217,7 @@ export default function WorkshopCard({
         )}
       >
         <div
-          className="relative aspect-square w-full overflow-hidden rounded-[inherit] [-webkit-mask-image:-webkit-radial-gradient(white,black)] bg-surface-sunken cursor-pointer"
+          className="relative aspect-square w-full cursor-pointer overflow-hidden rounded-[inherit] bg-surface-sunken [-webkit-mask-image:-webkit-radial-gradient(white,black)]"
           onClick={() => onOpen(item)}
         >
           <PreviewImage
@@ -225,7 +225,7 @@ export default function WorkshopCard({
             src={item.preview_url}
             alt={item.title}
             className={cn(
-              "h-full w-full scale-[1.02] object-cover transition-all rounded-[inherit]",
+              "size-full scale-[1.02] rounded-[inherit] object-cover transition-all",
               "duration-700 ease-out group-hover:scale-[1.15] group-hover:brightness-75",
             )}
           />
@@ -233,34 +233,34 @@ export default function WorkshopCard({
           {/* Градиентный оверлей для читаемости текста */}
           <div
             className={cn(
-              "absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300",
+              "absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300",
               "group-hover:opacity-90",
             )}
           />
 
           {/* Бейджи в верхней части */}
-          <div className="absolute left-2 top-2 z-[2] flex items-center gap-2">
+          <div className="absolute top-2 left-2 z-2 flex items-center gap-2">
             {item.is_collection && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 group-hover:bg-black/85">
-                <Layers className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/20 backdrop-blur-md transition-all duration-200 group-hover:bg-black/85">
+                <Layers className="size-3" />
                 {t("labels.collection_badge")}
               </span>
             )}
             {installed && !item.is_collection && (
               <span
-                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/95 text-white shadow-md ring-2 ring-white/30 backdrop-blur-sm transition-all duration-200 group-hover:scale-110 group-hover:bg-emerald-400"
+                className="inline-flex size-6 items-center justify-center rounded-full bg-emerald-500/95 text-white shadow-md ring-2 ring-white/30 backdrop-blur-sm transition-all duration-200 group-hover:scale-110 group-hover:bg-emerald-400"
                 title={t("labels.installed") || "Installed"}
                 aria-label={t("labels.installed") || "Installed"}
               >
-                <Check className="h-3 w-3" strokeWidth={3} />
+                <Check className="size-3" strokeWidth={3} />
               </span>
             )}
           </div>
 
           {/* Active-download overlay */}
           {isDownloading && (
-            <div className="pointer-events-none absolute inset-0 z-[3] flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-sm">
-              <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/20 border-t-white shadow-lg" />
+            <div className="pointer-events-none absolute inset-0 z-3 flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-sm">
+              <div className="size-10 animate-spin rounded-full border-3 border-white/20 border-t-white shadow-lg" />
               <div className="text-sm font-bold text-white drop-shadow-lg">
                 {downloadProgress != null
                   ? `${Math.round(downloadProgress)}%`
@@ -269,7 +269,7 @@ export default function WorkshopCard({
               {downloadProgress != null && (
                 <div className="h-1.5 w-3/4 overflow-hidden rounded-full bg-white/20 shadow-inner">
                   <div
-                    className="h-full bg-gradient-to-r from-primary to-white transition-all duration-300 ease-out"
+                    className="h-full bg-linear-to-r from-primary to-white transition-all duration-300 ease-out"
                     style={{
                       width: `${Math.min(100, Math.max(0, downloadProgress))}%`,
                     }}
@@ -281,8 +281,8 @@ export default function WorkshopCard({
 
           {/* Active-deletion overlay */}
           {isDeleting && (
-            <div className="pointer-events-none absolute inset-0 z-[3] flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-sm">
-              <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/20 border-t-danger shadow-lg" />
+            <div className="pointer-events-none absolute inset-0 z-3 flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-sm">
+              <div className="size-10 animate-spin rounded-full border-3 border-white/20 border-t-danger shadow-lg" />
               <div className="text-sm font-bold text-white drop-shadow-lg">
                 {t("labels.deleting") || "Deleting…"}
               </div>
@@ -291,8 +291,8 @@ export default function WorkshopCard({
 
           {/* Installed: quick actions */}
           {installed && !item.is_collection && !isDownloading && (
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-[2] flex items-center pr-2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
-              <div className="pointer-events-auto flex flex-col gap-[0.375rem]">
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-2 flex translate-x-2 items-center pr-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
+              <div className="pointer-events-auto flex flex-col gap-1.5">
                 <QuickIcon
                   onClick={(e) => {
                     e.stopPropagation();
@@ -300,7 +300,7 @@ export default function WorkshopCard({
                   }}
                   tooltip={t("tooltips.install_wallpaper")}
                 >
-                  <Play className="h-[1em] w-[1em]" />
+                  <Play className="size-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -310,7 +310,7 @@ export default function WorkshopCard({
                   tooltip={t("tooltips.extract_wallpaper")}
                   disabled={!installed.has_pkg}
                 >
-                  <Package className="h-[1em] w-[1em]" />
+                  <Package className="size-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -319,7 +319,7 @@ export default function WorkshopCard({
                   }}
                   tooltip={t("tooltips.open_folder")}
                 >
-                  <FolderOpen className="h-[1em] w-[1em]" />
+                  <FolderOpen className="size-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -328,7 +328,7 @@ export default function WorkshopCard({
                   }}
                   tooltip={t("buttons.copy_id")}
                 >
-                  <Copy className="h-[1em] w-[1em]" />
+                  <Copy className="size-[1em]" />
                 </QuickIcon>
                 <QuickIcon
                   onClick={(e) => {
@@ -338,7 +338,7 @@ export default function WorkshopCard({
                   tooltip={t("tooltips.delete_wallpaper")}
                   danger
                 >
-                  <Trash2 className="h-[1em] w-[1em]" />
+                  <Trash2 className="size-[1em]" />
                 </QuickIcon>
               </div>
             </div>
@@ -346,7 +346,7 @@ export default function WorkshopCard({
 
           {/* Non-installed: centered hover overlay with Install + Details. */}
           {!(installed && !item.is_collection) && !isDownloading && (
-            <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
+            <div className="pointer-events-none absolute inset-0 z-2 flex items-center justify-center">
               <div className="pointer-events-auto flex items-center gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <button
                   type="button"
@@ -356,13 +356,13 @@ export default function WorkshopCard({
                   }}
                   disabled={isDownloading}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground backdrop-blur-sm ring-2 ring-white/20 transition-all duration-200 hover:scale-105",
+                    "inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground ring-2 ring-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105",
                     isDownloading && "cursor-not-allowed opacity-60",
                     (hideDownload || item.is_collection) &&
-                      "invisible w-0 px-0 gap-0 opacity-0 pointer-events-none",
+                      "pointer-events-none invisible w-0 gap-0 px-0 opacity-0",
                   )}
                 >
-                  <Download className="h-3.5 w-3.5" />
+                  <Download className="size-3.5" />
                   {t("labels.install")}
                 </button>
                 <button
@@ -373,7 +373,7 @@ export default function WorkshopCard({
                   }}
                   className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white shadow-lg ring-1 ring-white/30 transition-all duration-200 hover:scale-105 hover:bg-white/30"
                 >
-                  <Eye className="h-3.5 w-3.5" />
+                  <Eye className="size-3.5" />
                   {t("labels.details")}
                 </button>
               </div>
@@ -382,9 +382,9 @@ export default function WorkshopCard({
 
           {/* Название и автор поверх изображения */}
           {!isDownloading && (
-            <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12">
+            <div className="absolute inset-x-0 bottom-0 z-1 flex flex-col gap-0.5 px-2.5 pt-6 pr-12 pb-2.5">
               <h3
-                className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg"
+                className="line-clamp-2 text-[13px] leading-tight font-bold text-white drop-shadow-lg"
               >
                 {item.title || "—"}
               </h3>
@@ -395,8 +395,8 @@ export default function WorkshopCard({
                   {item.author || "—"}
                 </span>
                 {item.num_ratings && (
-                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/40 px-1.5 py-0.5 font-semibold text-warning backdrop-blur-sm ring-1 ring-white/20">
-                    <Star className="h-2.5 w-2.5 fill-current" />
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/40 px-1.5 py-0.5 font-semibold text-warning ring-1 ring-white/20 backdrop-blur-sm">
+                    <Star className="size-2.5 fill-current" />
                     {item.num_ratings}
                   </span>
                 )}
@@ -431,8 +431,8 @@ function QuickIcon({
       disabled={disabled}
       aria-label={tooltip}
       className={cn(
-        "inline-flex aspect-square w-[clamp(1.75rem,8cqw,2rem)] items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
-        disabled && "opacity-40 cursor-not-allowed hover:scale-100",
+        "inline-flex aspect-square w-[clamp(1.75rem,8cqw,2rem)] items-center justify-center rounded-lg bg-black/60 text-white shadow-lg ring-1 ring-white/20 backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
+        disabled && "cursor-not-allowed opacity-40 hover:scale-100",
         danger && "text-danger hover:bg-danger/80 hover:text-white",
       )}
     >

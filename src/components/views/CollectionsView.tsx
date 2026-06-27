@@ -282,10 +282,10 @@ export default function CollectionsView() {
               else setOpened(null);
             }}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-4" />
             {t("labels.back")}
           </button>
-          <Layers className="h-4 w-4 text-primary" />
+          <Layers className="size-4 text-primary" />
           <button
             type="button"
             onClick={() => setShowInfo(true)}
@@ -293,7 +293,7 @@ export default function CollectionsView() {
             title={t("labels.collection_info") || "Collection info"}
           >
             {opened.title}
-            <Info className="h-3 w-3 text-subtle" />
+            <Info className="size-3 text-subtle" />
           </button>
           <span className="text-xs text-subtle">
             {t("labels.items_count", { count: opened.items.length })}
@@ -494,14 +494,14 @@ function CollectionVirtualGrid({
 
   if (items.length === 0) {
     return (
-      <div className="flex-1 flex h-64 items-center justify-center text-sm text-muted">
+      <div className="flex h-64 flex-1 items-center justify-center text-sm text-muted">
         {emptyLabel}
       </div>
     );
   }
 
   return (
-    <div ref={setContainer} className="flex-1 overflow-auto px-4 py-3 relative">
+    <div ref={setContainer} className="relative flex-1 overflow-auto px-4 py-3">
       <div style={{ height: `${totalHeight}px`, width: "100%", position: "relative" }}>
         {visibleItems.map(({ item, index }) => {
           const row = Math.floor(index / cols);

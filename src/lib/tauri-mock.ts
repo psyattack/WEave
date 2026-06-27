@@ -12,9 +12,6 @@ export const mockOpenUrlFn = vi.fn();
 export function getMockDialogResult() {
   return mockDialogResult;
 }
-export function getMockOpenUrlFn() {
-  return mockOpenUrlFn;
-}
 
 export const mockWindowInstance = {
   minimize: vi.fn().mockResolvedValue(undefined),
@@ -58,10 +55,4 @@ export function setMockDialogResult(result: string | string[] | null) {
   mockDialogResult = result;
 }
 
-export function getMockOpenUrlCalls() {
-  return mockOpenUrlFn.mock.calls.map((c) => c[0]);
-}
 
-export function getMockWindow() {
-  return mockWindowInstance;
-}

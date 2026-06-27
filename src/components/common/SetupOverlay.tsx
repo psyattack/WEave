@@ -65,12 +65,12 @@ export default function SetupOverlay() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/95 backdrop-blur-sm"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-background/95 backdrop-blur-sm"
         >
           <div className="flex w-full max-w-md flex-col items-center gap-6 px-6">
             {/* Spinner */}
             <motion.div
-              className="h-16 w-16 rounded-full border-4 border-primary border-t-transparent"
+              className="size-16 rounded-full border-4 border-primary border-t-transparent"
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
             />

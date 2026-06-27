@@ -138,9 +138,9 @@ function KeyCapture({
       type="button"
       onClick={() => setCapturing(true)}
       className={cn(
-        "flex h-8 min-w-[120px] items-center justify-center rounded-md border px-3 text-xs font-mono",
+        "flex h-8 min-w-30 items-center justify-center rounded-md border px-3 font-mono text-xs",
         capturing
-          ? "border-primary bg-primary/10 text-primary animate-pulse"
+          ? "animate-pulse border-primary bg-primary/10 text-primary"
           : "border-border bg-surface-sunken text-foreground hover:border-primary/50",
       )}
       title={
@@ -151,12 +151,12 @@ function KeyCapture({
     >
       {capturing ? (
         <span className="flex items-center gap-1.5">
-          <Keyboard className="h-3 w-3" />
+          <Keyboard className="size-3" />
           {t("settings.hotkeys_press_key")}
         </span>
       ) : (
         <span className="flex items-center gap-1.5">
-          {value?.startsWith("Mouse") && <Mouse className="h-3 w-3" />}
+          {value?.startsWith("Mouse") && <Mouse className="size-3" />}
           {formatBinding(displayValue)}
         </span>
       )}
@@ -227,10 +227,10 @@ function HotkeyRow({
         <button
           type="button"
           onClick={onClear}
-          className="btn-icon h-8 w-8"
+          className="btn-icon size-8"
           title={t("settings.hotkeys_reset_to_default")}
         >
-          <RotateCcw className="h-3.5 w-3.5" />
+          <RotateCcw className="size-3.5" />
         </button>
       )}
     </div>
@@ -257,14 +257,14 @@ export default function HotkeysSettings() {
           onClick={resetToDefaults}
           className="flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs text-subtle hover:bg-surface-raised"
         >
-          <RotateCcw className="h-3 w-3" />
+          <RotateCcw className="size-3" />
           {t("settings.hotkeys_reset") || "Reset All"}
         </button>
       </div>
 
       {ACTION_GROUPS.map((group) => (
         <div key={group.labelKey} className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-subtle">
+          <p className="text-xs font-medium tracking-wide text-subtle uppercase">
             {t(group.labelKey as any) || group.fallback}
           </p>
           <div className="divide-y divide-border rounded-md border border-border bg-surface-sunken px-3">

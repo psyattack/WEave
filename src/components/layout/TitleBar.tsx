@@ -78,7 +78,7 @@ export default function TitleBar() {
   return (
     <div
       data-tauri-drag-region
-      className="titlebar relative flex h-9 select-none items-center border-b border-border"
+      className="titlebar relative flex h-9 items-center border-b border-border select-none"
     >
       <div
         data-tauri-drag-region
@@ -99,7 +99,7 @@ export default function TitleBar() {
             onClick={minimize}
             aria-label={t("window.minimize")}
           >
-            <Minus className="h-3.5 w-3.5" />
+            <Minus className="size-3.5" />
           </button>
           <button
             className="titlebar-btn"
@@ -107,9 +107,9 @@ export default function TitleBar() {
             aria-label={maximized ? t("window.restore") : t("window.maximize")}
           >
             {maximized ? (
-              <Square className="h-3 w-3" />
+              <Square className="size-3" />
             ) : (
-              <Maximize2 className="h-3 w-3" />
+              <Maximize2 className="size-3" />
             )}
           </button>
           <button
@@ -117,7 +117,7 @@ export default function TitleBar() {
             onClick={close}
             aria-label={t("window.close")}
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="size-3.5" />
           </button>
         </div>
       )}

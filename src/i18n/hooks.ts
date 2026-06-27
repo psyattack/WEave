@@ -1,7 +1,6 @@
 import { useTranslation as useI18nextTranslation } from "react-i18next";
 import type { i18n as I18n } from "i18next";
 import type { TranslationKey, InterpolationParams } from "./types";
-import i18n from "./index";
 
 /**
  * Type-safe wrapper around useTranslation hook.
@@ -28,14 +27,4 @@ export function useTranslation(): {
   return { t, i18n };
 }
 
-/**
- * Get translation asynchronously outside of React components.
- * Use sparingly - prefer useTranslation hook in components.
- */
-export async function translate<K extends TranslationKey>(
-  key: K,
-  ...args: InterpolationParams<K> extends void ? [] : [InterpolationParams<K>]
-): Promise<string> {
-  const params = args[0];
-  return String(i18n.t(key, params as never));
-}
+

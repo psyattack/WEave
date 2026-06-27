@@ -130,7 +130,7 @@ export default function InstalledView() {
       ) : filtered.length === 0 ? (
         <div className="flex-1 overflow-auto px-4 py-3">
           <div className="flex h-64 flex-col items-center justify-center gap-2 text-center text-sm text-muted">
-            <Package className="h-10 w-10 text-subtle" />
+            <Package className="size-10 text-subtle" />
             {t("labels.no_wallpapers_found")}
           </div>
         </div>
@@ -151,14 +151,14 @@ export default function InstalledView() {
         />
       )}
 
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex h-10 items-center gap-3 rounded-full bg-background/50 backdrop-blur-2xl border border-white/10 px-5 shadow-2xl transition-all">
+      <div className="absolute bottom-3 left-1/2 z-30 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-background/50 px-5 shadow-2xl backdrop-blur-2xl transition-all">
         <span className="text-[11px] font-medium text-foreground/80">
           {t("labels.wallpapers_filtered", {
             filtered: filtered.length,
             total: items.length,
           })}
         </span>
-        <div className="w-[1px] h-3 bg-white/20" />
+        <div className="h-3 w-px bg-white/20" />
         <span className="text-[11px] font-medium text-white/70">
           {t("labels.total_size", { size: formatBytes(totalSize) })}
         </span>

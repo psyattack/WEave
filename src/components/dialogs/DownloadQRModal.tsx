@@ -73,8 +73,8 @@ export function DownloadQRModal({
       <AnimatePresence>
         {open && (
           <Dialog.Portal forceMount>
-            <Dialog.Overlay className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity" />
-            <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <Dialog.Overlay className="fixed inset-0 z-100 bg-background/80 backdrop-blur-sm transition-opacity" />
+            <div className="pointer-events-none fixed inset-0 z-100 flex items-center justify-center p-4">
               <Dialog.Content
                 asChild
                 onInteractOutside={(e) => {
@@ -85,33 +85,33 @@ export function DownloadQRModal({
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-xl relative"
+                  className="pointer-events-auto relative w-full max-w-sm overflow-hidden rounded-xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-xl"
                 >
                   <button
                     onClick={handleCancel}
                     disabled={busy}
-                    className="absolute right-4 top-4 rounded-full p-1 opacity-70 hover:bg-white/10 hover:opacity-100 disabled:pointer-events-none disabled:opacity-50 transition-all"
+                    className="absolute top-4 right-4 rounded-full p-1 opacity-70 transition-all hover:bg-white/10 hover:opacity-100 disabled:pointer-events-none disabled:opacity-50"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="size-4" />
                   </button>
                   <div className="p-6">
                     <div className="mb-6 flex flex-col items-center text-center">
-                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/50 text-accent-foreground ring-4 ring-background">
-                        <QrCode className="h-6 w-6" />
+                      <div className="bg-accent/50 text-accent-foreground mb-4 flex size-12 items-center justify-center rounded-full ring-4 ring-background">
+                        <QrCode className="size-6" />
                       </div>
                       <Dialog.Title className="mb-1 text-lg font-semibold tracking-tight">
                         {t("settings.login_qr") || "Login with QR"}
                       </Dialog.Title>
-                      <Dialog.Description className="text-sm text-muted-foreground max-w-[250px]">
+                      <Dialog.Description className="text-muted-foreground max-w-62.5 text-sm">
                         {t("settings.login_qr_desc") || "Scan this code with your Steam Mobile App to sign in."}
                       </Dialog.Description>
                     </div>
 
-                    <div className="relative mb-6 flex justify-center w-full">
-                      <div className="bg-white p-3 rounded-lg overflow-auto max-w-full">
+                    <div className="relative mb-6 flex w-full justify-center">
+                      <div className="max-w-full overflow-auto rounded-lg bg-white p-3">
                         {qrData ? (
                           <pre
-                            className="text-black font-mono whitespace-pre select-none m-0"
+                            className="m-0 font-mono whitespace-pre text-black select-none"
                             style={{
                               fontSize: "7px",
                               // Each dark module is rendered as two characters
@@ -126,7 +126,7 @@ export function DownloadQRModal({
                             {qrData}
                           </pre>
                         ) : (
-                          <div className="flex h-40 w-40 items-center justify-center text-xs text-gray-500">
+                          <div className="flex size-40 items-center justify-center text-xs text-gray-500">
                             {t("settings.generating_qr") || "Generating QR code…"}
                           </div>
                         )}

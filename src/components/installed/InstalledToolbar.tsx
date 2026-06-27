@@ -147,8 +147,8 @@ export default function InstalledToolbar({
   return (
     <div className="flex flex-col gap-2 px-4 py-3 pb-1.5">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+        <div className="relative min-w-55 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -168,7 +168,7 @@ export default function InstalledToolbar({
             type="button"
             onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
             className={cn(
-              "flex h-[38px] items-center gap-2 rounded-md bg-surface-sunken border border-border px-3 py-2 text-sm outline-none hover:border-border-strong transition-colors",
+              "flex h-9.5 items-center gap-2 rounded-md border border-border bg-surface-sunken px-3 py-2 text-sm transition-colors outline-none hover:border-border-strong",
             )}
           >
             <motion.span
@@ -179,9 +179,9 @@ export default function InstalledToolbar({
               className="inline-flex"
             >
               {sortOrder === "asc" ? (
-                <ArrowUpAZ className="h-4 w-4" />
+                <ArrowUpAZ className="size-4" />
               ) : (
-                <ArrowDownAZ className="h-4 w-4" />
+                <ArrowDownAZ className="size-4" />
               )}
             </motion.span>
           </button>
@@ -190,7 +190,7 @@ export default function InstalledToolbar({
           value={sort}
           onValueChange={(v) => setSort(v as LocalSortKey)}
           options={sortOptions}
-          icon={<SortAsc className="h-4 w-4 text-muted" />}
+          icon={<SortAsc className="size-4 text-muted" />}
         />
         <Select
           value={category}
@@ -223,7 +223,7 @@ export default function InstalledToolbar({
             )}
             aria-label={t("tooltips.select_multiple")}
           >
-            <CheckSquare className="h-5 w-5" />
+            <CheckSquare className="size-5" />
           </button>
         </Tooltip>
         {/* Init Metadata */}
@@ -241,11 +241,11 @@ export default function InstalledToolbar({
             className="btn-icon"
             aria-label={t("settings.initialize_now") || "Initialize metadata"}
           >
-            <Database className="h-5 w-5" />
+            <Database className="size-5" />
           </button>
         </Tooltip>
         <div className={cn(
-          "flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/50 rounded-md",
+          "flex items-center rounded-md transition-all focus-within:ring-2 focus-within:ring-primary/50",
           hasActiveFilters && "border border-border/80"
         )}>
           <button
@@ -253,26 +253,26 @@ export default function InstalledToolbar({
             onClick={() => setShowAdvanced((v) => !v)}
             aria-label="Filters"
             className={cn(
-              "relative flex h-[38px] w-[38px] items-center justify-center outline-none transition-colors disabled:opacity-50 disabled:pointer-events-none",
-              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-surface-raised",
+              "relative flex size-9.5 items-center justify-center transition-colors outline-none disabled:pointer-events-none disabled:opacity-50",
+              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:bg-surface-raised hover:text-foreground",
               hasActiveFilters ? "rounded-l-[5px]" : "rounded-md"
             )}
             aria-expanded={showAdvanced}
             disabled={!hasAnyExtraTags}
           >
-            <Filter className="h-5 w-5" />
+            <Filter className="size-5" />
             {activeFiltersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
                 {activeFiltersCount}
               </span>
             )}
           </button>
           {hasActiveFilters && (
             <>
-              <div className="h-[22px] w-[1px] bg-border/80" />
+              <div className="h-5.5 w-px bg-border/80" />
               <button
                 type="button"
-                className="flex h-[38px] w-[38px] items-center justify-center rounded-r-[5px] outline-none transition-colors text-muted hover:bg-danger/15 hover:text-danger"
+                className="flex size-9.5 items-center justify-center rounded-r-[5px] text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger"
                 onClick={() => {
                   setTagFilters([]);
                   setExcludedTagFilters([]);
@@ -286,7 +286,7 @@ export default function InstalledToolbar({
                 }}
                 aria-label={t("labels.clear")}
               >
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </>
           )}
@@ -379,12 +379,12 @@ function FilterChipsRow({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5 px-0 py-0",
+        "flex flex-wrap items-center gap-1.5 p-0",
         isFirst && "pt-1",
         isLast && "pb-0",
       )}
     >
-      <span className="text-[11px] uppercase tracking-wide text-subtle">
+      <span className="text-[11px] tracking-wide text-subtle uppercase">
         {title}
       </span>
       {keys.map((k) => {
@@ -398,7 +398,7 @@ function FilterChipsRow({
             type="button"
             onClick={() => toggle(k)}
             className={cn(
-              "chip cursor-pointer select-none text-[11px] transition-colors",
+              "chip cursor-pointer text-[11px] transition-colors select-none",
               !isIncluded && !isExcluded && "hover:bg-surface",
               isIncluded && "border-primary/60 bg-primary/15 text-foreground",
               isExcluded &&

@@ -73,7 +73,7 @@ export default function CollectionInfoDialog({
               key={collection.preview_url}
               src={collection.preview_url}
               alt={collection.title}
-              className="aspect-[16/9] w-full object-cover"
+              className="aspect-video w-full object-cover"
             />
           </div>
         )}
@@ -84,7 +84,7 @@ export default function CollectionInfoDialog({
           onClick={openWorkshop}
           className="flex items-center justify-center gap-2 rounded-lg border border-border-strong bg-surface px-4 py-2.5 text-sm font-semibold hover:bg-surface-raised"
         >
-          <ExternalLink className="h-4 w-4" />
+          <ExternalLink className="size-4" />
           {t("buttons.open_workshop")}
         </button>
 
@@ -101,13 +101,13 @@ export default function CollectionInfoDialog({
           {/* Author */}
           {collection.author && (
             <div className="col-span-2 flex items-center gap-2">
-              <User className="h-3.5 w-3.5 text-subtle" />
+              <User className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("labels.author", { author: "" })}
               </span>
               <button
                 type="button"
-                className="font-semibold text-primary hover:underline disabled:opacity-60 disabled:no-underline"
+                className="font-semibold text-primary hover:underline disabled:no-underline disabled:opacity-60"
                 disabled={!collection.author_url}
                 onClick={goAuthor}
               >
@@ -119,7 +119,7 @@ export default function CollectionInfoDialog({
           {/* Rating */}
           {ratingStars > 0 && (
             <div className="flex items-center gap-2">
-              <Star className="h-3.5 w-3.5 text-subtle" />
+              <Star className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.rating")}:
               </span>
@@ -127,7 +127,7 @@ export default function CollectionInfoDialog({
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-3.5 w-3.5 ${
+                    className={`size-3.5 ${
                       i < ratingStars
                         ? "fill-yellow-500 text-yellow-500"
                         : "text-border"
@@ -143,7 +143,7 @@ export default function CollectionInfoDialog({
 
           {/* Items Count */}
           <div className="flex items-center gap-2">
-            <Package className="h-3.5 w-3.5 text-subtle" />
+            <Package className="size-3.5 text-subtle" />
             <span className="text-subtle">{t("collection_stats.items")}:</span>
             <span className="font-semibold text-foreground">
               {collection.items.length}
@@ -153,7 +153,7 @@ export default function CollectionInfoDialog({
           {/* Statistics Row 1 */}
           {info.unique_visitors && (
             <div className="flex items-center gap-2">
-              <Eye className="h-3.5 w-3.5 text-subtle" />
+              <Eye className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.visitors")}:
               </span>
@@ -163,7 +163,7 @@ export default function CollectionInfoDialog({
 
           {info.subscribers && (
             <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-subtle" />
+              <Users className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.subscribers")}:
               </span>
@@ -174,7 +174,7 @@ export default function CollectionInfoDialog({
           {/* Statistics Row 2 */}
           {info.favorited && (
             <div className="flex items-center gap-2">
-              <Heart className="h-3.5 w-3.5 text-subtle" />
+              <Heart className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.favorited")}:
               </span>
@@ -184,7 +184,7 @@ export default function CollectionInfoDialog({
 
           {info.total_favorited && info.total_favorited !== info.favorited && (
             <div className="flex items-center gap-2">
-              <Heart className="h-3.5 w-3.5 text-subtle" />
+              <Heart className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.total")}:
               </span>
@@ -195,7 +195,7 @@ export default function CollectionInfoDialog({
           {/* Dates */}
           {info.posted_date && (
             <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-subtle" />
+              <Calendar className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.posted")}:
               </span>
@@ -205,7 +205,7 @@ export default function CollectionInfoDialog({
 
           {info.updated_date && (
             <div className="flex items-center gap-2">
-              <RefreshCw className="h-3.5 w-3.5 text-subtle" />
+              <RefreshCw className="size-3.5 text-subtle" />
               <span className="text-subtle">
                 {t("collection_stats.updated")}:
               </span>
@@ -247,13 +247,13 @@ export default function CollectionInfoDialog({
                     key={tagKey}
                     className="flex flex-wrap items-center gap-1"
                   >
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-subtle">
+                    <span className="text-[10px] font-semibold tracking-wide text-subtle uppercase">
                       {translateTagCategory(tagKey, i18n)}:
                     </span>
                     {values.map((v, i) => (
                       <span
                         key={`${v}-${i}`}
-                        className="chip !py-0 text-[11px]"
+                        className="chip py-0! text-[11px]"
                       >
                         {translateTagValue(v, tagKey, i18n)}
                       </span>
@@ -266,7 +266,7 @@ export default function CollectionInfoDialog({
 
         {/* Description */}
         {collection.description ? (
-          <div className="max-h-60 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-surface-sunken/50 p-3 text-xs leading-relaxed text-foreground">
+          <div className="max-h-60 overflow-auto rounded-lg border border-border bg-surface-sunken/50 p-3 text-xs leading-relaxed whitespace-pre-wrap text-foreground">
             {collection.description}
           </div>
         ) : (

@@ -53,20 +53,20 @@ export default function MetadataInitDialog() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
         >
           <motion.div
             key="metadata-init-dialog"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="pointer-events-auto relative w-full max-w-md rounded-lg bg-surface-elevated/95 backdrop-blur-md border border-border p-6 shadow-xl"
+            className="bg-surface-elevated/95 pointer-events-auto relative w-full max-w-md rounded-lg border border-border p-6 shadow-xl backdrop-blur-md"
           >
             <div className="flex flex-col items-center gap-4 text-center">
               {/* Icon */}
-              <div className="flex h-16 w-16 items-center justify-center">
+              <div className="flex size-16 items-center justify-center">
                 {phase === "initializing" && (
-                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                  <Loader2 className="size-12 animate-spin text-primary" />
                 )}
                 {phase === "complete" && (
                   <motion.div
@@ -74,7 +74,7 @@ export default function MetadataInitDialog() {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                   >
-                    <CheckCircle2 className="h-12 w-12 text-green-500" />
+                    <CheckCircle2 className="size-12 text-green-500" />
                   </motion.div>
                 )}
                 {phase === "error" && (
@@ -83,7 +83,7 @@ export default function MetadataInitDialog() {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                   >
-                    <XCircle className="h-12 w-12 text-red-500" />
+                    <XCircle className="size-12 text-red-500" />
                   </motion.div>
                 )}
               </div>

@@ -140,7 +140,7 @@ export default function InstalledGrid({
   }, [items, scrollTop, dimensions.height, cols, totalRows, itemHeight]);
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-auto px-4 py-3 relative">
+    <div ref={containerRef} className="relative flex-1 overflow-auto px-4 py-3">
       <div
         style={{
           height: `${totalHeight}px`,

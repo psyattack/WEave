@@ -138,7 +138,7 @@ function renderBlock(b: Block, idx: number) {
     }
     case "para":
       return (
-        <p className="mb-2 mt-1 text-sm">{renderInline(b.text)}</p>
+        <p className="mt-1 mb-2 text-sm">{renderInline(b.text)}</p>
       );
     case "list":
       if (b.ordered) {
@@ -168,7 +168,7 @@ function renderBlock(b: Block, idx: number) {
       );
     case "quote":
       return (
-        <blockquote className="mb-2 border-l-2 border-border-strong pl-3 text-sm italic text-muted">
+        <blockquote className="mb-2 border-l-2 border-border-strong pl-3 text-sm text-muted italic">
           {renderInline(b.text)}
         </blockquote>
       );

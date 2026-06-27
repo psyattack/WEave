@@ -82,7 +82,7 @@ export default function WallpaperCard({
         animationDelay: `${index * 0.05}s`,
       }}
       className={cn(
-        "card card-hover group relative flex flex-col overflow-hidden cursor-pointer",
+        "card card-hover group relative flex cursor-pointer flex-col overflow-hidden",
         enableLayoutAnimations
           ? "transition-all duration-300 ease-out"
           : "transition-[border-color,box-shadow] duration-200",
@@ -90,44 +90,44 @@ export default function WallpaperCard({
         selectionMode && isBulkSelected && "ring-2 ring-primary",
       )}
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-[inherit] [-webkit-mask-image:-webkit-radial-gradient(white,black)] bg-surface-sunken">
+      <div className="relative aspect-square w-full overflow-hidden rounded-[inherit] bg-surface-sunken [-webkit-mask-image:-webkit-radial-gradient(white,black)]">
         <PreviewImage
           key={item.preview}
           src={item.preview}
           alt={item.title}
-          className="h-full w-full scale-[1.02] object-cover transition-all duration-700 ease-out group-hover:scale-[1.15] group-hover:brightness-75 rounded-[inherit]"
+          className="size-full scale-[1.02] rounded-[inherit] object-cover transition-all duration-700 ease-out group-hover:scale-[1.15] group-hover:brightness-75"
         />
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-90" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-90" />
 
         {/* Checkbox for bulk actions */}
         {selectionMode && (
-          <div className="absolute right-2 top-2 z-[3]">
+          <div className="absolute top-2 right-2 z-3">
             <div
               className={cn(
-                "flex h-5 w-5 items-center justify-center rounded border-2 transition-all",
+                "flex size-5 items-center justify-center rounded border-2 transition-all",
                 isBulkSelected
-                  ? "bg-primary border-primary"
-                  : "bg-black/40 border-white/40 backdrop-blur-sm",
+                  ? "border-primary bg-primary"
+                  : "border-white/40 bg-black/40 backdrop-blur-sm",
               )}
             >
-              {isBulkSelected && <Check className="h-3.5 w-3.5 text-white" />}
+              {isBulkSelected && <Check className="size-3.5 text-white" />}
             </div>
           </div>
         )}
 
         {/* File size */}
-        <div className="absolute left-2 top-1.5 z-[2]">
-          <span className="inline-flex items-center rounded-full bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur-sm ring-1 ring-white/20">
+        <div className="absolute top-1.5 left-2 z-2">
+          <span className="inline-flex items-center rounded-full bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-sm">
             {formatBytes(item.size_bytes)}
           </span>
         </div>
 
         {/* Quick Actions */}
         {!selectionMode && (
-          <div className="absolute inset-y-0 right-0 z-[2] flex items-center pr-2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
-            <div className="flex flex-col gap-[0.375rem]">
+          <div className="absolute inset-y-0 right-0 z-2 flex translate-x-2 items-center pr-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
+            <div className="flex flex-col gap-1.5">
               <IconBtn
                 onClick={(e) => {
                   e.stopPropagation();
@@ -135,7 +135,7 @@ export default function WallpaperCard({
                 }}
                 tooltip={t("tooltips.install_wallpaper")}
               >
-                <Play className="h-[1em] w-[1em]" />
+                <Play className="size-[1em]" />
               </IconBtn>
               <IconBtn
                 onClick={(e) => {
@@ -145,7 +145,7 @@ export default function WallpaperCard({
                 tooltip={t("tooltips.extract_wallpaper")}
                 disabled={!item.has_pkg}
               >
-                <Package className="h-[1em] w-[1em]" />
+                <Package className="size-[1em]" />
               </IconBtn>
               <IconBtn
                 onClick={(e) => {
@@ -154,7 +154,7 @@ export default function WallpaperCard({
                 }}
                 tooltip={t("tooltips.open_folder")}
               >
-                <FolderOpen className="h-[1em] w-[1em]" />
+                <FolderOpen className="size-[1em]" />
               </IconBtn>
               <IconBtn
                 onClick={(e) => {
@@ -163,7 +163,7 @@ export default function WallpaperCard({
                 }}
                 tooltip={t("buttons.copy_id")}
               >
-                <Copy className="h-[1em] w-[1em]" />
+                <Copy className="size-[1em]" />
               </IconBtn>
               <IconBtn
                 onClick={(e) => {
@@ -173,16 +173,16 @@ export default function WallpaperCard({
                 tooltip={t("tooltips.delete_wallpaper")}
                 kind="danger"
               >
-                <Trash2 className="h-[1em] w-[1em]" />
+                <Trash2 className="size-[1em]" />
               </IconBtn>
             </div>
           </div>
         )}
 
         {/* Title and author overlay */}
-        <div className="absolute bottom-0 left-0 right-0 z-[1] flex flex-col gap-0.5 px-2.5 pb-2.5 pt-6 pr-12">
+        <div className="absolute inset-x-0 bottom-0 z-1 flex flex-col gap-0.5 px-2.5 pt-6 pr-12 pb-2.5">
           <h3
-            className="line-clamp-2 text-[13px] font-bold leading-tight text-white drop-shadow-lg"
+            className="line-clamp-2 text-[13px] leading-tight font-bold text-white drop-shadow-lg"
           >
             {item.title}
           </h3>
@@ -218,8 +218,8 @@ function IconBtn({
       disabled={disabled}
       aria-label={tooltip}
       className={cn(
-        "inline-flex aspect-square w-[clamp(1.75rem,8cqw,2rem)] items-center justify-center rounded-lg bg-black/60 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
-        disabled && "opacity-40 cursor-not-allowed hover:scale-100",
+        "inline-flex aspect-square w-[clamp(1.75rem,8cqw,2rem)] items-center justify-center rounded-lg bg-black/60 text-white shadow-lg ring-1 ring-white/20 backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-black/80 hover:ring-white/40",
+        disabled && "cursor-not-allowed opacity-40 hover:scale-100",
         kind === "danger" && "text-danger hover:bg-danger/80 hover:text-white",
       )}
     >
