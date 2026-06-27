@@ -230,16 +230,16 @@ export default {
     account: "Account",
     steam_session: "Steam web session",
     steam_session_description:
-      "Log in to Steam so authenticated Workshop browsing (age-gated items) works the same as in a browser.",
+      "Log in to Steam for the parser to view 18+ content.",
     download_account: "Download account",
     download_account_description:
-      "Pick a Steam account used for downloading. Custom credentials can be added below.",
-    infinite_retry_accounts: "Infinite retry",
-    infinite_retry_accounts_hint: "Iterate accounts infinitely in a loop (or reconnect to a custom one)",
+      "Pick a Steam account used for downloading.",
+    infinite_retry_accounts: "Endless download attempts",
+    infinite_retry_accounts_hint: "Iterate through accounts to upload endlessly in a loop (or reconnect to a custom one)",
     add_custom_account: "Add custom account",
-    add_custom_account_title: "Add download account",
+    add_custom_account_title: "Steam download account",
     add_custom_account_description:
-      "Enter the Steam credentials for an account used for downloading, or scan the QR code with the Steam Mobile App.",
+      "Enter the Steam credentials.",
     custom_badge: "custom",
     auto_account: "Auto",
     signed_in: "Signed in",
@@ -249,7 +249,7 @@ export default {
     relogin: "Relogin to system account",
     login_button: "Login",
     login_title: "Steam Login",
-    login_description: "Enter your Steam account credentials to log in to the parser without opening the browser window.",
+    login_description: "Enter your Steam account credentials to log in to the parser.",
     login_2fa_description: "Enter your Steam Guard code or confirm the login on your mobile device.",
     steam_guard_help: "If Steam Guard mobile confirmation is requested, just confirm it on your phone and wait.",
     steam_guard_code: "Code from mobile app or email",
@@ -499,14 +499,14 @@ export default {
   },
   faq: {
     login_issues_q: "Steam login error occurs in the app",
-    login_issues_a: "If you do not need 18+ content, you don't have to worry about this and can simply ignore it.\n\nIf you need 18+ content, try these options one by one:\n\n1) Simply restart the program\n2) Go to the settings and click \"Relogin\"\n3) Open the data folder (the \"Open Data folder\" button in the \"About\" window) and delete the «SteamWebView» folder (after closing WEave) (this will reset the built-in browser cache). Restart the program.\n\nIf the issue persists for a long time, there are likely problems with the parser's system account. Try providing your own Steam account in the parser settings (Accounts -> Login). You can use any account (even a dummy one), as long as there are no restrictions on 18+ content in your account settings.\n\nIf necessary, more system accounts with automatic selection will be created in the future.",
+    login_issues_a: "If you do not need 18+ content, you don't have to worry about this and can simply ignore it.\n\nIf you need 18+ content, try these options one by one:\n\n1) Simply restart the program\n2) Go to the settings and click \"Relogin to system account\"\n3) Open the data folder (the \"Open Data folder\" button in the \"About\" window) and delete the «SteamWebView» folder (after closing WEave) (this will reset the built-in browser cache). Restart the program.\n\nIf the issue persists for a long time, there are likely problems with the parser's system account. Try providing your own Steam account in the parser settings (Accounts -> Login). You can use any account (even a dummy one), as long as there are no restrictions on 18+ content in your account settings.\n\nIf necessary, more system accounts with automatic selection will be created in the future.",
     extract_q: "Why does the \"Extract\" button not work for some downloaded wallpapers?",
     extract_a: "Not all wallpapers in the Workshop are full-fledged projects (with a project.json file). There are video wallpapers (MP4) or web wallpapers (HTML). They are already ready to use, and there is no need (and technically impossible) to unpack them as Wallpaper Engine projects.",
     storage_q: "Where are downloaded wallpapers stored?",
     storage_a: "All downloaded wallpapers are saved directly to the root Wallpaper Engine folder in the \"projects/myprojects\" directory. They immediately become available in the official application without any additional actions on your part.",
     visibility_q: "Wallpapers are downloaded, but they are not visible in the original application",
-    visibility_a: "Make sure that in the Settings (System & Integration) you have specified the correct path to the Wallpaper Engine folder. The path must point to the root folder where the executable files (wallpaper32.exe / wallpaper64.exe) are located.",
+    visibility_a: "Make sure that in the Settings you have specified the correct path to the Wallpaper Engine folder. The path must point to the root folder where the executable files (wallpaper32.exe / wallpaper64.exe) are located.",
     download_issues_q: "What to do if wallpapers won't download?",
-    download_issues_a: "Try again, maybe wait a little bit.\n\nIt's possible that the passwords for the system download accounts have expired. In this case, you can:\n\n1) Add a friend's account or your own account with a copy of Wallpaper Engine (Account -> Add custom account)\n2) Buy an offline activation of Wallpaper Engine on various marketplaces and add it using the method above (They are very cheap)\n3) Write an Issue in the GitHub repository and I will try to promptly update the working accounts"
+    download_issues_a: "Try again, maybe wait a little bit.\n\nIt's possible that the passwords for the system download accounts have expired. In this case, you can:\n\n1) Add a friend's account or your own account with a copy of Wallpaper Engine in settings\n2) Buy an offline activation of Wallpaper Engine on various marketplaces and add it using the method above (They are very cheap)\n3) Write an Issue in the GitHub repository and I will try to promptly update the working accounts"
   },
 } as const;
