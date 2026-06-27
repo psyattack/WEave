@@ -8,7 +8,6 @@ import {
   Play,
   Trash2,
   MoreHorizontal,
-  MonitorPlay,
   Settings2,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -87,11 +86,6 @@ export default function DetailsActionButtons({
     } else {
       pushToast(`${t("messages.apply_failed") || "Apply failed"}: ${res.error}`, "error");
     }
-  };
-
-  const overlayOpenWe = async () => {
-    await tryInvokeOk("we_open", { show_window: true });
-    void maybeMinimize();
   };
 
   const overlayExtract = async () => {
@@ -248,24 +242,6 @@ export default function DetailsActionButtons({
               align="end"
               className="z-50 min-w-40 rounded-md border border-white/10 bg-black/40 p-1 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in zoom-in-95"
             >
-              <DropdownMenu.Item
-                onClick={() => void openWorkshopPage()}
-                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
-              >
-                <ExternalLink className="size-4" />
-                {t("buttons.open_workshop")}
-              </DropdownMenu.Item>
-
-              {showInstalledActions && installedHandle && (
-                <DropdownMenu.Item
-                  onClick={() => void overlayOpenWe()}
-                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
-                >
-                  <MonitorPlay className="size-4" />
-                  {t("tooltips.open_we") || "Open in WE"}
-                </DropdownMenu.Item>
-              )}
-
               {showInstalledActions && installedHandle && (
                 <DropdownMenu.Item
                   onClick={() =>
@@ -279,6 +255,14 @@ export default function DetailsActionButtons({
                   {t("tooltips.open_folder")}
                 </DropdownMenu.Item>
               )}
+
+              <DropdownMenu.Item
+                onClick={() => void openWorkshopPage()}
+                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10"
+              >
+                <ExternalLink className="size-4" />
+                {t("buttons.open_workshop")}
+              </DropdownMenu.Item>
 
               {copyIdHandle && (
                 <DropdownMenu.Item

@@ -25,6 +25,7 @@ import {
   SlidersHorizontal,
   ListVideo,
   MonitorCog,
+  MonitorPlay,
   X
 } from "lucide-react";
 
@@ -32,6 +33,7 @@ import { useAppStore, ThemeCode } from "@/stores/app";
 import { useTasksStore } from "@/stores/tasks";
 import { triggerGlobalRefresh } from "@/stores/refresh";
 import { persistTheme, THEME_CODES } from "@/hooks/useTheme";
+import { maybeMinimize } from "@/lib/window";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/common/Tooltip";
 
@@ -220,11 +222,13 @@ export default function TopBar({
                       </button>
                     </div>
                   ) : (
-                    <Tooltip content={t("tooltips.load_playlist") || "Load Playlist"} side="bottom">
-                      <button className="btn-icon rounded-full hover:bg-white/10" onClick={() => setShowPlaylistInput(true)}>
-                        <ListVideo className="size-4" />
-                      </button>
-                    </Tooltip>
+                    <button
+                      className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted transition-colors hover:bg-white/10 hover:text-foreground"
+                      onClick={() => setShowPlaylistInput(true)}
+                    >
+                      <ListVideo className="size-4" />
+                      <span>{t("tooltips.load_playlist") || "Load Playlist"}</span>
+                    </button>
                   )}
 
                   <div className="mx-1 h-4 w-px bg-white/20" />
@@ -253,12 +257,28 @@ export default function TopBar({
                       </button>
                     </div>
                   ) : (
-                    <Tooltip content={t("tooltips.load_profile") || "Load Profile"} side="bottom">
-                      <button className="btn-icon rounded-full hover:bg-white/10" onClick={() => setShowProfileInput(true)}>
-                        <MonitorCog className="size-4" />
-                      </button>
-                    </Tooltip>
+                    <button
+                      className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted transition-colors hover:bg-white/10 hover:text-foreground"
+                      onClick={() => setShowProfileInput(true)}
+                    >
+                      <MonitorCog className="size-4" />
+                      <span>{t("tooltips.load_profile") || "Load Profile"}</span>
+                    </button>
                   )}
+
+                  <div className="mx-1 h-4 w-px bg-white/20" />
+
+                  {/* Open WE Control */}
+                  <button
+                    className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted transition-colors hover:bg-white/10 hover:text-foreground"
+                    onClick={async () => {
+                      await tryInvoke("we_open", { show_window: true }).catch(console.error);
+                      void maybeMinimize();
+                    }}
+                  >
+                    <MonitorPlay className="size-4" />
+                    <span>{t("tooltips.open_we") || "Open WE"}</span>
+                  </button>
                 </div>
               </motion.div>
             )}

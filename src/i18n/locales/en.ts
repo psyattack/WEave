@@ -35,7 +35,7 @@ export default {
     submit: "Submit",
   },
   tooltips: {
-    open_folder: "Open folder in Explorer",
+    open_folder: "Open folder",
     open_workshop: "Open in Steam Workshop",
     delete_wallpaper: "Delete wallpaper",
     extract_wallpaper: "Extract .pkg file",
@@ -56,7 +56,7 @@ export default {
     theme: "Switch theme",
     init_metadata: "Initialize metadata for all installed wallpapers",
     select_multiple: "Select Multiple",
-    open_we: "Open Wallpaper Engine",
+    open_we: "Open WE",
     load_playlist: "Load Playlist",
     load_profile: "Load Profile",
     create_playlist_we: "Create Playlist in WE",
@@ -73,6 +73,7 @@ export default {
     show_icons: "Show Desktop Icons",
     hide_icons: "Hide Desktop Icons",
     media_controls: "Media Controls",
+    preset_settings: "Preset Settings",
   },
   steam_status: {
     logging_in: "Signing Steam",

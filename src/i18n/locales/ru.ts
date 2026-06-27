@@ -35,7 +35,7 @@ export default {
     submit: "Отправить",
   },
   tooltips: {
-    open_folder: "Открыть папку в проводнике",
+    open_folder: "Открыть папку",
     open_workshop: "Открыть в Steam Мастерской",
     delete_wallpaper: "Удалить обои",
     extract_wallpaper: "Извлечь файл .pkg",
@@ -56,7 +56,7 @@ export default {
     theme: "Сменить тему",
     init_metadata: "Инициализировать метаданные для всех установленных обоев",
     select_multiple: "Множественная выборка",
-    open_we: "Открыть Wallpaper Engine",
+    open_we: "Открыть WE",
     load_playlist: "Загрузить плейлист",
     load_profile: "Загрузить профиль",
     create_playlist_we: "Создать плейлист в WE",
@@ -73,6 +73,7 @@ export default {
     show_icons: "Показать значки рабочего стола",
     hide_icons: "Скрыть значки рабочего стола",
     media_controls: "Управление медиа",
+    preset_settings: "Настройки пресета",
   },
   steam_status: {
     logging_in: "Вход в Steam…",
