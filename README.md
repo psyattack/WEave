@@ -148,6 +148,9 @@ cargo +nightly udeps
 npx knip
 npm run typecheck
 npm run lint
+
+# Bump version
+npm run bump -- major.minor.patch
 ```
 
 </details>
@@ -212,54 +215,54 @@ npm run lint
 ```
 WEave/
 ├── src/                              # React frontend
-│   ├── components/
+│   ├── assets/                       # Static assets (logos, icons)
+│   ├── components/                   # React components
 │   │   ├── common/                   # Reusable UI (Dialog, Drawer, SetupOverlay, etc.)
 │   │   │   └── details/              # Details panel subcomponents (Action buttons, Meta grid, Sidebar)
 │   │   ├── dialogs/                  # Modal dialogs (Legal, Update, etc.)
 │   │   ├── installed/                # Installed wallpapers components (Grid, Toolbar, Selection bar, Card)
-│   │   ├── layout/                   # TitleBar, Sidebar, TopBar
+│   │   ├── layout/                   # Layout components (TitleBar, Sidebar, TopBar)
 │   │   ├── settings/                 # Settings dialog tabs (General, Accounts, Appearance, etc.)
 │   │   ├── tasks/                    # Download/extract task drawer
 │   │   ├── views/                    # Main views (Workshop, Collections, Installed)
 │   │   └── workshop/                 # Workshop components (Cards, Filters, Details)
-│   ├── stores/                       # Zustand state stores (dotnet, plugins, etc.)
-│   ├── hooks/                        # React hooks (useBootstrap, useTheme, useWallpaperActions, useDetailsMeta, useConfirm)
-│   ├── lib/                          # Utilities (errors, logger, helpers, tauri-mock)
-│   ├── i18n/                         # Type-safe i18n system
-│   ├── types/                        # TypeScript definitions
 │   ├── e2e/                          # End-to-End and Integration tests (accessibility, stress, scenarios)
-│   └── assets/                       # Static assets
+│   ├── hooks/                        # Custom React hooks (useTheme, useWallpaperActions, etc.)
+│   ├── i18n/                         # Type-safe i18n system
+│   │   └── locales/                  # Translation source files (en.ts, ru.ts)
+│   ├── lib/                          # Utilities (errors, logger, helpers, tauri-mock)
+│   ├── stores/                       # Zustand state stores
+│   └── types/                        # TypeScript definitions
 │
-├── src-tauri/                        # Rust backend
-│   ├── src/
-│   │   ├── commands/                 # Tauri command handlers
-│   │   │   ├── accounts.rs           # Account management
-│   │   │   ├── download.rs           # Download orchestration
-│   │   │   ├── extract.rs            # Package extraction
-│   │   │   ├── steam.rs              # Steam login/cookies/webview show
-│   │   │   ├── dotnet.rs             # .NET runtime management
-│   │   │   ├── plugins.rs            # Plugin initialization
-│   │   │   ├── logging.rs            # Logging integration
-│   │   │   └── ...
-│   │   ├── workshop/                 # Steam Workshop parser (avatar URL, display names)
-│   │   ├── accounts/                 # Encrypted account storage
-│   │   ├── config/                   # Configuration management
-│   │   ├── download/                 # Download manager (DepotDownloader wrapper)
-│   │   ├── extract/                  # Extract manager (RePKG wrapper)
-│   │   ├── runtime.rs                # .NET runtime downloader
-│   │   ├── plugin_manager.rs         # Plugin auto-downloader (GitHub releases)
-│   │   ├── plugin_paths.rs           # Plugin binary path resolution
-│   │   ├── we_client/                # Wallpaper Engine client
-│   │   ├── metadata/                 # Metadata batch initializer
-│   │   ├── logger.rs                 # Rotating file logger
-│   │   ├── errors.rs                 # Structured error types
-│   │   └── ...
-│   └── locales/                      # Backend translations
-│
-└── plugins/                          # External tools (auto-downloaded)
-    ├── depot_downloader_mod/         # Steam depot downloader (.NET)
-    ├── repkg/                        # WE package extractor
-    └── dotnet/                       # Portable .NET runtime (auto-downloaded)
+└── src-tauri/                        # Rust backend (Tauri)
+    ├── capabilities/                 # Tauri v2 security capabilities / permissions
+    └── src/                          # Backend source code
+        ├── commands/                 # Tauri command handlers (invoked from frontend)
+        │   ├── accounts.rs           # Account management
+        │   ├── download.rs           # Download orchestration
+        │   ├── extract.rs            # Package extraction
+        │   ├── steam.rs              # Steam login, cookies & webview orchestration
+        │   └── ...                   # Metadata, config, i18n, updater, workshop commands, etc.
+        ├── config/                   # Configuration management
+        │   ├── settings.rs           # User settings struct & disk operations
+        │   └── metadata.rs           # Wallpaper metadata cache
+        ├── core/                     # Application core components
+        │   ├── app_state.rs          # Shared global state
+        │   ├── errors.rs             # Structured error definitions
+        │   ├── logger.rs             # Rotating file logger setup
+        │   └── runtime.rs            # Portable .NET runtime manager
+        ├── plugins/                  # External plugin helpers
+        │   ├── plugin_manager.rs     # Plugin download & updates logic
+        │   └── plugin_paths.rs       # External binary path resolution
+        ├── services/                 # Business logic services
+        │   ├── accounts/             # Steam credentials encryption/storage
+        │   ├── workshop/             # Steam Workshop scraper & auth webview handler
+        │   ├── download.rs           # DepotDownloader wrapper service
+        │   ├── extract.rs            # RePKG extractor wrapper service
+        │   ├── we_client.rs          # Wallpaper Engine API and monitor integration
+        │   └── ...                   # i18n, translator, metadata services, etc.
+        ├── lib.rs                    # Tauri context & builder setup
+        └── main.rs                   # Executable entry point
 ```
 
 </details>

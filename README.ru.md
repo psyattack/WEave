@@ -148,6 +148,9 @@ cargo +nightly udeps
 npx knip
 npm run typecheck
 npm run lint
+
+# Сменить версию
+npm run bump -- major.minor.patch
 ```
 
 </details>
@@ -211,55 +214,55 @@ npm run lint
 
 ```
 WEave/
-├── src/                              # React frontend
-│   ├── components/
+├── src/                              # React фронтенд
+│   ├── assets/                       # Статические ресурсы (логотипы, иконки)
+│   ├── components/                   # React компоненты
 │   │   ├── common/                   # Переиспользуемые UI (Dialog, Drawer, SetupOverlay и др.)
 │   │   │   └── details/              # Подкомпоненты панели подробностей (Кнопки действий, Мета-сетка, Боковая панель)
 │   │   ├── dialogs/                  # Модальные окна (Legal, Update и др.)
 │   │   ├── installed/                # Компоненты установленных обоев (Сетка, Панель инструментов, Панель выбора, Карточка)
-│   │   ├── layout/                   # TitleBar, Sidebar, TopBar
+│   │   ├── layout/                   # Компоненты макета (TitleBar, Sidebar, TopBar)
 │   │   ├── settings/                 # Вкладки настроек (General, Accounts, Appearance и др.)
 │   │   ├── tasks/                    # Панель задач загрузки/извлечения
 │   │   ├── views/                    # Основные представления (Workshop, Collections, Installed)
 │   │   └── workshop/                 # Компоненты Workshop (Cards, Filters, Details)
-│   ├── stores/                       # Zustand хранилища состояний (dotnet, plugins и др.)
-│   ├── hooks/                        # React хуки (useBootstrap, useTheme, useWallpaperActions, useDetailsMeta, useConfirm)
-│   ├── lib/                          # Утилиты (errors, logger, helpers, tauri-mock)
-│   ├── i18n/                         # Типобезопасная система i18n
-│   ├── types/                        # TypeScript определения типов
 │   ├── e2e/                          # Сквозные (E2E) и интеграционные тесты (доступность, стресс-тесты, сценарии)
-│   └── assets/                       # Статические ресурсы
+│   ├── hooks/                        # Пользовательские React хуки (useTheme, useWallpaperActions и др.)
+│   ├── i18n/                         # Типобезопасная система i18n
+│   │   └── locales/                  # Исходные файлы переводов (en.ts, ru.ts)
+│   ├── lib/                          # Утилиты (errors, logger, helpers, tauri-mock)
+│   ├── stores/                       # Zustand хранилища состояний
+│   └── types/                        # TypeScript определения типов
 │
-├── src-tauri/                        # Rust backend
-│   ├── src/
-│   │   ├── commands/                 # Обработчики Tauri команд
-│   │   │   ├── accounts.rs           # Управление аккаунтами
-│   │   │   ├── download.rs           # Оркестрация загрузок
-│   │   │   ├── extract.rs            # Извлечение пакетов
-│   │   │   ├── steam.rs              # Steam логин/cookies/отображение webview
-│   │   │   ├── dotnet.rs             # Управление .NET runtime
-│   │   │   ├── plugins.rs            # Инициализация плагинов
-│   │   │   ├── logging.rs            # Интеграция логирования
-│   │   │   └── ...
-│   │   ├── workshop/                 # Парсер Steam Workshop (аватары, отображаемые имена)
-│   │   ├── accounts/                 # Шифрованное хранилище аккаунтов
-│   │   ├── config/                   # Управление конфигурацией
-│   │   ├── download/                 # Менеджер загрузок (обёртка DepotDownloader)
-│   │   ├── extract/                  # Менеджер извлечения (обёртка RePKG)
-│   │   ├── runtime.rs                # Загрузчик .NET runtime
-│   │   ├── plugin_manager.rs         # Автозагрузчик плагинов (GitHub releases)
-│   │   ├── plugin_paths.rs           # Разрешение путей к бинарникам плагинов
-│   │   ├── we_client/                # Клиент Wallpaper Engine
-│   │   ├── metadata/                 # Инициализатор пакетных метаданных
-│   │   ├── logger.rs                 # Ротирующий файловый логгер
-│   │   ├── errors.rs                 # Структурированные типы ошибок
-│   │   └── ...
-│   └── locales/                      # Переводы backend
-│
-└── plugins/                          # Внешние инструменты (автозагрузка)
-    ├── depot_downloader_mod/         # Загрузчик Steam депо (.NET)
-    ├── repkg/                        # Распаковщик пакетов WE
-    └── dotnet/                       # Портативный .NET runtime (автозагрузка)
+└── src-tauri/                        # Rust бэкенд (Tauri)
+    ├── capabilities/                 # Разрешения и безопасность Tauri v2
+    └── src/                          # Исходный код бэкенда
+        ├── commands/                 # Обработчики команд Tauri (вызываемые с фронтенда)
+        │   ├── accounts.rs           # Управление аккаунтами
+        │   ├── download.rs           # Оркестрация загрузок
+        │   ├── extract.rs            # Извлечение пакетов
+        │   ├── steam.rs              # Steam логин, файлы cookie и управление webview
+        │   └── ...                   # Команды метаданных, конфигурации, i18n, автообновления и др.
+        ├── config/                   # Управление конфигурацией
+        │   ├── settings.rs           # Структура настроек пользователя и операции с диском
+        │   └── metadata.rs           # Кэш метаданных обоев
+        ├── core/                     # Ядро приложения
+        │   ├── app_state.rs          # Общее глобальное состояние приложения
+        │   ├── errors.rs             # Структурированные типы ошибок
+        │   ├── logger.rs             # Ротируемый логгер файлов
+        │   └── runtime.rs            # Управление портативным .NET runtime
+        ├── plugins/                  # Плагины и внешние утилиты
+        │   ├── plugin_manager.rs     # Загрузка и обновление плагинов
+        │   └── plugin_paths.rs       # Разрешение путей к исполняемым файлам
+        ├── services/                 # Сервисы бизнес-логики
+        │   ├── accounts/             # Шифрованное хранилище данных аккаунтов
+        │   ├── workshop/             # Скрапер Steam Workshop и обработчик авторизации в webview
+        │   ├── download.rs           # Сервис-обёртка для DepotDownloader
+        │   ├── extract.rs            # Сервис-обёртка для экстрактора RePKG
+        │   ├── we_client.rs          # Интеграция с API Wallpaper Engine и мониторами
+        │   └── ...                   # Сервисы i18n, перевода, метаданных и др.
+        ├── lib.rs                    # Инициализация Tauri и настройка сборщика
+        └── main.rs                   # Точка входа исполняемого файла
 ```
 
 </details>
