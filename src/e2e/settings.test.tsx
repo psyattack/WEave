@@ -8,6 +8,9 @@ import { useAppStore } from "@/stores/app";
 
 describe("Settings Dialog E2E Tests (F3)", () => {
   beforeEach(() => {
+    document.body.innerHTML = "";
+    document.body.removeAttribute("data-scroll-locked");
+    document.body.removeAttribute("style");
     setupTauriMocks();
     useAppStore.setState({
       ready: true,
@@ -21,6 +24,9 @@ describe("Settings Dialog E2E Tests (F3)", () => {
       ],
       accountIndex: 0,
       language: "en",
+      tasksOpen: false,
+      loginModalOpen: false,
+      detailsOpen: false,
     });
 
     registerCommandMock("accounts_list", () => [
@@ -133,18 +139,24 @@ describe("Settings Dialog E2E Tests (F3)", () => {
       }
       return false;
     });
+    registerCommandMock("accounts_verify_custom", ({ username }: any) => {
+      emitTauriEvent("auth://success", username);
+    });
 
     render(<SettingsDialog open={true} onOpenChange={() => {}} />);
 
     const accountTab = await screen.findByRole("tab", { name: /account/i });
     await userEvent.click(accountTab);
 
+    const addCustomBtn = await screen.findByRole("button", { name: /add custom account/i });
+    await userEvent.click(addCustomBtn);
+
     const usernameInput = await screen.findByLabelText(/username/i);
     const passwordInput = screen.getByLabelText(/password/i);
     await userEvent.type(usernameInput, "user123");
     await userEvent.type(passwordInput, "pass123");
 
-    const addBtn = screen.getByRole("button", { name: /add/i });
+    const addBtn = screen.getByRole("button", { name: /^add$/i });
     await userEvent.click(addBtn);
 
     await waitFor(() => {
@@ -185,7 +197,7 @@ describe("Settings Dialog E2E Tests (F3)", () => {
   });
 
   it("T2.3.2 should show error toast on invalid directory selection", async () => {
-    registerCommandMock("we_set_directory", () => false); // Failure
+    registerCommandMock("we_set_directory", () => { throw new Error("Invalid directory"); }); // Failure
 
     const { setMockDialogResult } = await import("@/lib/tauri-mock");
     setMockDialogResult("C:/InvalidDirectoryPath");
@@ -204,18 +216,24 @@ describe("Settings Dialog E2E Tests (F3)", () => {
 
   it("T2.3.3 should display warning toast when adding duplicate custom account", async () => {
     registerCommandMock("accounts_set_custom", () => false); // Returns false for duplicate
+    registerCommandMock("accounts_verify_custom", ({ username }: any) => {
+      emitTauriEvent("auth://success", username);
+    });
 
     render(<SettingsDialog open={true} onOpenChange={() => {}} />);
 
     const accountTab = await screen.findByRole("tab", { name: /account/i });
     await userEvent.click(accountTab);
 
+    const addCustomBtn = await screen.findByRole("button", { name: /add custom account/i });
+    await userEvent.click(addCustomBtn);
+
     const usernameInput = await screen.findByLabelText(/username/i);
     const passwordInput = screen.getByLabelText(/password/i);
     await userEvent.type(usernameInput, "user123");
     await userEvent.type(passwordInput, "pass123");
 
-    const addBtn = screen.getByRole("button", { name: /add/i });
+    const addBtn = screen.getByRole("button", { name: /^add$/i });
     await userEvent.click(addBtn);
 
     // Verify it doesn't clear input or does similar. In duplicate case we get an error toast.
@@ -228,7 +246,10 @@ describe("Settings Dialog E2E Tests (F3)", () => {
     const accountTab = await screen.findByRole("tab", { name: /account/i });
     await userEvent.click(accountTab);
 
-    const addBtn = await screen.findByRole("button", { name: /add/i });
+    const addCustomBtn = await screen.findByRole("button", { name: /add custom account/i });
+    await userEvent.click(addCustomBtn);
+
+    const addBtn = await screen.findByRole("button", { name: /^add$/i });
     await userEvent.click(addBtn);
 
     // Inputs should still be blank. Verification passes since submission did not occur.

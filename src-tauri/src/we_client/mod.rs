@@ -473,3 +473,87 @@ pub fn delete_wallpaper_folder(projects_path: &Path, pubfileid: &str) -> anyhow:
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+    use std::fs;
+
+    #[test]
+    fn test_delete_wallpaper_folder() {
+        let dir = tempdir().unwrap();
+        let pubfileid = "12345";
+        let target = dir.path().join(pubfileid);
+        fs::create_dir(&target).unwrap();
+        assert!(target.exists());
+
+        delete_wallpaper_folder(dir.path(), pubfileid).unwrap();
+        assert!(!target.exists());
+    }
+
+    #[test]
+    fn test_walk_size() {
+        let dir = tempdir().unwrap();
+        let file1 = dir.path().join("file1.txt");
+        let file2 = dir.path().join("file2.txt");
+        fs::write(&file1, "123").unwrap(); // 3 bytes
+        fs::write(&file2, "12345").unwrap(); // 5 bytes
+
+        let mut total = 0;
+        walk_size(dir.path(), &mut total);
+        assert_eq!(total, 8);
+    }
+
+    #[test]
+    fn test_steam_library_folders() {
+        let dir = tempdir().unwrap();
+        let steamapps = dir.path().join("steamapps");
+        fs::create_dir(&steamapps).unwrap();
+        let vdf = steamapps.join("libraryfolders.vdf");
+        fs::write(&vdf, r#"
+        "libraryfolders"
+        {
+            "0"
+            {
+                "path" "C:\\Program Files (x86)\\Steam"
+            }
+            "1"
+            {
+                "path" "D:\\SteamLibrary"
+            }
+        }
+        "#).unwrap();
+
+        let folders = steam_library_folders(dir.path());
+        assert_eq!(folders.len(), 2);
+        assert_eq!(folders[0].to_str().unwrap(), "C:\\Program Files (x86)\\Steam");
+        assert_eq!(folders[1].to_str().unwrap(), "D:\\SteamLibrary");
+    }
+
+    #[test]
+    fn test_parse_project() {
+        let dir = tempdir().unwrap();
+        let project_json = dir.path().join("project.json");
+        fs::write(&project_json, r#"
+        {
+            "title": "Test Title",
+            "preview": "preview.jpg",
+            "description": "A test wallpaper",
+            "type": "scene",
+            "tags": ["Anime", "Cyberpunk"]
+        }
+        "#).unwrap();
+        let pkg_file = dir.path().join("scene.pkg");
+        fs::write(&pkg_file, "dummy").unwrap();
+
+        let wallpaper = parse_project(dir.path(), "777");
+        assert_eq!(wallpaper.pubfileid, "777");
+        assert_eq!(wallpaper.title, "Test Title");
+        assert_eq!(wallpaper.description, "A test wallpaper");
+        assert_eq!(wallpaper.file_type, "scene");
+        assert_eq!(wallpaper.tags, vec!["Anime".to_string(), "Cyberpunk".to_string()]);
+        assert!(wallpaper.has_pkg);
+        assert!(wallpaper.preview.contains("preview.jpg"));
+    }
+}

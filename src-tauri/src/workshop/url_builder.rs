@@ -136,3 +136,26 @@ fn add_tag_params<'a>(
         builder.append_pair("requiredflags[]", flag);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_browse() {
+        let mut filters = WorkshopFilters::default();
+        filters.sort = "trend".to_string();
+        filters.days = "7".to_string();
+        filters.search = "cyberpunk".to_string();
+        filters.page = 2;
+        filters.category = "scene".to_string();
+
+        let url = build_browse(&filters);
+        assert!(url.contains("browsesort=trend"));
+        assert!(url.contains("days=7"));
+        assert!(url.contains("searchtext=cyberpunk"));
+        assert!(url.contains("p=2"));
+        assert!(url.contains("requiredtags%5B%5D=scene"));
+        assert!(url.contains("appid="));
+    }
+}

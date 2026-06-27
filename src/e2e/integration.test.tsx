@@ -27,6 +27,9 @@ const mockWallpaper = {
 
 describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
   beforeEach(() => {
+    document.body.innerHTML = "";
+    document.body.removeAttribute("data-scroll-locked");
+    document.body.removeAttribute("style");
     setupTauriMocks();
     useAppStore.setState({
       ready: true,
@@ -34,6 +37,9 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
       theme: "dark",
       accent: "indigo",
       legalAccepted: true,
+      tasksOpen: false,
+      loginModalOpen: false,
+      detailsOpen: false,
     });
     useInstalledStore.setState({
       byId: { "2000001": mockWallpaper },
@@ -277,6 +283,9 @@ describe("Cross-Feature Combination E2E Tests (Tier 3)", () => {
     render(<SettingsDialog open={true} onOpenChange={() => {}} />);
     const accountTab = await screen.findByRole("tab", { name: /account/i });
     await userEvent.click(accountTab);
+
+    const addCustomBtn = await screen.findByRole("button", { name: /add custom account/i });
+    await userEvent.click(addCustomBtn);
 
     const input = screen.getByLabelText(/username/i);
     expect(input).toBeInTheDocument();

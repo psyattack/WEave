@@ -485,3 +485,24 @@ fn dir_has_files(dir: &std::path::Path) -> bool {
     }
     false
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+    use std::fs;
+
+    #[test]
+    fn test_dir_has_files() {
+        let dir = tempdir().unwrap();
+        assert!(!dir_has_files(dir.path()));
+
+        let subdir = dir.path().join("sub");
+        fs::create_dir(&subdir).unwrap();
+        assert!(!dir_has_files(dir.path()));
+
+        let file = subdir.join("file.txt");
+        fs::write(&file, "test").unwrap();
+        assert!(dir_has_files(dir.path()));
+    }
+}
