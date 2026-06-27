@@ -268,7 +268,7 @@ Configuration files and plugins are stored in:
 | `SteamWebView/` | WebView2 data (persisted cookies) |
 | `plugins/` | Auto-downloaded plugins (DepotDownloaderMod, RePKG) |
 | `dotnet/` | Portable .NET Runtime 9.0.17 (auto-downloaded if needed) |
-| `weave.log` | Rotating log file (10MB, 5 files retention) |
+| `.log` | App log file (max 10MB, auto-trims oldest records) |
 
 ---
 

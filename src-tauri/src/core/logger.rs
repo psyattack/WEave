@@ -4,7 +4,7 @@
 //! Provides structured logging with context information and automatic log rotation.
 
 use std::fs::{self, File, OpenOptions};
-use std::io::Write;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -12,10 +12,8 @@ use chrono::Local;
 use log::{LevelFilter, Metadata, Record};
 use parking_lot::Mutex;
 
-/// Maximum log file size before rotation (10 MB)
+/// Maximum log file size before truncation (10 MB)
 const MAX_LOG_SIZE: u64 = 10 * 1024 * 1024;
-/// Number of rotated log files to keep
-const MAX_LOG_FILES: usize = 5;
 
 /// Custom logger that writes to both console and file
 pub struct WEaveLogger {
@@ -28,7 +26,7 @@ impl WEaveLogger {
     pub fn init(log_dir: &Path, level: LevelFilter) -> anyhow::Result<()> {
         fs::create_dir_all(log_dir)?;
 
-        let log_path = log_dir.join("weave.log");
+        let log_path = log_dir.join(".log");
         let file = OpenOptions::new()
             .create(true)
             .append(true)
@@ -49,7 +47,6 @@ impl WEaveLogger {
         Ok(())
     }
 
-    /// Rotate log files if current log exceeds maximum size
     fn rotate_if_needed(&self) {
         let log_path_guard = self.log_path.lock();
         let log_path = log_path_guard.clone();
@@ -57,42 +54,43 @@ impl WEaveLogger {
 
         if let Ok(metadata) = fs::metadata(&log_path) {
             if metadata.len() > MAX_LOG_SIZE {
-                drop(self.file.lock().take());
+                let mut file_guard = self.file.lock();
 
-                if let Err(e) = Self::perform_rotation(&log_path) {
-                    eprintln!("Failed to rotate log file: {}", e);
-                }
+                let keep_len = MAX_LOG_SIZE / 2;
+                let start_pos = metadata.len().saturating_sub(keep_len);
 
-                // Reopen the log file
-                if let Ok(new_file) = OpenOptions::new().create(true).append(true).open(&log_path) {
-                    *self.file.lock() = Some(new_file);
+                if let Ok(mut f) = File::open(&log_path) {
+                    if f.seek(SeekFrom::Start(start_pos)).is_ok() {
+                        let mut buffer = String::new();
+                        if f.read_to_string(&mut buffer).is_ok() {
+                            let content_to_keep = if let Some(idx) = buffer.find('\n') {
+                                &buffer[idx + 1..]
+                            } else {
+                                &buffer
+                            };
+
+                            if let Ok(mut new_file) = OpenOptions::new()
+                                .create(true)
+                                .write(true)
+                                .truncate(true)
+                                .open(&log_path)
+                            {
+                                new_file.write_all(content_to_keep.as_bytes()).ok();
+                                // We must reopen in append mode for future writes
+                                if let Ok(append_file) = OpenOptions::new()
+                                    .append(true)
+                                    .open(&log_path)
+                                {
+                                    *file_guard = Some(append_file);
+                                } else {
+                                    *file_guard = Some(new_file);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
-
-    /// Perform log file rotation
-    fn perform_rotation(log_path: &Path) -> anyhow::Result<()> {
-        let parent = log_path.parent().unwrap();
-        let stem = log_path.file_stem().unwrap().to_string_lossy();
-        let ext = log_path.extension().unwrap_or_default().to_string_lossy();
-
-        // Remove oldest log file
-        let oldest = parent.join(format!("{}.{}.{}", stem, MAX_LOG_FILES, ext));
-        fs::remove_file(oldest).ok();
-
-        // Rotate existing log files
-        for i in (1..MAX_LOG_FILES).rev() {
-            let from = parent.join(format!("{}.{}.{}", stem, i, ext));
-            let to = parent.join(format!("{}.{}.{}", stem, i + 1, ext));
-            fs::rename(from, to).ok();
-        }
-
-        // Move current log to .1
-        let backup = parent.join(format!("{}.1.{}", stem, ext));
-        fs::rename(log_path, backup)?;
-
-        Ok(())
     }
 
     /// Format log record with timestamp and metadata
@@ -189,28 +187,11 @@ mod tests {
     fn test_logger_initialization() {
         let temp_dir = TempDir::new().unwrap();
         // Test that we can create log directory and file
-        let log_path = temp_dir.path().join("weave.log");
+        let log_path = temp_dir.path().join(".log");
         let file = OpenOptions::new().create(true).append(true).open(&log_path);
 
         assert!(file.is_ok());
         assert!(log_path.exists());
-    }
-
-    #[test]
-    fn test_log_rotation() {
-        let temp_dir = TempDir::new().unwrap();
-        let log_path = temp_dir.path().join("test.log");
-
-        // Create a log file
-        std::fs::write(&log_path, "test content").unwrap();
-
-        // Test rotation
-        let result = WEaveLogger::perform_rotation(&log_path);
-        assert!(result.is_ok());
-
-        // Check that backup was created
-        let backup = temp_dir.path().join("test.1.log");
-        assert!(backup.exists());
     }
 
     #[test]
