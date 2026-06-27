@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Lock, User, KeyRound } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
-import { inTauri, invoke, tryInvoke, tryInvokeAction } from "@/lib/tauri";
+import { invoke, tryInvoke, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { useSteamSessionStore, SteamAccountInfo } from "@/stores/steam-session";
 import { useAppStore } from "@/stores/app";

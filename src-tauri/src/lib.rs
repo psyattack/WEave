@@ -2,24 +2,30 @@
 //! Python/PyQt6 application. Preserves full feature parity with the original
 //! while adding a modern, animated web-based UI.
 
-pub mod accounts;
-pub mod app_state;
 pub mod commands;
 pub mod config;
-pub mod constants;
-pub mod download;
-pub mod errors;
-pub mod extract;
-pub mod i18n;
-pub mod logger;
-pub mod metadata;
-pub mod plugin_manager;
-pub mod plugin_paths;
-pub mod runtime;
-pub mod translator;
-pub mod updater;
-pub mod we_client;
-pub mod workshop;
+pub mod core;
+pub mod plugins;
+pub mod services;
+
+pub use core::app_state;
+pub use core::constants;
+pub use core::errors;
+pub use core::logger;
+pub use core::runtime;
+
+pub use plugins::plugin_manager;
+pub use plugins::plugin_paths;
+
+pub use services::accounts;
+pub use services::download;
+pub use services::extract;
+pub use services::i18n;
+pub use services::metadata;
+pub use services::translator;
+pub use services::updater;
+pub use services::we_client;
+pub use services::workshop;
 
 use std::sync::Arc;
 use tauri::Manager;

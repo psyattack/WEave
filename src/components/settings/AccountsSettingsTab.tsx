@@ -3,7 +3,7 @@ import { useTranslation } from "@/i18n/hooks";
 import { Trash2, AlertCircle, UserPlus } from "lucide-react";
 import { listen } from "@tauri-apps/api/event";
 
-import { inTauri, invoke, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
+import { inTauri, invoke, tryInvoke, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { useAppStore } from "@/stores/app";
 import { useConfirm } from "@/hooks/useConfirm";
