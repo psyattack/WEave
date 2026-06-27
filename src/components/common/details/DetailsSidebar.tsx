@@ -14,6 +14,7 @@ import { translateTagCategory, translateTagValue } from "@/lib/filterConfig";
 import { Tooltip } from "@/components/common/Tooltip";
 import { useAppStore } from "@/stores/app";
 import { dismissAllToasts } from "@/stores/toasts";
+import { inTauri, tryInvoke } from "@/lib/tauri";
 
 interface CommonProps {
   onClose: () => void;
@@ -122,6 +123,34 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
     setLastInstalled(currentInstalled);
   }
 
+  const [deleteActiveError, setDeleteActiveError] = useState(false);
+
+  const pubfileid = props.item?.pubfileid ?? null;
+  const [prevPubfileidForDelete, setPrevPubfileidForDelete] = useState<string | null>(pubfileid);
+
+  if (pubfileid !== prevPubfileidForDelete) {
+    setPrevPubfileidForDelete(pubfileid);
+    setDeleteActiveError(false);
+  }
+
+  const handleDeleteAttempt = async (item: InstalledWallpaper) => {
+    setDeleteActiveError(false);
+    if (inTauri) {
+      const active = await tryInvoke<string[]>(
+        "we_active_pubfileids",
+        undefined,
+        [],
+      );
+      if ((active ?? []).includes(item.pubfileid)) {
+        setDeleteActiveError(true);
+        return;
+      }
+    }
+    if (props.kind === "installed" && props.onDelete) {
+      props.onDelete(item);
+    }
+  };
+
   return (
     <Drawer
       open={!!props.item}
@@ -147,6 +176,12 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
                 "Rate limit exceeded. Please try again in a few minutes."}
             </div>
           )}
+          {deleteActiveError && (
+            <div className="rounded-md border border-danger/30 bg-danger/10 p-2.5 text-xs text-danger">
+              {t("messages.cannot_delete_active_single") ||
+                "Wallpaper is currently active — switch first."}
+            </div>
+          )}
           <div className="overflow-hidden rounded-md border border-white/5 bg-white/5 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] backdrop-blur-md">
             <PreviewImage
               key={meta.preview}
@@ -170,7 +205,7 @@ export default function DetailsSidebar(props: DetailsSidebarProps) {
             onDownload={props.kind === "workshop" ? props.onDownload : undefined}
             onApply={props.kind === "installed" ? props.onApply : undefined}
             onExtract={props.kind === "installed" ? props.onExtract : undefined}
-            onDelete={props.kind === "installed" ? props.onDelete : undefined}
+            onDelete={props.kind === "installed" ? handleDeleteAttempt : undefined}
             onOpenFolder={props.kind === "installed" ? props.onOpenFolder : undefined}
             onToggleSettings={() => setShowSettings(s => !s)}
           />

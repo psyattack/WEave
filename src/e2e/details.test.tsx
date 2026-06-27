@@ -300,4 +300,38 @@ describe("Details Panel E2E Tests (F2)", () => {
     const applyBtn = await screen.findByRole("button", { name: /apply/i });
     expect(applyBtn).toBeInTheDocument();
   });
+
+  it("T2.2.6 should show inline warning when trying to delete active wallpaper", async () => {
+    registerCommandMock("we_active_pubfileids", () => [mockWallpaper.pubfileid]);
+    const handleDelete = vi.fn();
+
+    render(
+      <DetailsPanel
+        kind="installed"
+        item={mockWallpaper}
+        onClose={() => {}}
+        onApply={() => {}}
+        onExtract={() => {}}
+        onDelete={handleDelete}
+        onOpenFolder={() => {}}
+        onCopyId={() => {}}
+      />
+    );
+
+    const menuTrigger = await screen.findByRole("button", { name: /more/i });
+    await userEvent.click(menuTrigger);
+
+    const deleteBtn = await screen.findByRole("menuitem", { name: /delete/i });
+    await userEvent.click(deleteBtn);
+
+    // It should not invoke the delete handler
+    expect(handleDelete).not.toHaveBeenCalled();
+
+    // It should show the inline warning message
+    expect(
+      await screen.findByText(
+        "This wallpaper is currently active in Wallpaper Engine. Please switch to a different wallpaper first, then try again."
+      )
+    ).toBeInTheDocument();
+  });
 });
