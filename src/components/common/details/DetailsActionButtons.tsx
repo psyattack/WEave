@@ -1,4 +1,4 @@
-
+import { useState, useEffect, useCallback } from "react";
 import {
   Copy,
   Download,
@@ -13,7 +13,7 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { open as openPath } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "@/i18n/hooks";
-import { inTauri, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
+import { inTauri, tryInvoke, tryInvokeOk, tryInvokeAction } from "@/lib/tauri";
 import { pushToast } from "@/stores/toasts";
 import { maybeMinimize } from "@/lib/window";
 import { useConfirm } from "@/hooks/useConfirm";
@@ -73,6 +73,36 @@ export default function DetailsActionButtons({
       ? (item as InstalledWallpaper | null)
       : (installedEntry ?? null);
 
+  const [isActive, setIsActive] = useState(false);
+
+  const checkActive = useCallback(async () => {
+    if (!installedHandle || !inTauri) {
+      setIsActive(false);
+      return;
+    }
+    const activeIds = await tryInvoke<string[]>("we_active_pubfileids", undefined, []) || [];
+    setIsActive(activeIds.includes(installedHandle.pubfileid));
+  }, [installedHandle]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      await Promise.resolve();
+      if (!cancelled) {
+        void checkActive();
+      }
+    };
+    void run();
+
+    const interval = setInterval(() => {
+      void checkActive();
+    }, 2000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [checkActive]);
+
   const overlayApply = async () => {
     if (!installedHandle) return;
     const res = await tryInvokeAction("we_apply", {
@@ -83,6 +113,7 @@ export default function DetailsActionButtons({
     if (res.ok) {
       pushToast(t("messages.applied") || "Applied", "success");
       void maybeMinimize();
+      void checkActive();
     } else {
       pushToast(`${t("messages.apply_failed") || "Apply failed"}: ${res.error}`, "error");
     }
@@ -116,7 +147,7 @@ export default function DetailsActionButtons({
   const overlayDelete = async () => {
     if (!installedHandle) return;
     if (inTauri) {
-      const activeIds = await tryInvokeOk("we_active_pubfileids") as unknown as string[] || [];
+      const activeIds = await tryInvoke<string[]>("we_active_pubfileids", undefined, []) || [];
       if (activeIds.includes(installedHandle.pubfileid)) {
         pushToast(
           t("messages.cannot_delete_active_single") ||
@@ -165,11 +196,14 @@ export default function DetailsActionButtons({
         <div className="flex-1">
           {showInstalledActions && installedHandle ? (
             <button
-              onClick={() =>
-                kind === "installed" && onApply
-                  ? onApply(installedHandle)
-                  : void overlayApply()
-              }
+              onClick={async () => {
+                if (kind === "installed" && onApply) {
+                  await onApply(installedHandle);
+                } else {
+                  await overlayApply();
+                }
+                void checkActive();
+              }}
               className="hover-shimmer flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
             >
               <Play className="size-4" />
@@ -199,9 +233,10 @@ export default function DetailsActionButtons({
         {showInstalledActions && installedHandle && (
           <Tooltip content={(t as any)("tooltips.preset_settings") || "Preset Settings"} side="top">
             <button
+              disabled={!isActive}
               onClick={onToggleSettings}
               aria-label="Preset Settings"
-              className="hover-shimmer flex size-9 items-center justify-center rounded-md bg-white/5 text-foreground transition-colors hover:bg-white/10"
+              className="hover-shimmer flex size-9 items-center justify-center rounded-md bg-white/5 text-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
             >
               <Settings2 className="size-4" />
             </button>
