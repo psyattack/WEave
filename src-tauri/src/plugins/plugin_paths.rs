@@ -45,20 +45,20 @@ pub fn depot_downloader() -> Result<PathBuf, String> {
     } else {
         "DepotDownloaderMod"
     };
-    find_plugin_binary("depot_downloader_mod", name).ok_or_else(|| {
+    find_plugin_binary("DepotDownloaderMod", name).ok_or_else(|| {
         format!(
             "DepotDownloaderMod not found. It will be downloaded automatically on first use from the shared data directory: {}",
-            plugins_dir().join("depot_downloader_mod").display()
+            plugins_dir().join("DepotDownloaderMod").display()
         )
     })
 }
 
 pub fn repkg() -> Result<PathBuf, String> {
     let name = if cfg!(windows) { "RePKG.exe" } else { "RePKG" };
-    find_plugin_binary("repkg", name).ok_or_else(|| {
+    find_plugin_binary("RePKG", name).ok_or_else(|| {
         format!(
             "RePKG not found. It will be downloaded automatically on first use from the shared data directory: {}",
-            plugins_dir().join("repkg").display()
+            plugins_dir().join("RePKG").display()
         )
     })
 }

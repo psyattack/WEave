@@ -10,6 +10,7 @@ import {
   Loader2,
   RefreshCw,
   HelpCircle,
+  Info,
 } from "lucide-react";
 
 const Github = (props: React.SVGProps<SVGSVGElement>) => (
@@ -180,7 +181,12 @@ export default function InfoDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t("dialog.about")}
+      title={
+        <div className="flex items-center gap-2">
+          <Info size={18} className="text-primary" />
+          <span>{t("dialog.about")}</span>
+        </div>
+      }
       size="sm"
     >
       <div className="flex flex-col items-center gap-3 text-center">

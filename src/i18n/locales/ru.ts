@@ -144,6 +144,9 @@ export default {
       "Превышен лимит запросов. Попробуйте снова через несколько минут.",
   },
   labels: {
+    input_links: "Вставьте ссылки или ID",
+    detected_preview: "Распознанные ID",
+    waiting_for_input: "Ожидание ввода",
     wallpapers_filtered: "Показано {{filtered}} из {{total}} обоев",
     total_size: "Общий размер: {{size}}",
     size: "Размер: {{size}}",

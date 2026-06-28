@@ -143,6 +143,9 @@ export default {
     rate_limit_error: "Rate limit exceeded. Please try again in a few minutes.",
   },
   labels: {
+    input_links: "Paste Links or IDs",
+    detected_preview: "Detected Preview",
+    waiting_for_input: "Waiting for input",
     wallpapers_filtered: "Showing {{filtered}} of {{total}} wallpapers",
     total_size: "Total size: {{size}}",
     size: "Size: {{size}}",

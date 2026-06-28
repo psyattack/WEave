@@ -10,6 +10,7 @@ import {
   RotateCcw,
   X,
   XCircle,
+  Activity,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -77,7 +78,12 @@ export default function TasksDrawer({ open, onOpenChange }: Props) {
     <Drawer
       open={open}
       onOpenChange={onOpenChange}
-      title={t("tooltips.tasks")}
+      title={
+        <div className="flex items-center gap-2">
+          <Activity size={18} className="text-primary" />
+          <span>{t("tooltips.tasks")}</span>
+        </div>
+      }
       width="380px"
     >
       <div className="flex h-full flex-col">

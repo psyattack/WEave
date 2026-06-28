@@ -22,7 +22,7 @@ pub struct PluginDef {
 
 pub const PLUGINS: &[PluginDef] = &[
     PluginDef {
-        id: "depot_downloader_mod",
+        id: "DepotDownloaderMod",
         name: "DepotDownloaderMod",
         download_url:
             "https://github.com/SteamAutoCracks/DepotDownloaderMod/releases/download/DepotDownloaderMod_3.4.0.2/Release.rar",
@@ -35,7 +35,7 @@ pub const PLUGINS: &[PluginDef] = &[
         strip_prefix: Some("Release/net9.0/"),
     },
     PluginDef {
-        id: "repkg",
+        id: "RePKG",
         name: "RePKG",
         download_url:
             "https://github.com/notscuffed/repkg/releases/download/v0.4.0-alpha/RePKG.zip",
