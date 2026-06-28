@@ -245,7 +245,7 @@ export default function InstalledToolbar({
           </button>
         </Tooltip>
         <div className={cn(
-          "flex items-center rounded-md transition-all focus-within:ring-2 focus-within:ring-primary/50",
+          "flex items-center rounded-md transition-all",
           hasActiveFilters && "border border-border/80"
         )}>
           <button
