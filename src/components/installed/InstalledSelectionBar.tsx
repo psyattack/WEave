@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
-import { Check, Package, Trash2, X } from "lucide-react";
+import { Check, Package, Trash2, X, Copy } from "lucide-react";
 
 interface InstalledSelectionBarProps {
   selectionMode: boolean;
@@ -9,6 +9,7 @@ interface InstalledSelectionBarProps {
   selectAll: () => void;
   handleBulkExtract: () => void;
   handleBulkDelete: () => void;
+  handleBulkCopyId: () => void;
 }
 
 export default function InstalledSelectionBar({
@@ -18,6 +19,7 @@ export default function InstalledSelectionBar({
   selectAll,
   handleBulkExtract,
   handleBulkDelete,
+  handleBulkCopyId,
 }: InstalledSelectionBarProps) {
   const { t } = useTranslation();
 
@@ -35,19 +37,25 @@ export default function InstalledSelectionBar({
             <button
               type="button"
               onClick={clearSelection}
-              className="btn-secondary flex items-center gap-2 text-sm"
+              className="btn btn-ghost flex items-center gap-2 text-sm"
             >
               <X className="size-4" />
               {t("labels.clear_selection")}
             </button>
+            
+            <div className="h-4 w-px bg-white/10" />
+
             <button
               type="button"
               onClick={selectAll}
-              className="btn-secondary flex items-center gap-2 text-sm"
+              className="btn btn-ghost flex items-center gap-2 text-sm"
             >
               <Check className="size-4" />
               {t("labels.select_all")}
             </button>
+            
+            <div className="h-4 w-px bg-white/10" />
+
             <div
               role="status"
               aria-live="polite"
@@ -61,15 +69,29 @@ export default function InstalledSelectionBar({
                   <button
                     type="button"
                     onClick={handleBulkExtract}
-                    className="btn-primary flex items-center gap-2 text-sm"
+                    className="btn flex items-center gap-2 text-sm text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
                   >
                     <Package className="size-4" />
                     {t("labels.extract_selected")}
                   </button>
+
+                  <div className="h-4 w-px bg-white/10" />
+
+                  <button
+                    type="button"
+                    onClick={handleBulkCopyId}
+                    className="btn btn-ghost flex items-center gap-2 text-sm"
+                  >
+                    <Copy className="size-4" />
+                    {t("buttons.copy_id") || "Copy ID"}
+                  </button>
+
+                  <div className="h-4 w-px bg-white/10" />
+
                   <button
                     type="button"
                     onClick={handleBulkDelete}
-                    className="btn-danger flex items-center gap-2 text-sm"
+                    className="btn flex items-center gap-2 text-sm text-danger transition-colors hover:bg-danger hover:text-white"
                   >
                     <Trash2 className="size-4" />
                     {t("labels.delete_selected")}

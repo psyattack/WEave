@@ -482,7 +482,6 @@ export function useWallpaperActions() {
 
   const clearSelection = () => {
     setSelectedIds(new Set());
-    setSelectionMode(false);
   };
 
   const handleExtract = async (item: InstalledWallpaper) => {
@@ -513,6 +512,13 @@ export function useWallpaperActions() {
 
   const handleCopyId = async (item: InstalledWallpaper) => {
     await navigator.clipboard.writeText(item.pubfileid);
+    pushToast(t("messages.id_copied"), "success");
+  };
+
+  const handleBulkCopyId = async () => {
+    if (selectedIds.size === 0) return;
+    const idsString = Array.from(selectedIds).join(" ");
+    await navigator.clipboard.writeText(idsString);
     pushToast(t("messages.id_copied"), "success");
   };
 
@@ -668,6 +674,7 @@ export function useWallpaperActions() {
     handleDelete,
     handleBulkDelete,
     handleBulkExtract,
+    handleBulkCopyId,
     toggleSelection,
     selectAll,
     clearSelection,
