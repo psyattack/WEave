@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
+import { Settings } from "lucide-react";
 
 import Dialog from "@/components/common/Dialog";
 import Tabs from "@/components/common/Tabs";
@@ -36,7 +37,12 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t("tooltips.settings")}
+      title={
+        <div className="flex items-center gap-2">
+          <Settings size={18} className="text-primary" />
+          <span>{t("tooltips.settings")}</span>
+        </div>
+      }
       size="md"
     >
       <Tabs
