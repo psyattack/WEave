@@ -49,6 +49,7 @@ export default function InstalledView() {
     handleDelete,
     handleBulkDelete,
     handleBulkExtract,
+    handleBulkCopyId,
     toggleSelection,
     selectAll,
     clearSelection,
@@ -117,6 +118,7 @@ export default function InstalledView() {
         selectAll={selectAll}
         handleBulkExtract={handleBulkExtract}
         handleBulkDelete={handleBulkDelete}
+        handleBulkCopyId={handleBulkCopyId}
       />
 
       {loading ? (
