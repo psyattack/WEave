@@ -535,17 +535,22 @@ export function useWallpaperActions() {
       total: items.length,
     });
 
+    let lastUpdate = 0;
     const unlisten = await listen<{ current: number; total: number }>(
       "metadata-init-progress",
       (event) => {
-        setStatus({
-          phase: "initializing",
-          message:
-            t("metadata_init.fetching") ||
-            "Fetching metadata for installed wallpapers...",
-          progress: event.payload.current,
-          total: event.payload.total,
-        });
+        const now = Date.now();
+        if (now - lastUpdate > 33) {
+          setStatus({
+            phase: "initializing",
+            message:
+              t("metadata_init.fetching") ||
+              "Fetching metadata for installed wallpapers...",
+            progress: event.payload.current,
+            total: event.payload.total,
+          });
+          lastUpdate = now;
+        }
       },
     );
 

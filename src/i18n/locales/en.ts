@@ -55,6 +55,7 @@ export default {
     expand_sidebar: "Expand Bar",
     theme: "Switch theme",
     init_metadata: "Initialize metadata for all installed wallpapers",
+    cancel_init_metadata: "Cancel metadata initialization",
     select_multiple: "Select Multiple",
     open_we: "Open WE",
     load_playlist: "Load Playlist",

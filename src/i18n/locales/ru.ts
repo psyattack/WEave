@@ -55,6 +55,7 @@ export default {
     expand_sidebar: "Развернуть",
     theme: "Сменить тему",
     init_metadata: "Инициализировать метаданные для всех установленных обоев",
+    cancel_init_metadata: "Остановить инициализацию метаданных",
     select_multiple: "Множественная выборка",
     open_we: "Открыть WE",
     load_playlist: "Загрузить плейлист",
