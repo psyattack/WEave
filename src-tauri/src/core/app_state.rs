@@ -39,6 +39,8 @@ pub struct AppState {
     dotnet_initialized: Arc<AtomicBool>,
     /// Flag to ensure plugins check runs only once
     plugins_initialized: Arc<AtomicBool>,
+    /// Flag to cancel metadata initialization
+    pub metadata_init_cancel: Arc<AtomicBool>,
 }
 
 impl AppState {
@@ -108,6 +110,7 @@ impl AppState {
             dotnet_root: Arc::new(Mutex::new(None)),
             dotnet_initialized: Arc::new(AtomicBool::new(false)),
             plugins_initialized: Arc::new(AtomicBool::new(false)),
+            metadata_init_cancel: Arc::new(AtomicBool::new(false)),
         })
     }
 

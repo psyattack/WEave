@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks";
 import { useMetadataInitStore } from "@/stores/metadata-init";
+import { tryInvoke } from "@/lib/tauri";
 import { cn } from "@/lib/utils";
 
 export default function MetadataInitDialog() {
@@ -11,16 +12,6 @@ export default function MetadataInitDialog() {
   const setStatus = useMetadataInitStore((s) => s.setStatus);
 
   const isOpen = status !== null;
-
-  // Auto-close after 2 seconds on complete
-  useEffect(() => {
-    if (status?.phase === "complete") {
-      const timer = setTimeout(() => {
-        setStatus(null);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [status?.phase, setStatus]);
 
   if (!status) return null;
 
@@ -39,6 +30,7 @@ export default function MetadataInitDialog() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
           onClick={() => {
             if (phase === "complete" || phase === "error") {
@@ -66,7 +58,7 @@ export default function MetadataInitDialog() {
               {/* Icon */}
               <div className="flex size-16 items-center justify-center">
                 {phase === "initializing" && (
-                  <Loader2 className="size-12 animate-spin text-primary" />
+                  <Loader2 className="size-10 animate-spin text-primary" />
                 )}
                 {phase === "complete" && (
                   <motion.div
@@ -74,7 +66,7 @@ export default function MetadataInitDialog() {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                   >
-                    <CheckCircle2 className="size-12 text-green-500" />
+                    <CheckCircle2 className="size-10 text-success" />
                   </motion.div>
                 )}
                 {phase === "error" && (
@@ -83,7 +75,7 @@ export default function MetadataInitDialog() {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                   >
-                    <XCircle className="size-12 text-red-500" />
+                    <XCircle className="size-10 text-danger" />
                   </motion.div>
                 )}
               </div>
@@ -101,20 +93,19 @@ export default function MetadataInitDialog() {
               {/* Message */}
               <p className="text-sm text-muted">{message}</p>
 
-              {/* Progress Bar */}
+              {/* Progress */}
               {phase === "initializing" &&
                 progress !== null &&
-                total !== null &&
-                total > 0 && (
+                total !== null && (
                   <div className="w-full space-y-2">
                     <div className="h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
                       <motion.div
-                        initial={{ width: 0 }}
+                        initial={{ x: "-100%" }}
                         animate={{
-                          width: `${progressPercent}%`,
+                          x: `-${100 - (progressPercent || 0)}%`,
                         }}
                         transition={{ duration: 0.3, ease: "easeOut" }}
-                        className="h-full bg-primary"
+                        className="size-full bg-primary"
                       />
                     </div>
                     <p className="text-xs text-muted">
@@ -122,6 +113,24 @@ export default function MetadataInitDialog() {
                     </p>
                   </div>
                 )}
+
+              {/* Cancel Button for initializing */}
+              {phase === "initializing" && (
+                <button
+                  onClick={async () => {
+                    await tryInvoke("app_cancel_init_metadata");
+                    setStatus({
+                      phase: "idle",
+                      message: "",
+                      progress: null,
+                      total: null,
+                    });
+                  }}
+                  className="btn-outline mt-2 border-danger/20 text-danger hover:bg-danger/10"
+                >
+                  {t("buttons.cancel") || "Cancel"}
+                </button>
+              )}
 
               {/* Close Button (only for error/complete) */}
               {(phase === "error" || phase === "complete") && (

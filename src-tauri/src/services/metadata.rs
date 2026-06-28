@@ -50,7 +50,14 @@ pub async fn batch_initialize_metadata(state: Arc<AppState>) -> anyhow::Result<u
     let total = pending.len() as u32;
     let mut count: u32 = 0;
 
+    state.metadata_init_cancel.store(false, std::sync::atomic::Ordering::SeqCst);
+
     for (index, pubfileid) in pending.iter().enumerate() {
+        if state.metadata_init_cancel.load(std::sync::atomic::Ordering::SeqCst) {
+            log::info!("Metadata initialization cancelled by user");
+            break;
+        }
+
         let workshop = state.workshop.clone();
         match workshop.item_details(pubfileid).await {
             Ok(item) => {

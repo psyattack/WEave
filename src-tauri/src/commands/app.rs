@@ -180,3 +180,9 @@ pub async fn app_init_metadata(state: AppStateHandle<'_>) -> Result<u32, String>
         .await
         .map_err(|e| e.to_string())
 }
+
+/// Cancel the metadata batch initializer.
+#[command]
+pub fn app_cancel_init_metadata(state: AppStateHandle<'_>) {
+    state.metadata_init_cancel.store(true, std::sync::atomic::Ordering::SeqCst);
+}
