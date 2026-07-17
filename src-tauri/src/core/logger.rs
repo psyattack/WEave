@@ -112,10 +112,11 @@ impl log::Log for WEaveLogger {
 
         let target = metadata.target();
 
-        // Filter out noisy debug targets
+        // Filter out noisy or sensitive debug targets
         if target.starts_with("selectors::matching") ||
            target.starts_with("html5ever::tokenizer") ||
            target.starts_with("html5ever::tree_builder") ||
+           target.starts_with("cookie_store") ||
            target.contains("parse") ||
            target.contains("parser") {
             return false;

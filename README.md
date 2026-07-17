@@ -6,7 +6,14 @@
   **Modern desktop application for managing Steam Workshop wallpapers for Wallpaper Engine**
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-  [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)](https://www.microsoft.com/windows)
+  [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+  [![Tauri](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://tauri.app)
+  [![Rust](https://img.shields.io/badge/Rust-%3E%3D1.77-black?logo=rust&logoColor=white)](https://www.rust-lang.org)
+  [![React](https://img.shields.io/badge/React-v19-61DAFB?logo=react&logoColor=black)](https://react.dev)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-v6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38BDF8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+  [![Vite](https://img.shields.io/badge/Vite-v8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
+  [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
   
   [Русская версия](README.ru.md)
 </div>
@@ -20,8 +27,8 @@ WEave is a powerful Wallpaper Engine Workshop Manager built with Tauri 2 and Rea
 https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 
 <div align="center">
-  <img src="repo/preview_1.png" width="49%"> <img src="repo/preview_2.png" width="49%">
-  <img src="repo/preview_3.png" width="49%"> <img src="repo/preview_4.png" width="49%">
+  <img src="https://github.com/user-attachments/assets/084d0710-4fb4-492c-a2eb-b9e1941a89bf" width="49%"> <img src="https://github.com/user-attachments/assets/5cd7ba5b-bb4e-4a87-be55-b4b74143cf94" width="49%">
+  <img src="https://github.com/user-attachments/assets/21eb0771-b350-47e0-8057-ccbcc774c83f" width="49%"> <img src="https://github.com/user-attachments/assets/1042d7d8-8f5b-4c7a-9097-2d0d7319876f" width="49%">
 </div>
 
 ---
@@ -32,8 +39,7 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 <summary><b>🌐 Workshop Browser</b></summary>
 
 - Full support for filters and sorting
-- Image preview with lazy loading and caching
-- Detailed item view with ratings, descriptions, and author info
+- View detailed information about the wallpaper
 - Collections and related collections support
 - Page preloading for seamless navigation
 - Description translation (Google Translate API)
@@ -44,7 +50,7 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 <summary><b>📥 Download Management</b></summary>
 
 - Multi-threaded downloads via DepotDownloaderMod
-- Multiple Steam account support (6 built-in + custom)
+- Multiple Steam account support (3 built-in + custom)
 - Real-time progress tracking with cancellation
 - Batch download from IDs/URLs
 - Queue management with status tracking
@@ -58,8 +64,6 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 - View all installed wallpapers from Wallpaper Engine
 - Local filtering and sorting
 - **Multi-select mode with batch operations** (delete, extract)
-- Apply wallpapers to specific monitors
-- Active wallpaper detection
 - Open folders in Explorer
 - Extract .pkg files with RePKG
 - **Interactive Preset & Property Settings**: Customize wallpaper properties (playback rate, alignment, volume, audio responsiveness, colors, brightness, contrast, saturation, hue, post-processing filters, and custom project-defined properties)
@@ -71,9 +75,9 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 <summary><b>⚙️ Wallpaper Engine Integration & Control</b></summary>
 
 - Auto-detect WE installation
-- Apply wallpapers to monitors
+- Apply wallpapers
 - Read current configuration
-- Detect active wallpapers across monitors
+- Detect active wallpapers
 - **Integrated Media Control Center**: Animated control bar to play, pause, stop, switch next/previous wallpapers, mute/unmute, and toggle desktop icons visibility (show/hide)
 - **Playlist & Profile Loader**: Quickly load Wallpaper Engine playlists or profiles by name from the control bar
 
@@ -82,7 +86,7 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 <details>
 <summary><b>🎨 Customization</b></summary>
 
-- 4 built-in themes
+- 6 built-in themes
 - 10 accent colors
 - Multi-language support (English, Russian)
 - Auto-detect system language on first launch
@@ -103,11 +107,12 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 
 #### Steps
 
-1. Download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave/releases)
-2. Extract the archive to any convenient location on your disk
-3. Run `WEave.exe`
+1. Download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave/releases):
+   - **Installer (`.exe`):** Run the installer and follow the instructions.
+   - **Portable version (`.zip`):** Extract the archive to any convenient location on your disk and run `WEave.exe`.
 
-> **Note:** When you first log in, WEave will automatically download additional tools and the portable version of .NET Runtime 9.0.17 if .NET Runtime/SDK 8/9/10 is not detected on your system.
+> [!NOTE]
+> When you first log in, WEave will automatically download additional tools and the portable version of .NET Runtime 9.0.17 if .NET Runtime/SDK 8/9/10 is not detected on your system.
 
 ---
 
@@ -117,12 +122,12 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 <summary><b>Development Setup</b></summary>
 
 #### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+)
-- [Rust](https://www.rust-lang.org/) (v1.77+)
-- [.NET 9 Runtime](https://dotnet.microsoft.com/download/dotnet/9.0)
-- Wallpaper Engine
+- **Node.js** (v20+)
+- **Rust** (v1.77+)
+- **.NET Runtime/SDK 8/9/10**
+- **Wallpaper Engine**
 
-#### Setup
+#### Setup & Other options
 
 ```bash
 # Clone repository
@@ -142,34 +147,22 @@ npm run tauri build
 npm run test  # Frontend tests
 cd src-tauri && cargo test  # Backend tests
 
-# Checks backend
+# Checks backend (personal recommendation)
 cargo check
 cargo machete
 cargo clippy -- -W dead_code
 cargo +nightly udeps
 
-# Checks frontend
+# Checks frontend (personal recommendation)
 npx knip
 npm run typecheck
 npm run lint
 
 # Bump version
-npm run bump -- major.minor.patch
+npm run bump -- <semver>
 ```
 
 </details>
-
----
-
-## 📚 Usage
-
-1. **Launch WEave** and accept the legal agreement (first run)
-2. **Configure** Wallpaper Engine path in Settings (auto-detected)
-3. **Select** a Steam account for downloads (if the current one doesn't work)
-4. **Browse** Workshop tab to discover wallpapers
-5. **Install** wallpapers with one click
-6. **Manage** installed wallpapers in the Installed tab
-7. **Apply** wallpapers to your monitors
 
 ---
 
@@ -203,7 +196,7 @@ npm run bump -- major.minor.patch
 - **AES-GCM + PBKDF2** (Encryption)
 - **Serde** (Serialization)
 - **dirs** (Platform directories)
-- **Tracing** (Logging)
+- **log + env_logger** (Logging)
 
 </td>
 </tr>
@@ -214,56 +207,58 @@ npm run bump -- major.minor.patch
 ## 📂 Project Structure
 
 <details>
-<summary><b>View Structure</b></summary>
+<summary><b>View structure</b></summary>
 
 ```
 WEave/
 ├── src/                              # React frontend
 │   ├── assets/                       # Static assets (logos, icons)
 │   ├── components/                   # React components
-│   │   ├── common/                   # Reusable UI (Dialog, Drawer, SetupOverlay, etc.)
-│   │   │   └── details/              # Details panel subcomponents (Action buttons, Meta grid, Sidebar)
-│   │   ├── dialogs/                  # Modal dialogs (Legal, Update, etc.)
-│   │   ├── installed/                # Installed wallpapers components (Grid, Toolbar, Selection bar, Card)
-│   │   ├── layout/                   # Layout components (TitleBar, Sidebar, TopBar)
-│   │   ├── settings/                 # Settings dialog tabs (General, Accounts, Appearance, etc.)
-│   │   ├── tasks/                    # Download/extract task drawer
-│   │   ├── views/                    # Main views (Workshop, Collections, Installed)
-│   │   └── workshop/                 # Workshop components (Cards, Filters, Details)
-│   ├── e2e/                          # End-to-End and Integration tests (accessibility, stress, scenarios)
-│   ├── hooks/                        # Custom React hooks (useTheme, useWallpaperActions, etc.)
+│   │   ├── common/                   # Reusable UI components (Select, ToastStack, SetupOverlay, etc.)
+│   │   │   ├── DetailsPanel.tsx      # Main wallpaper details panel
+│   │   │   └── details/              # Details panel sub-components (Actions, MetaGrid, Sidebar, Presets)
+│   │   ├── dialogs/                  # Modals & Dialogs (Legal, Update, Login/2FA, MultiDownload, etc.)
+│   │   ├── installed/                # Installed wallpapers components (Grid, SelectionBar, Toolbar, WallpaperCard)
+│   │   ├── layout/                   # App layout components (Sidebar, TitleBar, TopBar)
+│   │   ├── settings/                 # Settings components (General, Accounts, Hotkeys, SettingsDialog)
+│   │   ├── tasks/                    # Task drawer component (TasksDrawer)
+│   │   ├── views/                    # Views/screens (Workshop, Collections, Installed, Author)
+│   │   └── workshop/                 # Workshop components (Card, FilterBar, Pagination)
+│   ├── e2e/                          # UI & integration tests (Vitest + Tauri mock)
+│   ├── hooks/                        # React hooks (useWallpaperActions, useTheme, useBootstrap, useHotkeys, etc.)
 │   ├── i18n/                         # Type-safe i18n system
 │   │   └── locales/                  # Translation source files (en.ts, ru.ts)
-│   ├── lib/                          # Utilities (errors, logger, helpers, tauri-mock)
-│   ├── stores/                       # Zustand state stores
-│   └── types/                        # TypeScript definitions
+│   ├── lib/                          # Utility helpers (errors, logger, tauri, tauri-mock, workshop)
+│   ├── stores/                       # Zustand stores (app, dotnet, filters, hotkeys/, etc.)
+│   └── types/                        # TypeScript types (workshop.ts)
 │
 └── src-tauri/                        # Rust backend (Tauri)
-    ├── capabilities/                 # Tauri v2 security capabilities / permissions
+    ├── capabilities/                 # Tauri v2 permissions & security profiles
     └── src/                          # Backend source code
-        ├── commands/                 # Tauri command handlers (invoked from frontend)
-        │   ├── accounts.rs           # Account management
-        │   ├── download.rs           # Download orchestration
-        │   ├── extract.rs            # Package extraction
-        │   ├── steam.rs              # Steam login, cookies & webview orchestration
-        │   └── ...                   # Metadata, config, i18n, updater, workshop commands, etc.
+        ├── commands/                 # Tauri commands (invoked from frontend)
+        │   ├── accounts.rs           # Account management commands
+        │   ├── download.rs           # Download orchestration commands
+        │   ├── extract.rs            # Extraction commands (RePKG)
+        │   ├── steam.rs              # Steam login, cookies & webview commands
+        │   ├── we.rs                 # Wallpaper Engine commands (install, apply, control)
+        │   └── ...                   # Metadata, config, i18n, autoupdate commands, etc.
         ├── config/                   # Configuration management
-        │   ├── settings.rs           # User settings struct & disk operations
-        │   └── metadata.rs           # Wallpaper metadata cache
-        ├── core/                     # Application core components
-        │   ├── app_state.rs          # Shared global state
-        │   ├── errors.rs             # Structured error definitions
+        │   ├── settings.rs           # User settings service (JSON)
+        │   └── metadata.rs           # Metadata caching service
+        ├── core/                     # Core app logic
+        │   ├── app_state.rs          # Global application state (AppState)
+        │   ├── errors.rs             # Structured error types & formatting
         │   ├── logger.rs             # Rotating file logger setup
         │   └── runtime.rs            # Portable .NET runtime manager
-        ├── plugins/                  # External plugin helpers
+        ├── plugins/                  # External utility plugins
         │   ├── plugin_manager.rs     # Plugin download & updates logic
         │   └── plugin_paths.rs       # External binary path resolution
         ├── services/                 # Business logic services
-        │   ├── accounts/             # Steam credentials encryption/storage
-        │   ├── workshop/             # Steam Workshop scraper & auth webview handler
-        │   ├── download.rs           # DepotDownloader wrapper service
-        │   ├── extract.rs            # RePKG extractor wrapper service
-        │   ├── we_client.rs          # Wallpaper Engine API and monitor integration
+        │   ├── accounts/             # Encrypted Steam account storage service
+        │   ├── workshop/             # Steam Workshop scraper, parser & webview handler
+        │   ├── download.rs           # Wrapper service for DepotDownloader
+        │   ├── extract.rs            # Wrapper service for RePKG extractor
+        │   ├── we_client.rs          # Wallpaper Engine API and monitor integration service
         │   └── ...                   # i18n, translator, metadata services, etc.
         ├── lib.rs                    # Tauri context & builder setup
         └── main.rs                   # Executable entry point
@@ -280,13 +275,14 @@ Configuration files and plugins are stored in:
 
 | File / Directory | Description |
 |------|-------------|
-| `settings.json` | App settings (theme, language, WE directory, etc.) |
+| `settings.json` | App settings |
 | `metadata.json` | Cached wallpaper metadata |
 | `user_accounts.enc` | Encrypted Steam accounts |
-| `SteamWebView/` | WebView2 data (persisted cookies) |
+| `SteamWebView/` | Steam parser data |
+| `EBWebView/` | App data |
 | `plugins/` | Auto-downloaded plugins (DepotDownloaderMod, RePKG) |
-| `dotnet/` | Portable .NET Runtime 9.0.17 (auto-downloaded if needed) |
-| `.log` | App log file (max 10MB, auto-trims oldest records) |
+| `dotnet/` | Portable .NET Runtime 9.0.17 (if needed) |
+| `.log` | App log file |
 
 ---
 
@@ -320,6 +316,6 @@ This application is **not affiliated with or endorsed by** Valve Corporation or 
 
 ## 💬 Support
 
-For issues, questions, or feature requests, please open an issue on [**GitHub**](https://github.com/psyattack/weave-tauri/issues).
+For issues, questions, or feature requests, please open an issue on [**GitHub**](https://github.com/psyattack/weave/issues).
 
 ---
