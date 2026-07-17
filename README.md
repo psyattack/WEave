@@ -5,8 +5,8 @@
   
   **Modern desktop application for managing Steam Workshop wallpapers for Wallpaper Engine**
   
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-  [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=opensourceinitiative&logoColor=white)](LICENSE)
+  [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0wIDMuNDQ5TDkuNzUgMi4xdjkuNDVIMFYzLjQ0OXpNMCAxMi40NWg5Ljc1djkuNDVMMCAyMC41NTF2LTguMTAxek0xMS4yNSAxLjg5bDEyLjc1LTEuODl2MTEuNDVoLTEyLjc1VjEuODl6bTEyLjc1IDEwLjU2djExLjQ1bC0xMi43NS0xLjg5di05LjU2aDEyLjc1eiIvPjwvc3ZnPg==)](https://www.microsoft.com/windows)
   [![Tauri](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://tauri.app)
   [![Rust](https://img.shields.io/badge/Rust-%3E%3D1.77-black?logo=rust&logoColor=white)](https://www.rust-lang.org)
   [![React](https://img.shields.io/badge/React-v19-61DAFB?logo=react&logoColor=black)](https://react.dev)
@@ -35,64 +35,61 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 
 ## ✨ Key Features
 
-<details open>
-<summary><b>🌐 Workshop Browser</b></summary>
+* **Search wallpapers in Workshop** by specified parameters
+* **One-click wallpaper installation**
+* **Manage installed wallpapers**
 
-- Full support for filters and sorting
-- View detailed information about the wallpaper
-- Collections and related collections support
-- Page preloading for seamless navigation
-- Description translation (Google Translate API)
+*Specifically:*
+
+<details>
+<summary><b>Workshop Browser</b></summary>
+
+- **Steam Workshop Integration**: Replicates the standard Steam Workshop web interface features, including basic search, sorting, and filters (by category, age rating, resolution, etc.).
+- **Author Profiles**: View all wallpapers and collections published by a specific author.
+- **Collections**: Support for browsing Steam collections and their contents.
+- **Page Preloading**: Smooth navigation by pre-fetching the next page of items.
+- **Description Translation**: Translation of wallpaper descriptions (Google Translate API).
 
 </details>
 
 <details>
-<summary><b>📥 Download Management</b></summary>
+<summary><b>Download Management</b></summary>
 
-- Multi-threaded downloads via DepotDownloaderMod
-- Multiple Steam account support (3 built-in + custom)
-- Real-time progress tracking with cancellation
-- Batch download from IDs/URLs
-- Queue management with status tracking
-- Optional auto-apply after download
+- **Steam Accounts Support**: Built-in public accounts + ability to add custom accounts (supporting Steam Guard / QR-code authentication).
+- **Progress Tracking**: Real-time progress display (amount downloaded) and download cancellation.
+- **Auto-Apply**: Optional feature to automatically apply the latest downloaded wallpaper.
 
 </details>
 
 <details>
-<summary><b>🖼️ Installed Wallpapers</b></summary>
+<summary><b>Library Management</b></summary>
 
-- View all installed wallpapers from Wallpaper Engine
-- Local filtering and sorting
-- **Multi-select mode with batch operations** (delete, extract)
-- Open folders in Explorer
-- Extract .pkg files with RePKG
-- **Interactive Preset & Property Settings**: Customize wallpaper properties (playback rate, alignment, volume, audio responsiveness, colors, brightness, contrast, saturation, hue, post-processing filters, and custom project-defined properties)
-- **Live Preview & Persistence**: Apply adjustments live to the active wallpaper. Use "Fixate Changes" to write the settings directly into `project.json` (auto-backups created) or "Restore Defaults" to reset all settings
+- **Apply & Delete**: Quickly apply (activate) wallpapers on your desktop and delete them.
+- **Parameters & Presets**: Adjust wallpaper properties in real time (playback rate, alignment, volume, color settings, brightness, contrast, etc.) and save options directly to `project.json` (with automatic backup creation).
+- **Batch Actions**: Multi-select mode for bulk deletion or extraction of installed wallpapers.
+- **RePKG Decompiler**: Unpack `.pkg` files in one click.
 
 </details>
 
 <details>
-<summary><b>⚙️ Wallpaper Engine Integration & Control</b></summary>
+<summary><b>Wallpaper Engine Integration</b></summary>
 
-- Auto-detect WE installation
-- Apply wallpapers
-- Read current configuration
-- Detect active wallpapers
-- **Integrated Media Control Center**: Animated control bar to play, pause, stop, switch next/previous wallpapers, mute/unmute, and toggle desktop icons visibility (show/hide)
-- **Playlist & Profile Loader**: Quickly load Wallpaper Engine playlists or profiles by name from the control bar
+- **Auto-Detection**: Automatically detects your Wallpaper Engine installation directory.
+- **Control Center**: Integrated media control bar to play, pause, mute, switch wallpapers, and toggle desktop icons visibility.
+- **Playlists & Profiles**: Quickly load Wallpaper Engine playlists or settings profiles by name directly from the control bar.
 
 </details>
 
 <details>
-<summary><b>🎨 Customization</b></summary>
+<summary><b>Customization & Hotkeys</b></summary>
 
-- 6 built-in themes
-- 10 accent colors
-- Multi-language support (English, Russian)
-- Auto-detect system language on first launch
-- Global hotkey system with customizable bindings
+- **UI Themes**: 6 interface themes and 10 custom accent colors.
+- **Global Hotkeys**: Customizable keyboard shortcuts to control playback, navigate pages, and open views.
+- **Localization**: Interface available in both English and Russian (auto-detects system language on first launch).
 
 </details>
+
+*And other features not mentioned here*
 
 ---
 
@@ -105,11 +102,9 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 - **Wallpaper Engine** (installed)
 - **.NET Runtime 8/9/10** (auto-downloaded if missing)
 
-#### Steps
-
-1. Download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave/releases):
-   - **Installer (`.exe`):** Run the installer and follow the instructions.
-   - **Portable version (`.zip`):** Extract the archive to any convenient location on your disk and run `WEave.exe`.
+To install, download the latest release from [**GitHub Releases**](https://github.com/psyattack/weave/releases):
+- **Installer (`.exe`):** Run the installer and follow the instructions.
+- **Portable version (`.zip`):** Extract the archive to any convenient location on your disk and run `WEave.exe`.
 
 > [!NOTE]
 > When you first log in, WEave will automatically download additional tools and the portable version of .NET Runtime 9.0.17 if .NET Runtime/SDK 8/9/10 is not detected on your system.
