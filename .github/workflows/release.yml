@@ -180,6 +180,7 @@ jobs:
                   if ($line -match '^##\s+\[?v?\d+') {
                       if ($started) { break }
                       $started = $true
+                      continue
                   }
                   if ($started) {
                       $extracted += $line
