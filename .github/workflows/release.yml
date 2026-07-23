@@ -171,7 +171,34 @@ jobs:
               $changelogText += "### Other`n" + ($other -join "`n") + "`n`n"
           }
 
-          [System.IO.File]::WriteAllText("CHANGELOG_GENERATED.md", $changelogText.Trim(), [System.Text.Encoding]::UTF8)
+          $latestTagNotes = ""
+          if (Test-Path "CHANGELOG.md") {
+              $lines = Get-Content "CHANGELOG.md"
+              $extracted = @()
+              $started = $false
+              foreach ($line in $lines) {
+                  if ($line -match '^##\s+\[?v?\d+') {
+                      if ($started) { break }
+                      $started = $true
+                  }
+                  if ($started) {
+                      $extracted += $line
+                  }
+              }
+              $latestTagNotes = ($extracted -join "`n").Trim()
+          }
+
+          $finalReleaseBody = ""
+          if ($latestTagNotes) {
+              $finalReleaseBody += "$latestTagNotes`n`n"
+          }
+
+          $autoChangelog = $changelogText.Trim()
+          if ($autoChangelog) {
+              $finalReleaseBody += "<details><summary>Detailed Changelog</summary>`n`n$autoChangelog`n`n</details>"
+          }
+
+          [System.IO.File]::WriteAllText("CHANGELOG_GENERATED.md", $finalReleaseBody.Trim(), [System.Text.Encoding]::UTF8)
 
       - name: Attest Build Artifacts
         uses: actions/attest-build-provenance@v2
