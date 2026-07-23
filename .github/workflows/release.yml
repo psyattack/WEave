@@ -1,0 +1,192 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_title:
+        description: 'Custom Release Title (leave empty for default: "WEave vX.Y.Z")'
+        required: false
+        type: string
+      is_draft:
+        description: 'Publish as Draft'
+        required: false
+        type: boolean
+        default: false
+      is_prerelease:
+        description: 'Publish as Pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  publish-tauri:
+    name: Build & Publish Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Determine Version & Title
+        id: version_info
+        shell: powershell
+        run: |
+          $ver = (Get-Content package.json | ConvertFrom-Json).version
+          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
+          
+          $customTitle = "${{ github.event.inputs.release_title }}"
+          if ([string]::IsNullOrWhiteSpace($customTitle)) {
+              $customTitle = "WEave v$ver"
+          }
+          echo "TITLE=$customTitle" >> $env:GITHUB_OUTPUT
+
+      - name: Build Tauri App
+        run: npm run tauri build
+
+      - name: Prepare Artifacts & Zip Portable
+        id: prepare_artifacts
+        shell: powershell
+        run: |
+          $ver = "${{ steps.version_info.outputs.VERSION }}"
+          $distDir = "dist_artifacts"
+          New-Item -ItemType Directory -Force -Path $distDir
+
+          # 1. Installer (.exe from NSIS)
+          $nsisExe = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis/*.exe" | Select-Object -First 1
+          if ($nsisExe) {
+              $exeTarget = "$distDir/WEave-v$ver-Setup-x64.exe"
+              Copy-Item $nsisExe.FullName $exeTarget
+              Write-Host "Created $exeTarget"
+          }
+
+          # 2. Installer (.msi)
+          $msiFile = Get-ChildItem -Path "src-tauri/target/release/bundle/msi/*.msi" | Select-Object -First 1
+          if ($msiFile) {
+              $msiTarget = "$distDir/WEave-v$ver-Setup-x64.msi"
+              Copy-Item $msiFile.FullName $msiTarget
+              Write-Host "Created $msiTarget"
+          }
+
+          # 3. Portable Zip (compress standalone executable)
+          $exePath = "src-tauri/target/release/WEave.exe"
+          if (Test-Path $exePath) {
+              $zipTarget = "$distDir/WEave-v$ver-Portable-x64.zip"
+              Compress-Archive -Path $exePath -DestinationPath $zipTarget -Force
+              Write-Host "Created $zipTarget"
+          }
+
+      - name: Generate Conventional Changelog
+        id: changelog
+        shell: powershell
+        run: |
+          $prevTag = git describe --tags --abbrev=0 HEAD^ 2>$null
+          if ($prevTag) {
+              $logRange = "$prevTag..HEAD"
+          } else {
+              $logRange = "HEAD"
+          }
+
+          $commits = git log $logRange --pretty=format:"%h|%s|%an"
+          
+          $added = @()
+          $changed = @()
+          $deprecated = @()
+          $removed = @()
+          $fixed = @()
+          $security = @()
+          $other = @()
+
+          foreach ($line in $commits -split "`n") {
+              if (-not $line) { continue }
+              $parts = $line -split "\|"
+              $hash = $parts[0]
+              $msg = $parts[1]
+              $author = $parts[2]
+              $commitUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/commit/$hash"
+              $formatted = "- $msg ([$hash]($commitUrl)) by @$author"
+
+              if ($msg -match "^feat(\(.*\))?:") {
+                  $added += $formatted
+              } elseif ($msg -match "^(fix|bugfix)(\(.*\))?:") {
+                  $fixed += $formatted
+              } elseif ($msg -match "^(sec|security)(\(.*\))?:") {
+                  $security += $formatted
+              } elseif ($msg -match "^(deprecate|deprecated)(\(.*\))?:") {
+                  $deprecated += $formatted
+              } elseif ($msg -match "^(remove|removed|revert)(\(.*\))?:") {
+                  $removed += $formatted
+              } elseif ($msg -match "^(refactor|perf|style|build|ci|chore|docs|change|changed)(\(.*\))?:") {
+                  $changed += $formatted
+              } else {
+                  $other += $formatted
+              }
+          }
+
+          $changelogText = ""
+          if ($added.Count -gt 0) {
+              $changelogText += "### Added`n" + ($added -join "`n") + "`n`n"
+          }
+          if ($changed.Count -gt 0) {
+              $changelogText += "### Changed`n" + ($changed -join "`n") + "`n`n"
+          }
+          if ($deprecated.Count -gt 0) {
+              $changelogText += "### Deprecated`n" + ($deprecated -join "`n") + "`n`n"
+          }
+          if ($removed.Count -gt 0) {
+              $changelogText += "### Removed`n" + ($removed -join "`n") + "`n`n"
+          }
+          if ($fixed.Count -gt 0) {
+              $changelogText += "### Fixed`n" + ($fixed -join "`n") + "`n`n"
+          }
+          if ($security.Count -gt 0) {
+              $changelogText += "### Security`n" + ($security -join "`n") + "`n`n"
+          }
+          if ($other.Count -gt 0) {
+              $changelogText += "### Other`n" + ($other -join "`n") + "`n`n"
+          }
+
+          [System.IO.File]::WriteAllText("CHANGELOG_GENERATED.md", $changelogText.Trim(), [System.Text.Encoding]::UTF8)
+
+      - name: Attest Build Artifacts
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist_artifacts/*'
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version_info.outputs.VERSION }}
+          name: "${{ steps.version_info.outputs.TITLE }}"
+          body_path: CHANGELOG_GENERATED.md
+          draft: ${{ github.event.inputs.is_draft || false }}
+          prerelease: ${{ github.event.inputs.is_prerelease || false }}
+          files: |
+            dist_artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

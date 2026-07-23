@@ -296,7 +296,6 @@ impl WallpaperEngineClient {
             .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
 
         let properties_json = serde_json::to_string(properties)?;
-        let raw_properties = format!("-properties RAW~({})~END", properties_json);
 
         let mut cmd = Command::new(executable.clone());
         if let Some(parent) = executable.parent() {
@@ -310,7 +309,8 @@ impl WallpaperEngineClient {
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
-            cmd.raw_arg(raw_properties.clone());
+            let raw_properties = format!("-properties RAW~({})~END", properties_json);
+            cmd.raw_arg(raw_properties);
         }
         
         #[cfg(not(windows))]
@@ -332,7 +332,6 @@ impl WallpaperEngineClient {
             .ok_or_else(|| anyhow::anyhow!("Wallpaper Engine executable not found"))?;
 
         let properties_json = serde_json::to_string(properties)?;
-        let raw_properties = format!("-properties RAW~({})~END", properties_json);
 
         let mut cmd = Command::new(executable.clone());
         if let Some(parent) = executable.parent() {
@@ -346,7 +345,8 @@ impl WallpaperEngineClient {
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
-            cmd.raw_arg(raw_properties.clone());
+            let raw_properties = format!("-properties RAW~({})~END", properties_json);
+            cmd.raw_arg(raw_properties);
         }
         
         #[cfg(not(windows))]
