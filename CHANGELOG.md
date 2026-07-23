@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.10.2] - 2026-07-23
+## [4.10.3] - 2026-07-23
 
 ### Changed
 - Filtered `cookie_store` logs from logger output to reduce log noise.
