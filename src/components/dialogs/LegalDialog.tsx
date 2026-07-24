@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "@/i18n/hooks";
-import { AlertTriangle, BookOpen, FileText } from "lucide-react";
+import { openUrl as openExternal } from "@tauri-apps/plugin-opener";
+import { AlertTriangle, ExternalLink, FileText } from "lucide-react";
 
 import Dialog from "@/components/common/Dialog";
 import Markdown from "@/components/common/Markdown";
@@ -41,17 +42,22 @@ export default function LegalDialog({
     onOpenChange(false);
   };
 
-  const handleClose = () => {
-    if (!requireAccept) {
-      onOpenChange(false);
-    }
+  const openNoticeLink = () => {
+    void openExternal(
+      "https://github.com/psyattack/WEave/blob/main/NOTICE.md",
+    );
   };
 
   return (
     <Dialog
       open={open}
       onOpenChange={requireAccept ? () => {} : onOpenChange}
-      title={t("dialog.legal")}
+      title={
+        <div className="flex items-center gap-2">
+          <FileText size={18} className="text-primary" />
+          <span>{t("dialog.legal")}</span>
+        </div>
+      }
       size="lg"
       footer={
         requireAccept ? (
@@ -73,11 +79,7 @@ export default function LegalDialog({
               {t("buttons.continue")}
             </button>
           </div>
-        ) : (
-          <button className="btn-primary" onClick={handleClose}>
-            {t("buttons.close")}
-          </button>
-        )
+        ) : undefined
       }
     >
       <div className="flex flex-col gap-4">
@@ -127,35 +129,17 @@ export default function LegalDialog({
 
           {activeTab === "license" && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
-              <div className="mb-6 flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-4">
-                <BookOpen className="mt-0.5 size-5 shrink-0 text-primary" />
-                <div>
-                  <h3 className="mt-0 mb-1 text-base font-semibold text-primary">
-                    {t("legal.opensource_title")}
-                  </h3>
-                  <p className="mb-0 text-sm text-foreground">
-                    {t("legal.opensource_message")}
-                  </p>
-                </div>
-              </div>
-
               <Markdown source={MIT_LICENSE} />
-
-              <h3 className="mt-6">{t("legal.dependencies_title")}</h3>
-
-              <div className="mt-4 grid gap-2 text-xs">
-                <div className="rounded border border-border bg-surface p-2">
-                  <strong>Tauri</strong> - MIT/Apache-2.0
-                </div>
-                <div className="rounded border border-border bg-surface p-2">
-                  <strong>React</strong> - MIT
-                </div>
-                <div className="rounded border border-border bg-surface p-2">
-                  <strong>DepotDownloaderMod</strong> - GPL-2.0
-                </div>
-                <div className="rounded border border-border bg-surface p-2">
-                  <strong>RePKG</strong> - MIT
-                </div>
+              <div className="mt-6 flex flex-wrap items-center gap-1.5 border-t border-border pt-4 text-xs text-muted">
+                <span>{t("legal.third_party_notice_text")}</span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                  onClick={openNoticeLink}
+                >
+                  NOTICE.md
+                  <ExternalLink className="size-3" />
+                </button>
               </div>
             </div>
           )}

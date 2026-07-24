@@ -5,12 +5,10 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   FolderOpen,
-  Loader2,
-  RefreshCw,
   HelpCircle,
   Info,
+  RefreshCw,
 } from "lucide-react";
 
 const Github = (props: React.SVGProps<SVGSVGElement>) => (
@@ -32,20 +30,8 @@ const Github = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 import Dialog from "@/components/common/Dialog";
-import Markdown from "@/components/common/Markdown";
 import { inTauri, invoke, tryInvoke } from "@/lib/tauri";
 import AppIcon from "@/components/common/AppIcon";
-
-interface GithubRelease {
-  tag_name: string;
-  name: string;
-  body: string;
-  html_url: string;
-  published_at?: string;
-  prerelease?: boolean;
-}
-
-const RELEASES_URL = "https://api.github.com/repos/psyattack/WEave/releases";
 
 interface Props {
   open: boolean;
@@ -75,20 +61,6 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-const TOOLS: { label: string; url: string; license?: string }[] = [
-  { label: "Tauri", url: "https://v2.tauri.app/", license: "MIT/Apache-2.0" },
-  { label: "React", url: "https://react.dev/", license: "MIT" },
-  {
-    label: "DepotDownloaderMod",
-    url: "https://github.com/SteamAutoCracks/DepotDownloaderMod",
-    license: "GPL-2.0",
-  },
-  {
-    label: "RePKG",
-    url: "https://github.com/notscuffed/repkg",
-    license: "MIT",
-  },
-];
 
 export default function InfoDialog({
   open,
@@ -98,11 +70,6 @@ export default function InfoDialog({
 }: Props) {
   const { t } = useTranslation();
   const [version, setVersion] = useState<string>(__APP_VERSION__);
-  const [showChangelog, setShowChangelog] = useState(false);
-  const [releases, setReleases] = useState<GithubRelease[] | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string>("");
-  const [changelogError, setChangelogError] = useState<string | null>(null);
-  const [loadingReleases, setLoadingReleases] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
 
   useEffect(() => {
@@ -118,54 +85,13 @@ export default function InfoDialog({
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (!open) {
-      setShowChangelog(false);
       setShowFaq(false);
-      setChangelogError(null);
     }
   }
 
-  const loadReleases = async () => {
-    setLoadingReleases(true);
-    setChangelogError(null);
-    try {
-      const res = await fetch(RELEASES_URL, {
-        headers: { Accept: "application/vnd.github+json" },
-      });
-      if (!res.ok) {
-        throw new Error(`GitHub API ${res.status}`);
-      }
-      const data = (await res.json()) as GithubRelease[];
-      const list = Array.isArray(data) ? data : [];
-      setReleases(list);
-      if (list.length > 0 && !selectedTag) {
-        setSelectedTag(list[0].tag_name);
-      }
-    } catch (err) {
-      setChangelogError(
-        err instanceof Error ? err.message : String(err ?? "unknown error"),
-      );
-    } finally {
-      setLoadingReleases(false);
-    }
-  };
-
-  const toggleChangelog = () => {
-    const next = !showChangelog;
-    setShowChangelog(next);
-    if (next && showFaq) setShowFaq(false);
-    if (next && !releases && !loadingReleases) {
-      void loadReleases();
-    }
-  };
-
   const toggleFaq = () => {
-    const next = !showFaq;
-    setShowFaq(next);
-    if (next && showChangelog) setShowChangelog(false);
+    setShowFaq(!showFaq);
   };
-
-  const selectedRelease =
-    releases?.find((r) => r.tag_name === selectedTag) ?? null;
 
   const openLink = async (url: string) => {
     if (inTauri) await openExternal(url);
@@ -231,16 +157,10 @@ export default function InfoDialog({
           </button>
           <button
             className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
-            onClick={toggleChangelog}
-            aria-expanded={showChangelog}
+            onClick={() => openLink("https://github.com/psyattack/WEave/releases")}
           >
             <BookOpen className="size-4" />
             {t("buttons.changelog") || "Changelog"}
-            {showChangelog ? (
-              <ChevronUp className="size-3.5" />
-            ) : (
-              <ChevronDown className="size-3.5" />
-            )}
           </button>
           <button
             className="hover-shimmer flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-md transition-all hover:bg-white/10"
@@ -268,96 +188,6 @@ export default function InfoDialog({
             {t("buttons.legal")}
           </button>
         </div>
-
-        {showChangelog && (
-          <div className="w-full rounded-md border border-border bg-surface-sunken p-3 text-left">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <div className="text-[11px] font-semibold tracking-wide text-subtle uppercase">
-                {t("info.changelog_title") || "Release notes"}
-              </div>
-              <div className="flex items-center gap-1">
-                <select
-                  className="input h-9 w-auto min-w-20 text-xs disabled:opacity-50"
-                  style={{
-                    width: selectedTag
-                      ? `${Math.max(80, (selectedTag.length + (selectedRelease?.prerelease ? 6 : 0)) * 6.5 + 24)}px`
-                      : "auto",
-                  }}
-                  value={selectedTag}
-                  onChange={(e) => setSelectedTag(e.target.value)}
-                  disabled={!releases || releases.length === 0}
-                >
-                  {(releases ?? []).map((r) => (
-                    <option key={r.tag_name} value={r.tag_name}>
-                      {r.tag_name}
-                      {r.prerelease ? " (pre)" : ""}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="btn-ghost px-1.5 text-[11px]"
-                  onClick={() => void loadReleases()}
-                  disabled={loadingReleases}
-                  title={t("buttons.refresh") || "Refresh"}
-                >
-                  <RefreshCw
-                    className={`size-3.5 ${
-                      loadingReleases ? "animate-spin" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {loadingReleases && !releases && (
-              <div className="flex items-center gap-2 py-2 text-xs text-muted">
-                <Loader2 className="size-3.5 animate-spin" />
-                {t("labels.loading") || "Loading…"}
-              </div>
-            )}
-            {changelogError && (
-              <div className="py-2 text-xs text-danger">
-                {t("messages.changelog_error", { error: changelogError }) ||
-                  `Failed to load changelog: ${changelogError}`}
-              </div>
-            )}
-            {!loadingReleases &&
-              !changelogError &&
-              releases &&
-              releases.length === 0 && (
-                <div className="py-2 text-xs text-muted">
-                  {t("messages.no_releases") || "No releases published yet."}
-                </div>
-              )}
-            {selectedRelease && (
-              <div className="max-h-72 overflow-auto pr-1">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <div className="text-sm font-semibold">
-                    {selectedRelease.name || selectedRelease.tag_name}
-                  </div>
-                  <button
-                    type="button"
-                    className="text-[11px] text-muted hover:text-primary"
-                    onClick={() => openLink(selectedRelease.html_url)}
-                    title={selectedRelease.html_url}
-                  >
-                    <ExternalLink className="inline size-3" />{" "}
-                    {t("buttons.view_on_github") || "GitHub"}
-                  </button>
-                </div>
-                {selectedRelease.published_at && (
-                  <div className="mb-2 text-[10px] tracking-wide text-subtle uppercase">
-                    {new Date(
-                      selectedRelease.published_at,
-                    ).toLocaleDateString()}
-                  </div>
-                )}
-                <Markdown source={selectedRelease.body || ""} />
-              </div>
-            )}
-          </div>
-        )}
 
         {showFaq && (
           <div className="w-full rounded-md border border-border bg-surface-sunken p-3 text-left">
@@ -388,31 +218,6 @@ export default function InfoDialog({
             </div>
           </div>
         )}
-
-        <div className="w-full pt-3">
-          <div className="mb-1 text-[11px] tracking-wide text-subtle uppercase">
-            {t("info.tools_section_title")}
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs">
-            {TOOLS.map((tool) => (
-              <button
-                key={tool.label}
-                type="button"
-                className="inline-flex items-center gap-1 text-muted hover:text-primary"
-                onClick={() => openLink(tool.url)}
-                title={tool.license ? `License: ${tool.license}` : undefined}
-              >
-                {tool.label}
-                {tool.license && (
-                  <span className="text-[10px] text-subtle">
-                    ({tool.license})
-                  </span>
-                )}
-                <ExternalLink className="size-3" />
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </Dialog>
   );

@@ -367,7 +367,6 @@ export default {
     changelog_title: "История изменений",
     app_full_name: "WEave",
     version_label: "Версия",
-    tools_section_title: "Создано с помощью",
     faq_title: "Часто задаваемые вопросы",
   },
   debug: {
@@ -381,9 +380,6 @@ export default {
   legal: {
     disclaimer_tab: "Отказ от ответственности",
     license_tab: "Лицензия",
-    opensource_title: "Программное обеспечение с открытым исходным кодом",
-    opensource_message:
-      "WEave — бесплатное программное обеспечение с открытым исходным кодом, которое всегда было и будет бесплатным.",
     no_affiliation_title: "Отсутствие связи",
     no_affiliation_text:
       "WEave — независимый проект, не связанный, не одобренный и не спонсируемый Valve Corporation или Кристьяном Скуттой (создателем Wallpaper Engine).",
@@ -396,7 +392,7 @@ export default {
     workshop_content_title: "Сторонний контент",
     workshop_content_text:
       "WEave не контролирует, не одобряет и не несёт ответственности за какой-либо контент, загруженный из Steam Workshop. Пользователи несут полную ответственность за контент, который они загружают и используют.",
-    dependencies_title: "Зависимости",
+    third_party_notice_text: "Полную информацию о сторонних компонентах и их лицензиях см. в",
     accept_terms: "Я понимаю и принимаю эти условия",
     accept_explanation:
       "Используя WEave, вы подтверждаете, что прочитали и поняли данный отказ от ответственности.",

@@ -103,7 +103,7 @@ https://github.com/user-attachments/assets/45bf371d-6b76-4ecc-93d5-9bc8d95c467a
 - **.NET Runtime 8/9/10** (загружается автоматически при отсутствии)
 
 Для установки скачайте последний релиз с [**GitHub Releases**](https://github.com/psyattack/weave/releases):
-- **Установщик (`.exe`):** Запустите установщик и следуйте инструкциям на экране.
+- **Установщик (`.exe .msi`):** Запустите установщик и следуйте инструкциям на экране.
 - **Портативная версия (`.zip`):** Распакуйте архив в любое удобное место на диске и запустите `WEave.exe`.
 
 > [!NOTE]
@@ -289,15 +289,12 @@ WEave/
 
 ## 📄 Лицензия
 
-Этот проект лицензирован под [MIT License](LICENSE).
+Этот проект лицензирован под [MIT License](LICENSE). Полную информацию о сторонних компонентах и их лицензиях см. в файле [NOTICE.md](NOTICE.md).
 
 ---
 
 ## 🙏 Благодарности
 
-- **Создано с помощью:** [Tauri](https://tauri.app/), [React](https://react.dev/)
-- **Иконки:** [Lucide](https://lucide.dev/)
-- **UI компоненты:** [Radix UI](https://www.radix-ui.com/)
 - **Инструмент загрузки:** [DepotDownloaderMod](https://github.com/SteamAutoCracks/DepotDownloaderMod)
 - **Распаковщик пакетов:** [RePKG](https://github.com/notscuffed/repkg)
 

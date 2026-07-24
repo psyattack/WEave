@@ -366,7 +366,6 @@ export default {
     changelog_title: "Release notes",
     app_full_name: "WEave",
     version_label: "Version",
-    tools_section_title: "Built with",
     faq_title: "Frequently Asked Questions",
   },
   debug: {
@@ -380,9 +379,6 @@ export default {
   legal: {
     disclaimer_tab: "Disclaimer",
     license_tab: "License",
-    opensource_title: "Open Source Software",
-    opensource_message:
-      "WEave is free and open-source software that has always been and will remain free.",
     no_affiliation_title: "No Affiliation",
     no_affiliation_text:
       "WEave is an independent project and is not affiliated with, endorsed by, or sponsored by Valve Corporation or Kristjan Skutta (creator of Wallpaper Engine).",
@@ -395,7 +391,7 @@ export default {
     workshop_content_title: "Third-party Content",
     workshop_content_text:
       "WEave does not control, endorse, or assume responsibility for any content downloaded from the Steam Workshop. Users are solely responsible for the content they download and use.",
-    dependencies_title: "Dependencies",
+    third_party_notice_text: "For full third-party notices and component licenses, see",
     accept_terms: "I understand and accept these terms",
     accept_explanation:
       "By using WEave, you acknowledge that you have read and understood this disclaimer.",
