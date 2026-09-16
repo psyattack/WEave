@@ -11,16 +11,21 @@ const BASE_URL: &str = "https://steamcommunity.com/workshop/browse/";
 
 pub fn build_browse(filters: &WorkshopFilters) -> String {
     let mut builder = form_urlencoded::Serializer::new(String::new());
+    let c_start = if filters.created_date_range_start.is_empty() { "0" } else { &filters.created_date_range_start };
+    let c_end = if filters.created_date_range_end.is_empty() { "0" } else { &filters.created_date_range_end };
+    let u_start = if filters.updated_date_range_start.is_empty() { "0" } else { &filters.updated_date_range_start };
+    let u_end = if filters.updated_date_range_end.is_empty() { "0" } else { &filters.updated_date_range_end };
+
     builder
         .append_pair("appid", STEAM_APP_ID)
         .append_pair("browsesort", &filters.sort)
         .append_pair("section", "readytouseitems")
         .append_pair("p", &filters.page.max(1).to_string())
         .append_pair("childpublishedfileid", "0")
-        .append_pair("created_date_range_filter_start", "0")
-        .append_pair("created_date_range_filter_end", "0")
-        .append_pair("updated_date_range_filter_start", "0")
-        .append_pair("updated_date_range_filter_end", "0")
+        .append_pair("created_date_range_filter_start", c_start)
+        .append_pair("created_date_range_filter_end", c_end)
+        .append_pair("updated_date_range_filter_start", u_start)
+        .append_pair("updated_date_range_filter_end", u_end)
         .append_pair("actualsort", &filters.sort);
 
     if filters.sort == "trend" && !filters.days.is_empty() {
@@ -28,6 +33,9 @@ pub fn build_browse(filters: &WorkshopFilters) -> String {
     }
     if !filters.search.is_empty() {
         builder.append_pair("searchtext", &filters.search);
+        if filters.search_text_mode > 0 {
+            builder.append_pair("search_text_mode", &filters.search_text_mode.to_string());
+        }
     }
     add_tag_params(&mut builder, filters);
     format!("{BASE_URL}?{}", builder.finish())
@@ -47,6 +55,9 @@ pub fn build_collections_browse(filters: &WorkshopFilters) -> String {
     }
     if !filters.search.is_empty() {
         builder.append_pair("searchtext", &filters.search);
+        if filters.search_text_mode > 0 {
+            builder.append_pair("search_text_mode", &filters.search_text_mode.to_string());
+        }
     }
     add_tag_params(&mut builder, filters);
     format!("{BASE_URL}?{}", builder.finish())
@@ -60,6 +71,9 @@ pub fn build_author_items(profile_url: &str, filters: &WorkshopFilters) -> Strin
         .append_pair("p", &filters.page.max(1).to_string());
     if !filters.search.is_empty() {
         builder.append_pair("searchtext", &filters.search);
+        if filters.search_text_mode > 0 {
+            builder.append_pair("search_text_mode", &filters.search_text_mode.to_string());
+        }
     }
     add_tag_params(&mut builder, filters);
     format!("{base}?{}", builder.finish())
@@ -74,6 +88,9 @@ pub fn build_author_collections(profile_url: &str, filters: &WorkshopFilters) ->
         .append_pair("p", &filters.page.max(1).to_string());
     if !filters.search.is_empty() {
         builder.append_pair("searchtext", &filters.search);
+        if filters.search_text_mode > 0 {
+            builder.append_pair("search_text_mode", &filters.search_text_mode.to_string());
+        }
     }
     add_tag_params(&mut builder, filters);
     format!("{base}?{}", builder.finish())
@@ -150,12 +167,17 @@ mod tests {
         filters.page = 2;
         filters.category = "scene".to_string();
 
+        filters.required_flags = vec!["incompatible".to_string()];
+        filters.created_date_range_start = "1704067200".to_string();
+
         let url = build_browse(&filters);
         assert!(url.contains("browsesort=trend"));
         assert!(url.contains("days=7"));
         assert!(url.contains("searchtext=cyberpunk"));
         assert!(url.contains("p=2"));
         assert!(url.contains("requiredtags%5B%5D=scene"));
+        assert!(url.contains("requiredflags%5B%5D=incompatible"));
+        assert!(url.contains("created_date_range_filter_start=1704067200"));
         assert!(url.contains("appid="));
     }
 }

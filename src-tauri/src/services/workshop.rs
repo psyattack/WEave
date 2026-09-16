@@ -38,6 +38,16 @@ pub struct WorkshopFilters {
     pub asset_genre: String,
     pub script_type: String,
     pub required_flags: Vec<String>,
+    #[serde(default)]
+    pub created_date_range_start: String,
+    #[serde(default)]
+    pub created_date_range_end: String,
+    #[serde(default)]
+    pub updated_date_range_start: String,
+    #[serde(default)]
+    pub updated_date_range_end: String,
+    #[serde(default)]
+    pub search_text_mode: u32,
     pub page: u32,
 }
 

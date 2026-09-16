@@ -196,6 +196,7 @@ fn default_settings() -> Value {
                 "auto_apply_last_downloaded": false,
                 "skip_version": "",
                 "save_window_state": true,
+                "show_active_filters": false,
                 "window_geometry": {
                     "x": -1,
                     "y": -1,

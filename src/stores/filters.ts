@@ -16,6 +16,11 @@ export interface WorkshopFilters {
   asset_genre: string;
   script_type: string;
   required_flags: string[];
+  created_date_range_start: string;
+  created_date_range_end: string;
+  updated_date_range_start: string;
+  updated_date_range_end: string;
+  search_text_mode: number;
   page: number;
 }
 
@@ -35,6 +40,11 @@ export const DEFAULT_FILTERS: WorkshopFilters = {
   asset_genre: "",
   script_type: "",
   required_flags: [],
+  created_date_range_start: "",
+  created_date_range_end: "",
+  updated_date_range_start: "",
+  updated_date_range_end: "",
+  search_text_mode: 0,
   page: 1,
 };
 

@@ -6,6 +6,7 @@
 
 export const SORT_KEYS = [
   "trend",
+  "toprated",
   "mostrecent",
   "lastupdated",
   "totaluniquesubscribers",
@@ -14,6 +15,7 @@ export type WorkshopSortKey = (typeof SORT_KEYS)[number];
 
 export const SORT_OPTIONS: Record<WorkshopSortKey, string> = {
   trend: "Popular",
+  toprated: "Top Rated",
   mostrecent: "Most Recent",
   lastupdated: "Recently Updated",
   totaluniquesubscribers: "Most Subscribed",
@@ -90,27 +92,57 @@ export const AGE_RATINGS: Record<string, string> = {
 
 export const RESOLUTION_KEYS = [
   "",
+  "Standard Definition",
+  "1280 x 720",
+  "1366 x 768",
   "1920 x 1080",
   "2560 x 1440",
   "3840 x 2160",
-  "1280 x 720",
-  "1366 x 768",
+  "Ultrawide Standard Definition",
   "Ultrawide 2560 x 1080",
   "Ultrawide 3440 x 1440",
+  "Dual Standard Definition",
+  "Dual 3840 x 1080",
+  "Dual 5120 x 1440",
+  "Dual 7680 x 2160",
+  "Triple Standard Definition",
+  "Triple 4096 x 768",
+  "Triple 5760 x 1080",
+  "Triple 7680 x 1440",
+  "Triple 11520 x 2160",
+  "Portrait Standard Definition",
+  "Portrait 720 x 1280",
   "Portrait 1080 x 1920",
+  "Portrait 1440 x 2560",
+  "Portrait 2160 x 3840",
   "Dynamic resolution",
   "Other resolution",
 ] as const;
 export const RESOLUTIONS: Record<string, string> = {
   "": "Any",
+  "Standard Definition": "SD",
+  "1280 x 720": "720p",
+  "1366 x 768": "768p",
   "1920 x 1080": "1080p",
   "2560 x 1440": "1440p",
   "3840 x 2160": "4K",
-  "1280 x 720": "720p",
-  "1366 x 768": "768p",
+  "Ultrawide Standard Definition": "UW SD",
   "Ultrawide 2560 x 1080": "UW 1080p",
   "Ultrawide 3440 x 1440": "UW 1440p",
+  "Dual Standard Definition": "Dual SD",
+  "Dual 3840 x 1080": "Dual 1080p",
+  "Dual 5120 x 1440": "Dual 1440p",
+  "Dual 7680 x 2160": "Dual 4K",
+  "Triple Standard Definition": "Triple SD",
+  "Triple 4096 x 768": "Triple 768p",
+  "Triple 5760 x 1080": "Triple 1080p",
+  "Triple 7680 x 1440": "Triple 1440p",
+  "Triple 11520 x 2160": "Triple 4K",
+  "Portrait Standard Definition": "Portrait SD",
+  "Portrait 720 x 1280": "Portrait 720p",
   "Portrait 1080 x 1920": "Portrait 1080p",
+  "Portrait 1440 x 2560": "Portrait 1440p",
+  "Portrait 2160 x 3840": "Portrait 4K",
   "Dynamic resolution": "Dynamic",
   "Other resolution": "Other",
 };
@@ -172,6 +204,7 @@ export const ASSET_TYPE_KEYS = [
   "Composite",
   "Script",
   "Effect",
+  "Scripted Layer",
 ] as const;
 export type AssetTypeKey = (typeof ASSET_TYPE_KEYS)[number];
 export const ASSET_TYPES: Record<AssetTypeKey, string> = {
@@ -186,6 +219,7 @@ export const ASSET_TYPES: Record<AssetTypeKey, string> = {
   Composite: "Composite",
   Script: "Script",
   Effect: "Effect",
+  "Scripted Layer": "Scripted Layer",
 };
 
 export const ASSET_GENRE_KEYS = [
@@ -340,3 +374,25 @@ export function translateTagValue(
 export function translateTagCategory(category: string, i18n: any): string {
   return i18n.t(`tag_categories.${category}`, { defaultValue: category });
 }
+
+export function tsToDateStr(ts: string): string {
+  if (!ts || ts === "0") return "";
+  const num = Number(ts);
+  if (isNaN(num) || num <= 0) return "";
+  const d = new Date(num * 1000);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export function dateStrToTs(str: string, isEnd: boolean): string {
+  if (!str) return "";
+  const [y, m, d] = str.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const date = isEnd
+    ? new Date(y, m - 1, d, 23, 59, 59)
+    : new Date(y, m - 1, d, 0, 0, 0);
+  return Math.floor(date.getTime() / 1000).toString();
+}
+

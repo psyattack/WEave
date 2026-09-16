@@ -159,6 +159,23 @@ export default function GeneralSettingsTab() {
             tooltip: t("settings.layout_animations_warning") || "This setting strongly affects performance and is not recommended on weak systems."
           }
         )}
+        {renderRow(
+          t("settings.show_active_filters") || "Show active filters bar",
+          t("settings.show_active_filters_hint") || "Display applied filter chips under the search bar",
+          <Switch
+            id="settings-show-active-filters"
+            checked={state.showActiveFilters}
+            onCheckedChange={(v) => {
+              state.setShowActiveFilters(v);
+              if (inTauri) {
+                void invoke("config_set", {
+                  path: "settings.general.behavior.show_active_filters",
+                  value: v,
+                }).catch(() => undefined);
+              }
+            }}
+          />
+        )}
       </SectionWrap>
 
       <SectionWrap title={t("settings.behavior_workflow") || "Behavior & Workflow"}>

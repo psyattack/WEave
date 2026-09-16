@@ -82,6 +82,14 @@ export function useBootstrap() {
       // selection on next bootstrap.
       if (appearance.theme) patch.theme = appearance.theme as ThemeCode;
       if (appearance.accent) patch.accent = appearance.accent as string;
+      const behavior = getConfigValue<Record<string, unknown>>(
+        config,
+        ["general", "behavior"],
+        {},
+      );
+      if (typeof behavior.show_active_filters === "boolean") {
+        patch.showActiveFilters = behavior.show_active_filters;
+      }
       useAppStore.setState(patch);
 
       // Sign the hidden Steam webview into the dedicated parser account

@@ -67,12 +67,12 @@ export default function Select({
         <RadixSelect.Content
           position="popper"
           sideOffset={6}
-          className="z-50 min-w-40 overflow-hidden rounded-md border border-border bg-surface shadow-card-hover"
+          className="z-50 max-h-80 w-(--radix-select-trigger-width) min-w-(--radix-select-trigger-width overflow-hidden rounded-md border border-border bg-surface shadow-card-hover"
           onPointerDownOutside={(e) => {
             if (closeOnSelectionOnly) e.preventDefault();
           }}
         >
-          <RadixSelect.Viewport className="p-1">
+          <RadixSelect.Viewport className="max-h-60 overflow-y-auto p-1">
             {options.map((opt) => (
               <RadixSelect.Item
                 key={opt.value || EMPTY_SENTINEL}

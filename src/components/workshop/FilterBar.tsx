@@ -1,64 +1,38 @@
 import { useTranslation } from "@/i18n/hooks";
-import { AnimatePresence, motion } from "framer-motion";
-import { Filter, Search, SortAsc, X } from "lucide-react";
+import { Search, SlidersHorizontal, SortAsc, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Select from "@/components/common/Select";
+import { Tooltip } from "@/components/common/Tooltip";
+import WorkshopFilterDrawer from "./WorkshopFilterDrawer";
+import SearchOptionsPopover from "./SearchOptionsPopover";
 import {
-  AGE_RATING_KEYS,
-  AGE_RATINGS,
-  ASSET_GENRE_KEYS,
-  ASSET_GENRES,
-  ASSET_TYPE_KEYS,
-  ASSET_TYPES,
-  CATEGORY_KEYS,
-  CATEGORIES,
-  GENRE_TAGS,
-  MISC_TAGS,
-  RESOLUTION_KEYS,
-  RESOLUTIONS,
-  SCRIPT_TYPE_KEYS,
-  SCRIPT_TYPES,
   SORT_KEYS,
   SORT_OPTIONS,
   TIME_PERIOD_KEYS,
   TIME_PERIODS,
-  TYPE_KEYS,
-  TYPES,
   toSelectOptionsI18n,
   translateTag,
+  translateTagValue,
 } from "@/lib/filterConfig";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app";
 import { DEFAULT_FILTERS, useFiltersStore } from "@/stores/filters";
 
-type TagListKey = "misc_tags" | "genre_tags";
+interface ActiveChip {
+  id: string;
+  label: string;
+  onRemove: () => void;
+}
 
 export default function FilterBar() {
   const { t, i18n } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const resetFilters = useFiltersStore((s) => s.resetFilters);
-  const showAdvanced = useFiltersStore((s) => s.showAdvanced);
-  const toggleAdvanced = useFiltersStore((s) => s.toggleAdvanced);
+  const showActiveFilters = useAppStore((s) => s.showActiveFilters);
 
-  // "Clear filters" should only be visible when something is actually set —
-  // matches Installed's behaviour so the row stays calm at rest.
-  const hasActiveFilters =
-    filters.search !== DEFAULT_FILTERS.search ||
-    filters.sort !== DEFAULT_FILTERS.sort ||
-    filters.days !== DEFAULT_FILTERS.days ||
-    filters.category !== DEFAULT_FILTERS.category ||
-    filters.type_tag !== DEFAULT_FILTERS.type_tag ||
-    filters.age_rating !== DEFAULT_FILTERS.age_rating ||
-    filters.resolution !== DEFAULT_FILTERS.resolution ||
-    filters.asset_type !== DEFAULT_FILTERS.asset_type ||
-    filters.asset_genre !== DEFAULT_FILTERS.asset_genre ||
-    filters.script_type !== DEFAULT_FILTERS.script_type ||
-    filters.misc_tags.length > 0 ||
-    filters.genre_tags.length > 0 ||
-    filters.excluded_misc_tags.length > 0 ||
-    filters.excluded_genre_tags.length > 0 ||
-    filters.required_flags.length > 0;
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [prevSearch, setPrevSearch] = useState(filters.search);
   const [searchValue, setSearchValue] = useState(filters.search);
@@ -67,6 +41,16 @@ export default function FilterBar() {
     setPrevSearch(filters.search);
     setSearchValue(filters.search);
   }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchValue !== filters.search) {
+        setFilters({ search: searchValue, page: 1 });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchValue, filters.search, setFilters]);
+
   const sortOptions = toSelectOptionsI18n(
     SORT_KEYS,
     SORT_OPTIONS,
@@ -79,73 +63,17 @@ export default function FilterBar() {
     "filters.time_period",
     i18n,
   );
-  const categoryOptions = toSelectOptionsI18n(
-    CATEGORY_KEYS,
-    CATEGORIES,
-    "filters.category",
-    i18n,
+
+  const isIncompatible = filters.required_flags.includes("incompatible");
+  const hasActiveDateFilter = Boolean(
+    filters.created_date_range_start ||
+    filters.created_date_range_end ||
+    filters.updated_date_range_start ||
+    filters.updated_date_range_end,
   );
-  const typeOptions = toSelectOptionsI18n(
-    TYPE_KEYS,
-    TYPES,
-    "filters.type",
-    i18n,
-  );
-  const ageRatingOptions = toSelectOptionsI18n(
-    AGE_RATING_KEYS,
-    AGE_RATINGS,
-    "filters.age_rating",
-    i18n,
-  );
-  const resolutionOptions = RESOLUTION_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.resolution.${(k || "empty").replace(/ /g, "_")}`, {
-      defaultValue: RESOLUTIONS[k] ?? k,
-    }),
-  }));
-  const assetTypeOptions = toSelectOptionsI18n(
-    ASSET_TYPE_KEYS,
-    ASSET_TYPES,
-    "filters.asset_type",
-    i18n,
-  );
-  const assetGenreOptions = ASSET_GENRE_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.asset_genre.${(k || "empty").replace(/ /g, "_")}`, {
-      defaultValue: ASSET_GENRES[k] ?? k,
-    }),
-  }));
-  const scriptTypeOptions = SCRIPT_TYPE_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.script_type.${(k || "empty").replace(/ /g, "_")}`, {
-      defaultValue: SCRIPT_TYPES[k] ?? k,
-    }),
-  }));
 
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (searchValue !== filters.search) {
-        setFilters({ search: searchValue, page: 1 });
-      }
-    }, 400);
-    return () => clearTimeout(t);
-  }, [searchValue, filters.search, setFilters]);
-
-  const toggleTag = (list: TagListKey, tag: string) => {
-    const current = filters[list];
-    const next = current.includes(tag)
-      ? current.filter((t) => t !== tag)
-      : [...current, tag];
-    setFilters(
-      list === "misc_tags"
-        ? { misc_tags: next, page: 1 }
-        : { genre_tags: next, page: 1 },
-    );
-  };
-
-  const activeFiltersCount = [
-    filters.days !== DEFAULT_FILTERS.days && filters.sort === "trend",
+  const activeDrawerFiltersCount = [
     filters.category !== DEFAULT_FILTERS.category,
     filters.type_tag !== DEFAULT_FILTERS.type_tag,
     filters.age_rating !== DEFAULT_FILTERS.age_rating,
@@ -157,228 +85,252 @@ export default function FilterBar() {
     filters.genre_tags.length > 0,
     filters.excluded_misc_tags.length > 0,
     filters.excluded_genre_tags.length > 0,
+    filters.required_flags.length > 0,
+    hasActiveDateFilter,
   ].filter(Boolean).length;
 
+  // Construct active chips list for quick display and dismissal
+  const activeChips: ActiveChip[] = [];
+
+  if (filters.category) {
+    activeChips.push({
+      id: "category",
+      label: `${t("tag_categories.Category")}: ${translateTagValue(filters.category, "Category", i18n)}`,
+      onRemove: () => setFilters({ category: "", page: 1 }),
+    });
+  }
+
+  if (filters.type_tag) {
+    activeChips.push({
+      id: "type_tag",
+      label: `${t("tag_categories.Type")}: ${translateTagValue(filters.type_tag, "Type", i18n)}`,
+      onRemove: () => setFilters({ type_tag: "", page: 1 }),
+    });
+  }
+
+  if (filters.resolution) {
+    activeChips.push({
+      id: "resolution",
+      label: `${t("tag_categories.Resolution")}: ${translateTagValue(filters.resolution, "Resolution", i18n)}`,
+      onRemove: () => setFilters({ resolution: "", page: 1 }),
+    });
+  }
+
+  if (filters.age_rating) {
+    activeChips.push({
+      id: "age_rating",
+      label: `${t("tag_categories.Age Rating")}: ${translateTagValue(filters.age_rating, "Age Rating", i18n)}`,
+      onRemove: () => setFilters({ age_rating: "", page: 1 }),
+    });
+  }
+
+  if (filters.asset_type) {
+    activeChips.push({
+      id: "asset_type",
+      label: `${t("tag_categories.Asset Type")}: ${translateTagValue(filters.asset_type, "Asset Type", i18n)}`,
+      onRemove: () => setFilters({ asset_type: "", page: 1 }),
+    });
+  }
+
+  if (filters.asset_genre) {
+    activeChips.push({
+      id: "asset_genre",
+      label: `${t("tag_categories.Asset Genre")}: ${translateTagValue(filters.asset_genre, "Asset Genre", i18n)}`,
+      onRemove: () => setFilters({ asset_genre: "", page: 1 }),
+    });
+  }
+
+  if (filters.script_type) {
+    activeChips.push({
+      id: "script_type",
+      label: `${t("tag_categories.Script Type")}: ${translateTagValue(filters.script_type, "Script Type", i18n)}`,
+      onRemove: () => setFilters({ script_type: "", page: 1 }),
+    });
+  }
+
+  if (isIncompatible) {
+    activeChips.push({
+      id: "incompatible",
+      label: t("filters.incompatible_items"),
+      onRemove: () =>
+        setFilters({
+          required_flags: filters.required_flags.filter((f) => f !== "incompatible"),
+          page: 1,
+        }),
+    });
+  }
+
+  if (hasActiveDateFilter) {
+    activeChips.push({
+      id: "date",
+      label: t("filters.date_filter.title"),
+      onRemove: () =>
+        setFilters({
+          created_date_range_start: "",
+          created_date_range_end: "",
+          updated_date_range_start: "",
+          updated_date_range_end: "",
+          page: 1,
+        }),
+    });
+  }
+
+  for (const tag of filters.misc_tags) {
+    activeChips.push({
+      id: `misc_inc_${tag}`,
+      label: `+${translateTag(tag, "filters.misc_tags", i18n)}`,
+      onRemove: () =>
+        setFilters({
+          misc_tags: filters.misc_tags.filter((t) => t !== tag),
+          page: 1,
+        }),
+    });
+  }
+
+  for (const tag of filters.excluded_misc_tags) {
+    activeChips.push({
+      id: `misc_exc_${tag}`,
+      label: `-${translateTag(tag, "filters.misc_tags", i18n)}`,
+      onRemove: () =>
+        setFilters({
+          excluded_misc_tags: filters.excluded_misc_tags.filter((t) => t !== tag),
+          page: 1,
+        }),
+    });
+  }
+
+  for (const tag of filters.genre_tags) {
+    activeChips.push({
+      id: `genre_inc_${tag}`,
+      label: `+${translateTag(tag, "filters.genre_tags", i18n)}`,
+      onRemove: () =>
+        setFilters({
+          genre_tags: filters.genre_tags.filter((t) => t !== tag),
+          page: 1,
+        }),
+    });
+  }
+
+  for (const tag of filters.excluded_genre_tags) {
+    activeChips.push({
+      id: `genre_exc_${tag}`,
+      label: `-${translateTag(tag, "filters.genre_tags", i18n)}`,
+      onRemove: () =>
+        setFilters({
+          excluded_genre_tags: filters.excluded_genre_tags.filter((t) => t !== tag),
+          page: 1,
+        }),
+    });
+  }
+
+  if (filters.search_text_mode === 1) {
+    activeChips.push({
+      id: "search_text_mode",
+      label: t("filters.search_fields.title_only"),
+      onRemove: () => setFilters({ search_text_mode: 0, page: 1 }),
+    });
+  } else if (filters.search_text_mode === 2) {
+    activeChips.push({
+      id: "search_text_mode",
+      label: t("filters.search_fields.description_only"),
+      onRemove: () => setFilters({ search_text_mode: 0, page: 1 }),
+    });
+  }
+
   return (
-    <div className="flex flex-col gap-2 px-4 py-3 pb-1.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-50 flex-1">
+    <div className="relative z-30 flex flex-col gap-2 px-4 py-3 pb-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Search Input pinned to the left with options inside at the end */}
+        <div className="relative z-20 w-105">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" />
           <input
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder={t("labels.search_placeholder")}
-            className="input pl-9"
+            className="input px-9 hover:border-border-strong focus:border-border-strong focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
           />
+          <div className="absolute top-1/2 right-1.5 -translate-y-1/2">
+            <SearchOptionsPopover />
+          </div>
         </div>
-        <Select
-          value={filters.sort}
-          onValueChange={(v) => setFilters({ sort: v, page: 1 })}
-          options={sortOptions}
-          icon={<SortAsc className="size-4 text-muted" />}
-        />
-        {filters.sort === "trend" && (
+
+        {/* Action controls pinned to the right */}
+        <div className="flex items-center gap-2">
           <Select
-            value={filters.days}
-            onValueChange={(v) => setFilters({ days: v, page: 1 })}
-            options={timePeriodOptions}
+            value={filters.sort}
+            onValueChange={(v) => setFilters({ sort: v, page: 1 })}
+            options={sortOptions}
+            icon={<SortAsc className="size-4 text-muted" />}
           />
-        )}
-        <Select
-          value={filters.category}
-          onValueChange={(v) => setFilters({ category: v, page: 1 })}
-          options={categoryOptions}
-        />
-        {filters.category !== "Asset" && (
-          <Select
-            value={filters.type_tag}
-            onValueChange={(v) => setFilters({ type_tag: v, page: 1 })}
-            options={typeOptions}
-          />
-        )}
-        {filters.category === "Wallpaper" && (
-          <Select
-            value={filters.resolution}
-            onValueChange={(v) => setFilters({ resolution: v, page: 1 })}
-            options={resolutionOptions}
-          />
-        )}
-        {filters.category === "Asset" && (
-          <>
+
+          {filters.sort === "trend" && (
             <Select
-              value={filters.asset_type}
-              onValueChange={(v) => setFilters({ asset_type: v, page: 1 })}
-              options={assetTypeOptions}
+              value={filters.days}
+              onValueChange={(v) => setFilters({ days: v, page: 1 })}
+              options={timePeriodOptions}
             />
-            <Select
-              value={filters.asset_genre}
-              onValueChange={(v) => setFilters({ asset_genre: v, page: 1 })}
-              options={assetGenreOptions}
-            />
-            <Select
-              value={filters.script_type}
-              onValueChange={(v) => setFilters({ script_type: v, page: 1 })}
-              options={scriptTypeOptions}
-            />
-          </>
-        )}
-        <Select
-          value={filters.age_rating}
-          onValueChange={(v) => setFilters({ age_rating: v, page: 1 })}
-          options={ageRatingOptions}
-        />
-        <div className={cn(
-          "flex items-center rounded-md transition-all",
-          hasActiveFilters && "border border-border/80"
-        )}>
-          <button
-            onClick={toggleAdvanced}
-            className={cn(
-              "relative flex size-9.5 items-center justify-center transition-colors outline-none",
-              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:bg-surface-raised hover:text-foreground",
-              hasActiveFilters ? "rounded-l-[5px]" : "rounded-md"
-            )}
-            aria-expanded={showAdvanced}
-          >
-            <Filter className="size-5" />
-            {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-          {hasActiveFilters && (
-            <>
-              <div className="h-5.5 w-px bg-border/80" />
-              <button
-                onClick={resetFilters}
-                className="flex size-9.5 items-center justify-center rounded-r-[5px] text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger"
-                aria-label={t("labels.clear")}
-              >
-                <X className="size-5" />
-              </button>
-            </>
           )}
+
+          {/* Workshop Filters Drawer Toggle: Icon only with Tooltip & badge */}
+          <Tooltip content={t("filters.workshop_filters")}>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className={cn(
+                "relative flex size-9.5 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface-sunken text-muted transition-colors outline-none hover:border-border-strong hover:text-foreground focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none",
+                drawerOpen &&
+                  "border-primary/60 bg-primary/10 text-primary hover:border-primary",
+              )}
+              aria-label={t("filters.workshop_filters")}
+            >
+              <SlidersHorizontal className="size-4" />
+              {activeDrawerFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {activeDrawerFiltersCount}
+                </span>
+              )}
+            </button>
+          </Tooltip>
         </div>
       </div>
 
-      <AnimatePresence>
-        {showAdvanced && (
-          <motion.div
-            key="advanced-filter-panel"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="flex flex-col gap-2"
-          >
-            <TagBlock
-              title={t("labels.miscellaneous")}
-              tags={MISC_TAGS}
-              included={filters.misc_tags}
-              excluded={filters.excluded_misc_tags}
-              onToggleInclude={(tag) => toggleTag("misc_tags", tag)}
-              onToggleExclude={(tag) => {
-                const current = filters.excluded_misc_tags;
-                const next = current.includes(tag)
-                  ? current.filter((t) => t !== tag)
-                  : [...current, tag];
-                setFilters({ excluded_misc_tags: next, page: 1 });
-              }}
-              isFirst={true}
-              isLast={false}
-              i18n={i18n}
-              i18nPrefix="filters.misc_tags"
-            />
-            <TagBlock
-              title={t("labels.genre")}
-              tags={GENRE_TAGS}
-              included={filters.genre_tags}
-              excluded={filters.excluded_genre_tags}
-              onToggleInclude={(tag) => toggleTag("genre_tags", tag)}
-              onToggleExclude={(tag) => {
-                const current = filters.excluded_genre_tags;
-                const next = current.includes(tag)
-                  ? current.filter((t) => t !== tag)
-                  : [...current, tag];
-                setFilters({ excluded_genre_tags: next, page: 1 });
-              }}
-              isFirst={false}
-              isLast={true}
-              i18n={i18n}
-              i18nPrefix="filters.genre_tags"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function TagBlock({
-  title,
-  tags,
-  included,
-  excluded,
-  onToggleInclude,
-  onToggleExclude,
-  isFirst,
-  isLast,
-  i18n,
-  i18nPrefix,
-}: {
-  title: string;
-  tags: string[];
-  included: string[];
-  excluded: string[];
-  onToggleInclude: (tag: string) => void;
-  onToggleExclude: (tag: string) => void;
-  isFirst?: boolean;
-  isLast?: boolean;
-  i18n?: any;
-  i18nPrefix?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-1.5 p-0",
-        isFirst && "pt-1",
-        isLast && "pb-0",
-      )}
-    >
-      <span className="text-[11px] tracking-wide text-subtle uppercase">
-        {title}
-      </span>
-      {tags.map((tag) => {
-        const isIncluded = included.includes(tag);
-        const isExcluded = excluded.includes(tag);
-        const displayTag =
-          i18n && i18nPrefix ? translateTag(tag, i18nPrefix, i18n) : tag;
-        return (
+      {/* Active Filter Pills / Chips */}
+      {showActiveFilters && activeChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[11px] font-medium text-subtle">
+            {t("filters.active_filters")}:
+          </span>
+          {activeChips.map((chip) => (
+            <span
+              key={chip.id}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border/80 bg-surface-raised px-2 py-0.5 text-xs text-foreground"
+            >
+              <span>{chip.label}</span>
+              <button
+                type="button"
+                onClick={chip.onRemove}
+                className="cursor-pointer text-muted transition-colors hover:text-danger"
+                aria-label="Remove filter"
+              >
+                <X className="size-3" />
+              </button>
+            </span>
+          ))}
           <button
-            key={tag}
-            onClick={() => {
-              if (isExcluded) {
-                onToggleExclude(tag);
-              } else if (isIncluded) {
-                onToggleInclude(tag);
-                onToggleExclude(tag);
-              } else {
-                onToggleInclude(tag);
-              }
-            }}
-            className={cn(
-              "chip cursor-pointer text-[11px] transition-colors select-none",
-              !isIncluded && !isExcluded && "hover:bg-surface",
-              isIncluded && "border-primary/60 bg-primary/15 text-foreground",
-              isExcluded &&
-                "border-danger/60 bg-danger/10 text-danger line-through",
-            )}
+            type="button"
+            onClick={resetFilters}
+            className="ml-1 cursor-pointer text-[11px] font-medium text-muted underline transition-colors hover:text-danger"
           >
-            {displayTag}
+            {t("filters.reset_all")}
           </button>
-        );
-      })}
+        </div>
+      )}
+
+      {/* Left Drawer */}
+      <WorkshopFilterDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   );
 }

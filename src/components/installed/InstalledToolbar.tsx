@@ -1,20 +1,22 @@
-
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
   CheckSquare,
   Database,
-  Filter,
+  RotateCcw,
   Search,
+  SlidersHorizontal,
   SortAsc,
   X,
 } from "lucide-react";
+import Drawer from "@/components/common/Drawer";
 import Select from "@/components/common/Select";
 import { Tooltip } from "@/components/common/Tooltip";
 import { cn } from "@/lib/utils";
 import { inTauri } from "@/lib/tauri";
+import { useAppStore } from "@/stores/app";
 import {
   LOCAL_SORT_KEYS,
   LOCAL_SORT_OPTIONS,
@@ -27,6 +29,7 @@ import {
   RESOLUTION_KEYS,
   RESOLUTIONS,
   translateTag,
+  translateTagValue,
   type LocalSortKey,
 } from "@/lib/filterConfig";
 
@@ -69,6 +72,12 @@ interface InstalledToolbarProps {
   itemsCount: number;
 }
 
+interface ActiveChip {
+  id: string;
+  label: string;
+  onRemove: () => void;
+}
+
 export default function InstalledToolbar({
   search,
   setSearch,
@@ -100,7 +109,6 @@ export default function InstalledToolbar({
   visibleMiscTags,
   visibleGenreTags,
   hasActiveFilters,
-  hasAnyExtraTags,
   activeFiltersCount,
   handleInitMetadata,
   toggleTag,
@@ -108,6 +116,7 @@ export default function InstalledToolbar({
   itemsCount,
 }: InstalledToolbarProps) {
   const { t, i18n } = useTranslation();
+  const showActiveFilters = useAppStore((s) => s.showActiveFilters);
 
   const sortOptions = LOCAL_SORT_KEYS.map((k) => ({
     value: k,
@@ -144,271 +153,406 @@ export default function InstalledToolbar({
     }),
   }));
 
+  const handleClearAll = () => {
+    setCategory("");
+    setTypeFilter("");
+    setAge("");
+    setResolution("");
+    setTagFilters([]);
+    setExcludedTagFilters([]);
+    setAuthorFilters([]);
+    setExcludedAuthorFilters([]);
+  };
+
+  // Construct active chips list for quick display and dismissal
+  const activeChips: ActiveChip[] = [];
+
+  if (category) {
+    activeChips.push({
+      id: "category",
+      label: `${t("tag_categories.Category")}: ${translateTagValue(category, "Category", i18n)}`,
+      onRemove: () => setCategory(""),
+    });
+  }
+
+  if (typeFilter) {
+    activeChips.push({
+      id: "typeFilter",
+      label: `${t("tag_categories.Type")}: ${translateTagValue(typeFilter, "Type", i18n)}`,
+      onRemove: () => setTypeFilter(""),
+    });
+  }
+
+  if (resolution) {
+    activeChips.push({
+      id: "resolution",
+      label: `${t("tag_categories.Resolution")}: ${translateTagValue(resolution, "Resolution", i18n)}`,
+      onRemove: () => setResolution(""),
+    });
+  }
+
+  if (age) {
+    activeChips.push({
+      id: "age",
+      label: `${t("tag_categories.Age Rating")}: ${translateTagValue(age, "Age Rating", i18n)}`,
+      onRemove: () => setAge(""),
+    });
+  }
+
+  for (const author of authorFilters) {
+    activeChips.push({
+      id: `author_inc_${author}`,
+      label: `+${author}`,
+      onRemove: () => toggleAuthor(author),
+    });
+  }
+
+  for (const author of excludedAuthorFilters) {
+    activeChips.push({
+      id: `author_exc_${author}`,
+      label: `-${author}`,
+      onRemove: () => toggleAuthor(author),
+    });
+  }
+
+  for (const tag of tagFilters) {
+    activeChips.push({
+      id: `tag_inc_${tag}`,
+      label: `+${translateTagValue(tag, "", i18n)}`,
+      onRemove: () => toggleTag(tag),
+    });
+  }
+
+  for (const tag of excludedTagFilters) {
+    activeChips.push({
+      id: `tag_exc_${tag}`,
+      label: `-${translateTagValue(tag, "", i18n)}`,
+      onRemove: () => toggleTag(tag),
+    });
+  }
+
   return (
     <div className="flex flex-col gap-2 px-4 py-3 pb-1.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-55 flex-1">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Search Input pinned to the left */}
+        <div className="relative w-105">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-9"
+            className="input pl-9 hover:border-border-strong focus:border-border-strong focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
             placeholder={t("labels.search_placeholder")}
           />
         </div>
-        <Tooltip
-          content={
-            sortOrder === "asc"
-              ? t("tooltips.sort_asc") || "Ascending"
-              : t("tooltips.sort_desc") || "Descending"
-          }
-          side="bottom"
-        >
-          <button
-            type="button"
-            onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
-            className={cn(
-              "flex h-9.5 items-center gap-2 rounded-md border border-border bg-surface-sunken px-3 py-2 text-sm transition-colors outline-none hover:border-border-strong",
-            )}
+
+        {/* Action controls pinned to the right */}
+        <div className="flex items-center gap-2">
+          {/* Sort Direction Toggle */}
+          <Tooltip
+            content={
+              sortOrder === "asc"
+                ? t("tooltips.sort_asc") || "Ascending"
+                : t("tooltips.sort_desc") || "Descending"
+            }
+            side="bottom"
           >
-            <motion.span
-              key={sortOrder}
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              transition={{ duration: 0.18 }}
-              className="inline-flex"
+            <button
+              type="button"
+              onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+              className="relative flex size-9.5 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface-sunken text-muted transition-colors outline-none hover:border-border-strong hover:text-foreground"
+              aria-label={sortOrder === "asc" ? "Ascending" : "Descending"}
             >
-              {sortOrder === "asc" ? (
-                <ArrowUpAZ className="size-4" />
-              ) : (
-                <ArrowDownAZ className="size-4" />
-              )}
-            </motion.span>
-          </button>
-        </Tooltip>
-        <Select
-          value={sort}
-          onValueChange={(v) => setSort(v as LocalSortKey)}
-          options={sortOptions}
-          icon={<SortAsc className="size-4 text-muted" />}
-        />
-        <Select
-          value={category}
-          onValueChange={(v) => setCategory(v)}
-          options={categoryOptions}
-        />
-        <Select
-          value={typeFilter}
-          onValueChange={(v) => setTypeFilter(v)}
-          options={typeOptions}
-        />
-        <Select
-          value={age}
-          onValueChange={(v) => setAge(v)}
-          options={ageOptions}
-        />
-        <Select
-          value={resolution}
-          onValueChange={(v) => setResolution(v)}
-          options={resolutionOptions}
-        />
-        {/* Bulk Selection Toggle */}
-        <Tooltip content={t("tooltips.select_multiple")} side="bottom">
-          <button
-            type="button"
-            onClick={() => setSelectionMode((prev) => !prev)}
-            className={cn(
-              "btn-icon",
-              selectionMode && "bg-primary/10 text-primary",
-            )}
-            aria-label={t("tooltips.select_multiple")}
-          >
-            <CheckSquare className="size-5" />
-          </button>
-        </Tooltip>
-        {/* Init Metadata */}
-        <Tooltip
-          content={
-            t("tooltips.init_metadata") ||
-            "Initialize metadata for all installed wallpapers"
-          }
-          side="bottom"
-        >
-          <button
-            type="button"
-            onClick={handleInitMetadata}
-            disabled={!inTauri || itemsCount === 0}
-            className="btn-icon"
-            aria-label={t("settings.initialize_now") || "Initialize metadata"}
-          >
-            <Database className="size-5" />
-          </button>
-        </Tooltip>
-        <div className={cn(
-          "flex items-center rounded-md transition-all",
-          hasActiveFilters && "border border-border/80"
-        )}>
-          <button
-            type="button"
-            onClick={() => setShowAdvanced((v) => !v)}
-            aria-label="Filters"
-            className={cn(
-              "relative flex size-9.5 items-center justify-center transition-colors outline-none disabled:pointer-events-none disabled:opacity-50",
-              showAdvanced ? "bg-primary/10 text-primary" : "text-muted hover:bg-surface-raised hover:text-foreground",
-              hasActiveFilters ? "rounded-l-[5px]" : "rounded-md"
-            )}
-            aria-expanded={showAdvanced}
-            disabled={!hasAnyExtraTags}
-          >
-            <Filter className="size-5" />
-            {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-          {hasActiveFilters && (
-            <>
-              <div className="h-5.5 w-px bg-border/80" />
-              <button
-                type="button"
-                className="flex size-9.5 items-center justify-center rounded-r-[5px] text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger"
-                onClick={() => {
-                  setTagFilters([]);
-                  setExcludedTagFilters([]);
-                  setAuthorFilters([]);
-                  setExcludedAuthorFilters([]);
-                  setCategory("");
-                  setTypeFilter("");
-                  setAge("");
-                  setResolution("");
-                  setSearch("");
-                }}
-                aria-label={t("labels.clear")}
+              <motion.span
+                key={sortOrder}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ duration: 0.18 }}
+                className="inline-flex"
               >
-                <X className="size-5" />
-              </button>
-            </>
-          )}
+                {sortOrder === "asc" ? (
+                  <ArrowUpAZ className="size-4" />
+                ) : (
+                  <ArrowDownAZ className="size-4" />
+                )}
+              </motion.span>
+            </button>
+          </Tooltip>
+
+          {/* Sort Select */}
+          <Select
+            value={sort}
+            onValueChange={(v) => setSort(v as LocalSortKey)}
+            options={sortOptions}
+            icon={<SortAsc className="size-4 text-muted" />}
+          />
+
+          {/* Bulk Selection Toggle */}
+          <Tooltip content={t("tooltips.select_multiple")} side="bottom">
+            <button
+              type="button"
+              onClick={() => setSelectionMode((prev) => !prev)}
+              className={cn(
+                "relative flex size-9.5 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface-sunken text-muted transition-colors outline-none hover:border-border-strong hover:text-foreground",
+                selectionMode &&
+                  "border-primary/60 bg-primary/10 text-primary hover:border-primary",
+              )}
+              aria-label={t("tooltips.select_multiple")}
+            >
+              <CheckSquare className="size-4" />
+            </button>
+          </Tooltip>
+
+          {/* Init Metadata */}
+          <Tooltip
+            content={
+              t("tooltips.init_metadata") ||
+              "Initialize metadata for all installed wallpapers"
+            }
+            side="bottom"
+          >
+            <button
+              type="button"
+              onClick={handleInitMetadata}
+              disabled={!inTauri || itemsCount === 0}
+              className="relative flex size-9.5 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface-sunken text-muted transition-colors outline-none hover:border-border-strong hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+              aria-label={t("settings.initialize_now") || "Initialize metadata"}
+            >
+              <Database className="size-4" />
+            </button>
+          </Tooltip>
+
+          {/* Installed Filters Drawer Toggle: Icon only with Tooltip & badge */}
+          <Tooltip content={t("filters.workshop_filters") || "Filters"}>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((prev) => !prev)}
+              aria-label="Filters"
+              className={cn(
+                "relative flex size-9.5 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface-sunken text-muted transition-colors outline-none hover:border-border-strong hover:text-foreground focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none",
+                showAdvanced &&
+                  "border-primary/60 bg-primary/10 text-primary hover:border-primary",
+              )}
+            >
+              <SlidersHorizontal className="size-4" />
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          </Tooltip>
         </div>
       </div>
 
-      <AnimatePresence>
-        {showAdvanced && (
-          <motion.div
-            key="installed-advanced-filter-panel"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="flex flex-col gap-2"
+      {/* Active Filter Pills / Chips */}
+      {showActiveFilters && activeChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[11px] font-medium text-subtle">
+            {t("filters.active_filters")}:
+          </span>
+          {activeChips.map((chip) => (
+            <span
+              key={chip.id}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border/80 bg-surface-raised px-2 py-0.5 text-xs text-foreground"
+            >
+              <span>{chip.label}</span>
+              <button
+                type="button"
+                onClick={chip.onRemove}
+                className="cursor-pointer text-muted transition-colors hover:text-danger"
+                aria-label="Remove filter"
+              >
+                <X className="size-3" />
+              </button>
+            </span>
+          ))}
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="ml-1 cursor-pointer text-[11px] font-medium text-muted underline transition-colors hover:text-danger"
           >
-            {visibleAuthors.length > 0 && (
-              <FilterChipsRow
-                title={t("labels.authors") || "Authors"}
-                keys={visibleAuthors}
-                active={authorFilters}
-                excluded={excludedAuthorFilters}
-                toggle={toggleAuthor}
-                isFirst={true}
-                isLast={
-                  visibleMiscTags.length === 0 &&
-                  visibleGenreTags.length === 0
-                }
-              />
+            {t("filters.reset_all")}
+          </button>
+        </div>
+      )}
+
+      {/* Left Filter Drawer */}
+      <Drawer
+        open={showAdvanced}
+        onOpenChange={(open) => setShowAdvanced(() => open)}
+        side="left"
+        width="390px"
+        title={
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="size-4 text-primary" />
+            <span>{t("filters.workshop_filters") || "Filters"}</span>
+            {activeFiltersCount > 0 && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
+                {activeFiltersCount}
+              </span>
             )}
-            {visibleMiscTags.length > 0 && (
-              <FilterChipsRow
+          </div>
+        }
+        headerAction={
+          <Tooltip content={t("filters.reset_all")}>
+            <button
+              type="button"
+              onClick={handleClearAll}
+              disabled={!hasActiveFilters}
+              className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted"
+              aria-label={t("filters.reset_all")}
+            >
+              <RotateCcw className="size-4" />
+            </button>
+          </Tooltip>
+        }
+      >
+        <div className="flex flex-col gap-4 p-4">
+          {/* Category */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-subtle">
+              {t("tag_categories.Category")}
+            </label>
+            <Select
+              value={category}
+              onValueChange={setCategory}
+              options={categoryOptions}
+              className="w-full justify-between"
+            />
+          </div>
+
+          {/* Type */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-subtle">
+              {t("tag_categories.Type")}
+            </label>
+            <Select
+              value={typeFilter}
+              onValueChange={setTypeFilter}
+              options={typeOptions}
+              className="w-full justify-between"
+            />
+          </div>
+
+          {/* Resolution */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-subtle">
+              {t("tag_categories.Resolution")}
+            </label>
+            <Select
+              value={resolution}
+              onValueChange={setResolution}
+              options={resolutionOptions}
+              className="w-full justify-between"
+            />
+          </div>
+
+          {/* Age Rating */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-subtle">
+              {t("tag_categories.Age Rating")}
+            </label>
+            <Select
+              value={age}
+              onValueChange={setAge}
+              options={ageOptions}
+              className="w-full justify-between"
+            />
+          </div>
+
+          {visibleAuthors.length > 0 && (
+            <>
+              <div className="h-px bg-border/50" />
+              <InstalledTagBlock
+                title={t("labels.authors") || "Authors"}
+                tags={visibleAuthors}
+                included={authorFilters}
+                excluded={excludedAuthorFilters}
+                onToggle={toggleAuthor}
+              />
+            </>
+          )}
+
+          {visibleMiscTags.length > 0 && (
+            <>
+              <div className="h-px bg-border/50" />
+              <InstalledTagBlock
                 title={t("labels.miscellaneous") || "Miscellaneous"}
-                keys={visibleMiscTags}
-                active={tagFilters}
+                tags={visibleMiscTags}
+                included={tagFilters}
                 excluded={excludedTagFilters}
-                toggle={toggleTag}
-                isFirst={visibleAuthors.length === 0}
-                isLast={visibleGenreTags.length === 0}
+                onToggle={toggleTag}
                 i18n={i18n}
                 i18nPrefix="filters.misc_tags"
               />
-            )}
-            {visibleGenreTags.length > 0 && (
-              <FilterChipsRow
+            </>
+          )}
+
+          {visibleGenreTags.length > 0 && (
+            <>
+              <div className="h-px bg-border/50" />
+              <InstalledTagBlock
                 title={t("labels.genre") || "Genre"}
-                keys={visibleGenreTags}
-                active={tagFilters}
+                tags={visibleGenreTags}
+                included={tagFilters}
                 excluded={excludedTagFilters}
-                toggle={toggleTag}
-                isFirst={
-                  visibleAuthors.length === 0 &&
-                  visibleMiscTags.length === 0
-                }
-                isLast={true}
+                onToggle={toggleTag}
                 i18n={i18n}
                 i18nPrefix="filters.genre_tags"
               />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </>
+          )}
+        </div>
+      </Drawer>
     </div>
   );
 }
 
-interface FilterChipsRowProps {
-  title: string;
-  keys: readonly string[];
-  active: string[];
-  excluded: string[];
-  toggle: (k: string) => void;
-  isFirst?: boolean;
-  isLast?: boolean;
-  i18n?: any;
-  i18nPrefix?: string;
-}
-
-function FilterChipsRow({
+function InstalledTagBlock({
   title,
-  keys,
-  active,
+  tags,
+  included,
   excluded,
-  toggle,
-  isFirst,
-  isLast,
+  onToggle,
   i18n,
   i18nPrefix,
-}: FilterChipsRowProps) {
+}: {
+  title: string;
+  tags: readonly string[];
+  included: string[];
+  excluded: string[];
+  onToggle: (tag: string) => void;
+  i18n?: any;
+  i18nPrefix?: string;
+}) {
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-1.5 p-0",
-        isFirst && "pt-1",
-        isLast && "pb-0",
-      )}
-    >
-      <span className="text-[11px] tracking-wide text-subtle uppercase">
-        {title}
-      </span>
-      {keys.map((k) => {
-        const isIncluded = active.includes(k);
-        const isExcluded = excluded.includes(k);
-        const displayKey =
-          i18n && i18nPrefix ? translateTag(k, i18nPrefix, i18n) : k;
-        return (
-          <button
-            key={k}
-            type="button"
-            onClick={() => toggle(k)}
-            className={cn(
-              "chip cursor-pointer text-[11px] transition-colors select-none",
-              !isIncluded && !isExcluded && "hover:bg-surface",
-              isIncluded && "border-primary/60 bg-primary/15 text-foreground",
-              isExcluded &&
-                "border-danger/60 bg-danger/10 text-danger line-through",
-            )}
-          >
-            {displayKey}
-          </button>
-        );
-      })}
+    <div className="flex flex-col gap-2">
+      <span className="text-xs font-medium text-subtle">{title}</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {tags.map((tag) => {
+          const isIncluded = included.includes(tag);
+          const isExcluded = excluded.includes(tag);
+          const displayTag =
+            i18n && i18nPrefix ? translateTag(tag, i18nPrefix, i18n) : tag;
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => onToggle(tag)}
+              className={cn(
+                "chip cursor-pointer text-xs transition-colors select-none",
+                !isIncluded && !isExcluded && "hover:bg-surface",
+                isIncluded &&
+                  "border-primary/60 bg-primary/15 font-medium text-foreground",
+                isExcluded &&
+                  "border-danger/60 bg-danger/10 text-danger line-through",
+              )}
+            >
+              {displayTag}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

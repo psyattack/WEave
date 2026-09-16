@@ -20,6 +20,7 @@ interface AppState {
   lowPerformance: boolean;
   enable3dCards: boolean;
   enableLayoutAnimations: boolean;
+  showActiveFilters: boolean;
   activeDetailsCover: string | null;
   showLoginPromptOnFail: boolean;
   loginModalOpen: boolean;
@@ -44,6 +45,7 @@ interface AppState {
   setLowPerformance: (v: boolean) => void;
   setEnable3dCards: (v: boolean) => void;
   setEnableLayoutAnimations: (v: boolean) => void;
+  setShowActiveFilters: (v: boolean) => void;
   setActiveDetailsCover: (v: string | null) => void;
   setShowLoginPromptOnFail: (v: boolean) => void;
   setLoginModalOpen: (open: boolean, mode?: "auto" | "manual") => void;
@@ -72,6 +74,7 @@ export const useAppStore = create<AppState>()(
       lowPerformance: false,
       enable3dCards: true,
       enableLayoutAnimations: false,
+      showActiveFilters: false,
       activeDetailsCover: null,
       showLoginPromptOnFail: true,
       loginModalOpen: false,
@@ -100,6 +103,7 @@ export const useAppStore = create<AppState>()(
       setLowPerformance: (lowPerformance) => set({ lowPerformance }),
       setEnable3dCards: (enable3dCards) => set({ enable3dCards }),
       setEnableLayoutAnimations: (enableLayoutAnimations) => set({ enableLayoutAnimations }),
+      setShowActiveFilters: (showActiveFilters) => set({ showActiveFilters }),
       setActiveDetailsCover: (activeDetailsCover) => set({ activeDetailsCover }),
       setShowLoginPromptOnFail: (showLoginPromptOnFail) => set({ showLoginPromptOnFail }),
       setLoginModalOpen: (loginModalOpen, mode) => set(s => ({ loginModalOpen, loginModalMode: mode || s.loginModalMode })),
@@ -119,6 +123,7 @@ export const useAppStore = create<AppState>()(
         lowPerformance: state.lowPerformance,
         enable3dCards: state.enable3dCards,
         enableLayoutAnimations: state.enableLayoutAnimations,
+        showActiveFilters: state.showActiveFilters,
         showLoginPromptOnFail: state.showLoginPromptOnFail,
       }),
     },

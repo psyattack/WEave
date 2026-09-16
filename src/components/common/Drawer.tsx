@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 
 interface DrawerProps {
   open: boolean;
@@ -14,6 +15,10 @@ interface DrawerProps {
   width?: string;
   preventClose?: boolean;
   onPreventedClose?: () => void;
+  headerAction?: ReactNode;
+  showCloseButton?: boolean;
+  className?: string;
+  autoFocus?: boolean;
 }
 
 export default function Drawer({
@@ -26,6 +31,10 @@ export default function Drawer({
   width = "420px",
   preventClose = false,
   onPreventedClose,
+  headerAction,
+  showCloseButton = false,
+  className,
+  autoFocus = false,
 }: DrawerProps) {
   const isRight = side === "right";
   return (
@@ -44,6 +53,11 @@ export default function Drawer({
             </RadixDialog.Overlay>
             <RadixDialog.Content 
               asChild
+              onOpenAutoFocus={(e) => {
+                if (!autoFocus) {
+                  e.preventDefault();
+                }
+              }}
               onInteractOutside={(e) => {
                 if (preventClose) {
                   e.preventDefault();
@@ -68,8 +82,9 @@ export default function Drawer({
                 }}
                 style={{ width }}
                 className={cn(
-                  "fixed top-0 z-50 flex h-full flex-col border-white/10 bg-background/50 shadow-2xl backdrop-blur-3xl",
+                  "fixed top-0 z-50 flex h-full flex-col border-white/10 bg-background/80 shadow-2xl backdrop-blur-3xl",
                   isRight ? "right-0 border-l" : "left-0 border-r",
+                  className,
                 )}
               >
                 <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
@@ -79,6 +94,16 @@ export default function Drawer({
                   <RadixDialog.Description className="sr-only">
                     Details
                   </RadixDialog.Description>
+                  {(headerAction || showCloseButton) && (
+                    <div className="flex items-center gap-1">
+                      {headerAction}
+                      {showCloseButton && (
+                        <RadixDialog.Close className="flex size-7 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-white/10 hover:text-foreground">
+                          <X className="size-4" />
+                        </RadixDialog.Close>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="drawer-scroll flex-1 overflow-auto">
                   {children}

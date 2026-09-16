@@ -4,7 +4,7 @@ use crate::commands::AppStateHandle;
 use crate::updater::{check_for_updates, UpdateInfo};
 
 #[command]
-pub async fn updater_check(state: AppStateHandle<'_>) -> Result<UpdateInfo, ()> {
+pub async fn updater_check(state: AppStateHandle<'_>) -> Result<UpdateInfo, String> {
     let mut info = check_for_updates().await;
     let skip = state.settings.read().get_skip_version();
     if !skip.is_empty() && info.latest_version == skip {
