@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.12.0](https://github.com/psyattack/WEave/compare/v4.11.1...v4.12.0) - 2026-09-16
+
+### Added
+- Advanced search options in the Steam Workshop, including exact match, all-words search, any-word search, and support for Boolean search syntax.
+- Filter Workshop items by creation date or last update.
+- Dedicated controls in the drop-down menu and on the toolbar to view and clear active filters.
+- Advanced filters.
+- An option in General Settings to enable or disable the display of the active filters panel.
+
+<details><summary>Detailed Changelog</summary>
+
+### Added
+- **workshop:** Add advanced search filters and date range parameters (by @psyattack in 9a5b96d)
+
+### Changed
+- **release:** Use short hashes and issue references for commit links in bump script (by @psyattack in b92c958)
+- **release:** Add comprehensive technical commit filters to bump script (by @psyattack in e4350ce)
+
+</details>
+
 ## [4.11.1](https://github.com/psyattack/WEave/compare/v4.11.0...v4.11.1) - 2026-07-25
 
 ### Fixed
