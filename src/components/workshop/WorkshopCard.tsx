@@ -201,7 +201,7 @@ export default function WorkshopCard({
   return (
     <>
       <motion.article
-        layout={enableLayoutAnimations ? true : false}
+        layout={false}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
@@ -209,7 +209,7 @@ export default function WorkshopCard({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "card card-hover group relative flex flex-col overflow-hidden",
+          "card card-hover group relative flex size-full flex-col overflow-hidden",
           enableLayoutAnimations
             ? "transition-all duration-300 ease-out"
             : "transition-[border-color,box-shadow] duration-200",

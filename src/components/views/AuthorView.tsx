@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import { ArrowLeft, Layers, User } from "lucide-react";
 
 import WorkshopCard from "@/components/workshop/WorkshopCard";
+import WorkshopGrid from "@/components/workshop/WorkshopGrid";
 import DetailsPanel from "@/components/common/DetailsPanel";
 import Pagination from "@/components/workshop/Pagination";
 import { SkeletonCard } from "@/components/common/Skeleton";
@@ -191,7 +191,7 @@ export default function AuthorView() {
         </div>
       </div>
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 py-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 pt-3 pb-20">
         {loading ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
             {Array.from({ length: 9 }).map((_, i) => (
@@ -205,32 +205,32 @@ export default function AuthorView() {
               : t("labels.no_collections_found")}
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-              {items.map((item) => {
-                // On the author's own workshop page Steam strips the "By
-                // NAME" chip from each tile (redundant — it's the same
-                // author for every card). Inject the author we already
-                // know from the nav entry so the grid stays consistent
-                // with Workshop/Collections/Installed.
-                const withAuthor: WorkshopItem = {
-                  ...item,
-                  author: item.author || displayName,
-                  author_url: item.author_url || profileUrl,
-                  ...(tab === "collections" ? { is_collection: true } : null),
-                };
-                return (
-                  <WorkshopCard
-                    key={item.pubfileid}
-                    item={withAuthor}
-                    onOpen={handleOpen}
-                    onDownload={handleDownload}
-                    hideDownload={tab === "collections"}
-                  />
-                );
-              })}
-            </div>
-          </AnimatePresence>
+          <WorkshopGrid
+            items={items}
+            containerRef={scrollContainerRef}
+            renderItem={(item) => {
+              // On the author's own workshop page Steam strips the "By
+              // NAME" chip from each tile (redundant — it's the same
+              // author for every card). Inject the author we already
+              // know from the nav entry so the grid stays consistent
+              // with Workshop/Collections/Installed.
+              const withAuthor: WorkshopItem = {
+                ...item,
+                author: item.author || displayName,
+                author_url: item.author_url || profileUrl,
+                ...(tab === "collections" ? { is_collection: true } : null),
+              };
+              return (
+                <WorkshopCard
+                  key={item.pubfileid}
+                  item={withAuthor}
+                  onOpen={handleOpen}
+                  onDownload={handleDownload}
+                  hideDownload={tab === "collections"}
+                />
+              );
+            }}
+          />
         )}
       </div>
 

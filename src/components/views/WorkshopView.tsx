@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 
 import FilterBar from "@/components/workshop/FilterBar";
+import WorkshopFilterDrawer from "@/components/workshop/WorkshopFilterDrawer";
 import Pagination from "@/components/workshop/Pagination";
 import WorkshopCard from "@/components/workshop/WorkshopCard";
+import WorkshopGrid from "@/components/workshop/WorkshopGrid";
 import DetailsPanel from "@/components/common/DetailsPanel";
 import { SkeletonCard } from "@/components/common/Skeleton";
 import { useFiltersStore } from "@/stores/filters";
@@ -20,6 +21,7 @@ import { WorkshopItem, WorkshopPage } from "@/types/workshop";
 export default function WorkshopView() {
   const { t } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
+  const showAdvanced = useFiltersStore((s) => s.showAdvanced);
   const setPage = useFiltersStore((s) => s.setPage);
   const setViewPage = useFiltersStore((s) => s.setViewPage);
   const getViewPage = useFiltersStore((s) => s.getViewPage);
@@ -164,31 +166,34 @@ export default function WorkshopView() {
   return (
     <div className="flex h-full flex-col">
       <FilterBar />
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 py-3">
-        {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="flex h-64 items-center justify-center text-sm text-muted">
-            {t("labels.no_wallpapers_found")}
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout">
+      <div className="relative flex flex-1 overflow-hidden">
+        <WorkshopFilterDrawer open={showAdvanced} />
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 pt-3 pb-20">
+          {loading ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-              {items.map((item) => (
+              {Array.from({ length: 30 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex h-64 items-center justify-center text-sm text-muted">
+              {t("labels.no_wallpapers_found")}
+            </div>
+          ) : (
+            <WorkshopGrid
+              items={items}
+              containerRef={scrollContainerRef}
+              renderItem={(item) => (
                 <WorkshopCard
                   key={item.pubfileid}
                   item={item}
                   onOpen={setSelected}
                   onDownload={handleDownload}
                 />
-              ))}
-            </div>
-          </AnimatePresence>
-        )}
+              )}
+            />
+          )}
+        </div>
       </div>
       <Pagination
         page={filters.page}

@@ -56,7 +56,7 @@ export default function InstalledGrid({
         : (dimensions.width - (c - 1) * gap) / c;
     const ih = cw;
     const tr = Math.ceil(items.length / c);
-    const th = tr * ih + (tr > 0 ? (tr - 1) * gap : 0);
+    const th = tr * ih + (tr > 0 ? (tr - 1) * gap : 0) + 72;
     return {
       cols: c,
       colWidth: cw,
@@ -140,7 +140,7 @@ export default function InstalledGrid({
   }, [items, scrollTop, dimensions.height, cols, totalRows, itemHeight]);
 
   return (
-    <div ref={containerRef} className="relative flex-1 overflow-auto px-4 py-3">
+    <div ref={containerRef} className="relative flex-1 overflow-auto px-4 pt-3 pb-20">
       <div
         style={{
           height: `${totalHeight}px`,

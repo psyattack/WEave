@@ -1,10 +1,10 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
-import { Search, SlidersHorizontal, SortAsc, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { RotateCcw, Search, SlidersHorizontal, SortAsc, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import Select from "@/components/common/Select";
 import { Tooltip } from "@/components/common/Tooltip";
-import WorkshopFilterDrawer from "./WorkshopFilterDrawer";
 import SearchOptionsPopover from "./SearchOptionsPopover";
 import {
   SORT_KEYS,
@@ -30,9 +30,12 @@ export default function FilterBar() {
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const resetFilters = useFiltersStore((s) => s.resetFilters);
+  const showAdvanced = useFiltersStore((s) => s.showAdvanced);
+  const toggleAdvanced = useFiltersStore((s) => s.toggleAdvanced);
   const showActiveFilters = useAppStore((s) => s.showActiveFilters);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const [prevSearch, setPrevSearch] = useState(filters.search);
   const [searchValue, setSearchValue] = useState(filters.search);
@@ -50,6 +53,29 @@ export default function FilterBar() {
     }, 400);
     return () => clearTimeout(timer);
   }, [searchValue, filters.search, setFilters]);
+
+  useEffect(() => {
+    if (!searchDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setSearchDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSearchDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [searchDropdownOpen]);
 
   const sortOptions = toSelectOptionsI18n(
     SORT_KEYS,
@@ -237,24 +263,57 @@ export default function FilterBar() {
     });
   }
 
+  const hasAnyFilters =
+    activeDrawerFiltersCount > 0 ||
+    activeChips.length > 0 ||
+    Boolean(filters.search);
+
   return (
-    <div className="relative z-30 flex flex-col gap-2 px-4 py-3 pb-1.5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Search Input pinned to the left with options inside at the end */}
-        <div className="relative z-20 w-105">
+    <div className="relative z-30 flex flex-col items-center gap-2 px-4 py-3 pb-1.5">
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {/* Search Input with Smart Dropdown */}
+        <div className="relative z-20 w-96" ref={searchContainerRef}>
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" />
           <input
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
+            onFocus={() => setSearchDropdownOpen(true)}
+            onClick={() => setSearchDropdownOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setSearchDropdownOpen(false);
+                (e.target as HTMLInputElement).blur();
+              } else if (e.key === "Enter") {
+                setSearchDropdownOpen(false);
+              }
+            }}
             placeholder={t("labels.search_placeholder")}
-            className="input px-9 hover:border-border-strong focus:border-border-strong focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+            className={cn(
+              "input px-9 transition-colors hover:border-border-strong focus:border-border-strong focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none",
+              searchDropdownOpen && "border-border-strong bg-surface-raised/40",
+            )}
           />
-          <div className="absolute top-1/2 right-1.5 -translate-y-1/2">
-            <SearchOptionsPopover />
-          </div>
+          {searchValue ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchValue("");
+                setFilters({ search: "", page: 1 });
+              }}
+              className="absolute top-1/2 right-2.5 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded text-subtle transition-colors hover:bg-surface-raised hover:text-foreground"
+              aria-label={t("common.clear")}
+            >
+              <X className="size-3.5" />
+            </button>
+          ) : null}
+
+          <SearchOptionsPopover
+            open={searchDropdownOpen}
+            onClose={() => setSearchDropdownOpen(false)}
+          />
         </div>
 
-        {/* Action controls pinned to the right */}
+        {/* Action controls */}
         <div className="flex items-center gap-2">
           <Select
             value={filters.sort}
@@ -272,13 +331,13 @@ export default function FilterBar() {
           )}
 
           {/* Workshop Filters Drawer Toggle: Icon only with Tooltip & badge */}
-          <Tooltip content={t("filters.workshop_filters")}>
+          <Tooltip content={t("filters.workshop_filters")} side="bottom">
             <button
               type="button"
-              onClick={() => setDrawerOpen(true)}
+              onClick={toggleAdvanced}
               className={cn(
                 "relative flex size-9.5 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface-sunken text-muted transition-colors outline-none hover:border-border-strong hover:text-foreground focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none",
-                drawerOpen &&
+                showAdvanced &&
                   "border-primary/60 bg-primary/10 text-primary hover:border-primary",
               )}
               aria-label={t("filters.workshop_filters")}
@@ -291,12 +350,32 @@ export default function FilterBar() {
               )}
             </button>
           </Tooltip>
+
+          {/* Reset filters: larger icon appearing only when active filters exist */}
+          <AnimatePresence>
+            {hasAnyFilters && (
+              <Tooltip content={t("filters.reset_all")} side="bottom">
+                <motion.button
+                  type="button"
+                  onClick={resetFilters}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger focus:ring-0 focus:outline-none"
+                  aria-label={t("filters.reset_all")}
+                >
+                  <RotateCcw className="size-5" />
+                </motion.button>
+              </Tooltip>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Active Filter Pills / Chips */}
       {showActiveFilters && activeChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
           <span className="text-[11px] font-medium text-subtle">
             {t("filters.active_filters")}:
           </span>
@@ -325,12 +404,6 @@ export default function FilterBar() {
           </button>
         </div>
       )}
-
-      {/* Left Drawer */}
-      <WorkshopFilterDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-      />
     </div>
   );
 }

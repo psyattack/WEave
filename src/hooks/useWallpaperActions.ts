@@ -18,6 +18,7 @@ import {
 } from "@/lib/filterConfig";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useMetadataInitStore } from "@/stores/metadata-init";
+import { useFiltersStore } from "@/stores/filters";
 
 export interface InstalledMetadata {
   tags?: unknown[];
@@ -47,7 +48,8 @@ export function useWallpaperActions() {
   const [excludedAuthorFilters, setExcludedAuthorFilters] = useState<string[]>([]);
   const [sort, setSort] = useState<LocalSortKey>("install_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const showAdvanced = useFiltersStore((s) => s.showInstalledAdvanced);
+  const setShowAdvanced = useFiltersStore((s) => s.setShowInstalledAdvanced);
   const [selected, setSelected] = useState<InstalledWallpaper | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);

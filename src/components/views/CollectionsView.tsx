@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import { ArrowLeft, Info, Layers } from "lucide-react";
 
 import WorkshopCard from "@/components/workshop/WorkshopCard";
+import WorkshopGrid from "@/components/workshop/WorkshopGrid";
 import FilterBar from "@/components/workshop/FilterBar";
+import WorkshopFilterDrawer from "@/components/workshop/WorkshopFilterDrawer";
 import DetailsPanel from "@/components/common/DetailsPanel";
 import Pagination from "@/components/workshop/Pagination";
 import { SkeletonCard } from "@/components/common/Skeleton";
@@ -48,6 +50,7 @@ export interface CollectionContents {
 export default function CollectionsView() {
   const { t } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
+  const showAdvanced = useFiltersStore((s) => s.showAdvanced);
   const setPage = useFiltersStore((s) => s.setPage);
   const setViewPage = useFiltersStore((s) => s.setViewPage);
   const getViewPage = useFiltersStore((s) => s.getViewPage);
@@ -326,21 +329,24 @@ export default function CollectionsView() {
           Collections tab; restating it adds nothing. */}
       <FilterBar />
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 py-3">
-        {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="flex h-64 items-center justify-center text-sm text-muted">
-            {t("labels.no_collections_found")}
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout">
+      <div className="relative flex flex-1 overflow-hidden">
+        <WorkshopFilterDrawer open={showAdvanced} />
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 pt-3 pb-20">
+          {loading ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-              {items.map((item) => (
+              {Array.from({ length: 30 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex h-64 items-center justify-center text-sm text-muted">
+              {t("labels.no_collections_found")}
+            </div>
+          ) : (
+            <WorkshopGrid
+              items={items}
+              containerRef={scrollContainerRef}
+              renderItem={(item) => (
                 <WorkshopCard
                   key={item.pubfileid}
                   item={{ ...item, is_collection: true }}
@@ -348,10 +354,10 @@ export default function CollectionsView() {
                   onDownload={openCollection}
                   hideDownload
                 />
-              ))}
-            </div>
-          </AnimatePresence>
-        )}
+              )}
+            />
+          )}
+        </div>
       </div>
 
       <Pagination
@@ -425,6 +431,7 @@ function CollectionVirtualGrid({
   onDownload,
   emptyLabel,
 }: CollectionVirtualGridProps) {
+  const enableLayoutAnimations = useAppStore((s) => s.enableLayoutAnimations);
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -506,13 +513,37 @@ function CollectionVirtualGrid({
         {visibleItems.map(({ item, index }) => {
           const row = Math.floor(index / cols);
           const col = index % cols;
-          return (
+          const left = col * (colWidth + gap);
+          const top = row * (itemHeight + gap);
+
+          return enableLayoutAnimations ? (
+            <motion.div
+              key={item.pubfileid}
+              initial={false}
+              animate={{
+                top,
+                left,
+                width: colWidth,
+                height: itemHeight,
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{
+                position: "absolute",
+              }}
+            >
+              <WorkshopCard
+                item={item}
+                onOpen={onOpen}
+                onDownload={onDownload}
+              />
+            </motion.div>
+          ) : (
             <div
               key={item.pubfileid}
               style={{
                 position: "absolute",
-                top: `${row * (itemHeight + gap)}px`,
-                left: `${col * (colWidth + gap)}px`,
+                top: `${top}px`,
+                left: `${left}px`,
                 width: `${colWidth}px`,
                 height: `${itemHeight}px`,
               }}

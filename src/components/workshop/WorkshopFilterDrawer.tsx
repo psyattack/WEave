@@ -1,10 +1,9 @@
 import { useTranslation } from "@/i18n/hooks";
-import { AlertCircle, Calendar, ChevronDown, ChevronRight, Layers, RotateCcw, SlidersHorizontal, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, ChevronRight, Layers, X } from "lucide-react";
 import { useState } from "react";
 
-import Drawer from "@/components/common/Drawer";
+import { AnimatePresence, motion } from "framer-motion";
 import Select from "@/components/common/Select";
-import { Tooltip } from "@/components/common/Tooltip";
 import {
   AGE_RATING_KEYS,
   AGE_RATINGS,
@@ -28,23 +27,20 @@ import {
   tsToDateStr,
 } from "@/lib/filterConfig";
 import { cn } from "@/lib/utils";
-import { DEFAULT_FILTERS, useFiltersStore } from "@/stores/filters";
+import { useFiltersStore } from "@/stores/filters";
 
 type TagListKey = "misc_tags" | "genre_tags";
 
 interface WorkshopFilterDrawerProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
 }
 
 export default function WorkshopFilterDrawer({
   open,
-  onOpenChange,
 }: WorkshopFilterDrawerProps) {
   const { t, i18n } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
-  const resetFilters = useFiltersStore((s) => s.resetFilters);
 
   const [assetsOpen, setAssetsOpen] = useState(
     Boolean(
@@ -63,38 +59,6 @@ export default function WorkshopFilterDrawer({
     filters.updated_date_range_start ||
     filters.updated_date_range_end,
   );
-
-  const hasActiveFilters =
-    filters.category !== DEFAULT_FILTERS.category ||
-    filters.type_tag !== DEFAULT_FILTERS.type_tag ||
-    filters.age_rating !== DEFAULT_FILTERS.age_rating ||
-    filters.resolution !== DEFAULT_FILTERS.resolution ||
-    filters.asset_type !== DEFAULT_FILTERS.asset_type ||
-    filters.asset_genre !== DEFAULT_FILTERS.asset_genre ||
-    filters.script_type !== DEFAULT_FILTERS.script_type ||
-    filters.misc_tags.length > 0 ||
-    filters.genre_tags.length > 0 ||
-    filters.excluded_misc_tags.length > 0 ||
-    filters.excluded_genre_tags.length > 0 ||
-    filters.required_flags.length > 0 ||
-    hasActiveDateFilter;
-
-  const activeFiltersCount = [
-    filters.category !== DEFAULT_FILTERS.category,
-    filters.type_tag !== DEFAULT_FILTERS.type_tag,
-    filters.age_rating !== DEFAULT_FILTERS.age_rating,
-    filters.resolution !== DEFAULT_FILTERS.resolution,
-    filters.asset_type !== DEFAULT_FILTERS.asset_type,
-    filters.asset_genre !== DEFAULT_FILTERS.asset_genre,
-    filters.script_type !== DEFAULT_FILTERS.script_type,
-    filters.misc_tags.length > 0,
-    filters.genre_tags.length > 0,
-    filters.excluded_misc_tags.length > 0,
-    filters.excluded_genre_tags.length > 0,
-    filters.required_flags.length > 0,
-    hasActiveDateFilter,
-  ].filter(Boolean).length;
-
   const categoryOptions = toSelectOptionsI18n(
     CATEGORY_KEYS,
     CATEGORIES,
@@ -173,37 +137,22 @@ export default function WorkshopFilterDrawer({
   );
 
   return (
-    <Drawer
-      open={open}
-      onOpenChange={onOpenChange}
-      side="left"
-      width="390px"
-      title={
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="size-4 text-primary" />
-          <span>{t("filters.workshop_filters")}</span>
-          {activeFiltersCount > 0 && (
-            <span className="flex size-5 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-              {activeFiltersCount}
-            </span>
-          )}
-        </div>
-      }
-      headerAction={
-        <Tooltip content={t("filters.reset_all")}>
-          <button
-            type="button"
-            onClick={resetFilters}
-            disabled={!hasActiveFilters}
-            className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted"
-            aria-label={t("filters.reset_all")}
-          >
-            <RotateCcw className="size-4" />
-          </button>
-        </Tooltip>
-      }
-    >
-      <div className="flex flex-col gap-4 p-4">
+    <AnimatePresence initial={false}>
+      {open && (
+        <motion.aside
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: 340, opacity: 1 }}
+          exit={{ width: 0, opacity: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 380,
+            damping: 36,
+          }}
+          className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden"
+        >
+          <div className="flex h-full w-[340px] flex-col">
+            {/* Scrollable Filters Content */}
+            <div className="drawer-scroll flex flex-1 flex-col gap-4 overflow-y-auto py-3 pr-0 pl-4">
         {/* Category */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium text-subtle">
@@ -256,7 +205,7 @@ export default function WorkshopFilterDrawer({
           />
         </div>
 
-        <div className="h-px bg-border/50" />
+        <div className="h-px shrink-0 bg-border/60" />
 
         {/* Assets & Scripts (Collapsible Card) */}
         <div className="rounded-lg border border-border/70 bg-surface-sunken/40">
@@ -443,7 +392,7 @@ export default function WorkshopFilterDrawer({
           )}
         </div>
 
-        <div className="h-px bg-border/50" />
+        <div className="h-px shrink-0 bg-border/60" />
 
         {/* Special Filters: Incompatible Items */}
         <div className="flex flex-col gap-1.5">
@@ -477,7 +426,7 @@ export default function WorkshopFilterDrawer({
           </button>
         </div>
 
-        <div className="h-px bg-border/50" />
+        <div className="h-px shrink-0 bg-border/60" />
 
         {/* Miscellaneous Tags */}
         <DrawerTagBlock
@@ -497,7 +446,7 @@ export default function WorkshopFilterDrawer({
           i18nPrefix="filters.misc_tags"
         />
 
-        <div className="h-px bg-border/50" />
+        <div className="h-px shrink-0 bg-border/60" />
 
         {/* Genre Tags */}
         <DrawerTagBlock
@@ -517,7 +466,10 @@ export default function WorkshopFilterDrawer({
           i18nPrefix="filters.genre_tags"
         />
       </div>
-    </Drawer>
+    </div>
+  </motion.aside>
+      )}
+    </AnimatePresence>
   );
 }
 

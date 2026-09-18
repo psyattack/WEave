@@ -4,6 +4,7 @@ import { Package } from "lucide-react";
 
 import DetailsPanel from "@/components/common/DetailsPanel";
 import InstalledToolbar from "@/components/installed/InstalledToolbar";
+import InstalledFilterSidebar from "@/components/installed/InstalledFilterSidebar";
 import InstalledSelectionBar from "@/components/installed/InstalledSelectionBar";
 import InstalledGrid from "@/components/installed/InstalledGrid";
 import { useWallpaperActions } from "@/hooks/useWallpaperActions";
@@ -64,8 +65,6 @@ export default function InstalledView() {
     visibleGenreTags,
     visibleAuthors,
     totalSize,
-    hasActiveFilters,
-    hasAnyExtraTags,
     activeFiltersCount,
     ConfirmDialog,
   } = useWallpaperActions();
@@ -99,11 +98,6 @@ export default function InstalledView() {
         setAuthorFilters={setAuthorFilters}
         excludedAuthorFilters={excludedAuthorFilters}
         setExcludedAuthorFilters={setExcludedAuthorFilters}
-        visibleAuthors={visibleAuthors}
-        visibleMiscTags={visibleMiscTags}
-        visibleGenreTags={visibleGenreTags}
-        hasActiveFilters={hasActiveFilters}
-        hasAnyExtraTags={hasAnyExtraTags}
         activeFiltersCount={activeFiltersCount}
         handleInitMetadata={handleInitMetadata}
         toggleTag={toggleTag}
@@ -121,37 +115,62 @@ export default function InstalledView() {
         handleBulkCopyId={handleBulkCopyId}
       />
 
-      {loading ? (
-        <div className="flex-1 overflow-auto px-4 py-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex-1 overflow-auto px-4 py-3">
-          <div className="flex h-64 flex-col items-center justify-center gap-2 text-center text-sm text-muted">
-            <Package className="size-10 text-subtle" />
-            {t("labels.no_wallpapers_found")}
-          </div>
-        </div>
-      ) : (
-        <InstalledGrid
-          items={filtered}
-          selected={selected}
-          selectionMode={selectionMode}
-          selectedIds={selectedIds}
-          toggleSelection={toggleSelection}
-          setSelected={setSelected}
-          metaMap={metaMap}
-          onApply={handleApply}
-          onExtract={handleExtract}
-          onDelete={handleDelete}
-          onOpenFolder={handleOpenFolder}
-          onCopyId={handleCopyId}
+      <div className="relative flex flex-1 overflow-hidden">
+        <InstalledFilterSidebar
+          open={showAdvanced}
+          category={category}
+          setCategory={setCategory}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          age={age}
+          setAge={setAge}
+          resolution={resolution}
+          setResolution={setResolution}
+          tagFilters={tagFilters}
+          toggleTag={toggleTag}
+          authorFilters={authorFilters}
+          toggleAuthor={toggleAuthor}
+          excludedTagFilters={excludedTagFilters}
+          excludedAuthorFilters={excludedAuthorFilters}
+          visibleAuthors={visibleAuthors}
+          visibleMiscTags={visibleMiscTags}
+          visibleGenreTags={visibleGenreTags}
         />
-      )}
+
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {loading ? (
+            <div className="flex-1 overflow-auto px-4 pt-3 pb-20">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex-1 overflow-auto px-4 pt-3 pb-20">
+              <div className="flex h-64 flex-col items-center justify-center gap-2 text-center text-sm text-muted">
+                <Package className="size-10 text-subtle" />
+                {t("labels.no_wallpapers_found")}
+              </div>
+            </div>
+          ) : (
+            <InstalledGrid
+              items={filtered}
+              selected={selected}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              toggleSelection={toggleSelection}
+              setSelected={setSelected}
+              metaMap={metaMap}
+              onApply={handleApply}
+              onExtract={handleExtract}
+              onDelete={handleDelete}
+              onOpenFolder={handleOpenFolder}
+              onCopyId={handleCopyId}
+            />
+          )}
+        </div>
+      </div>
 
       <div className="absolute bottom-3 left-1/2 z-30 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-background/50 px-5 shadow-2xl backdrop-blur-2xl transition-all">
         <span className="text-[11px] font-medium text-foreground/80">

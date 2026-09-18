@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "@/i18n/hooks";
 import {
   ArrowDownAZ,
@@ -11,7 +11,6 @@ import {
   SortAsc,
   X,
 } from "lucide-react";
-import Drawer from "@/components/common/Drawer";
 import Select from "@/components/common/Select";
 import { Tooltip } from "@/components/common/Tooltip";
 import { cn } from "@/lib/utils";
@@ -20,15 +19,6 @@ import { useAppStore } from "@/stores/app";
 import {
   LOCAL_SORT_KEYS,
   LOCAL_SORT_OPTIONS,
-  CATEGORY_KEYS,
-  CATEGORIES,
-  TYPE_KEYS,
-  TYPES,
-  AGE_RATING_KEYS,
-  AGE_RATINGS,
-  RESOLUTION_KEYS,
-  RESOLUTIONS,
-  translateTag,
   translateTagValue,
   type LocalSortKey,
 } from "@/lib/filterConfig";
@@ -60,11 +50,6 @@ interface InstalledToolbarProps {
   setAuthorFilters: (v: string[]) => void;
   excludedAuthorFilters: string[];
   setExcludedAuthorFilters: (v: string[]) => void;
-  visibleAuthors: string[];
-  visibleMiscTags: string[];
-  visibleGenreTags: string[];
-  hasActiveFilters: boolean;
-  hasAnyExtraTags: boolean;
   activeFiltersCount: number;
   handleInitMetadata: () => void;
   toggleTag: (tag: string) => void;
@@ -105,10 +90,6 @@ export default function InstalledToolbar({
   setAuthorFilters,
   excludedAuthorFilters,
   setExcludedAuthorFilters,
-  visibleAuthors,
-  visibleMiscTags,
-  visibleGenreTags,
-  hasActiveFilters,
   activeFiltersCount,
   handleInitMetadata,
   toggleTag,
@@ -122,34 +103,6 @@ export default function InstalledToolbar({
     value: k,
     label: i18n.t(`filters.local_sort.${k}`, {
       defaultValue: LOCAL_SORT_OPTIONS[k],
-    }),
-  }));
-
-  const categoryOptions = CATEGORY_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.category.${k || "empty"}`, {
-      defaultValue: CATEGORIES[k] ?? k,
-    }),
-  }));
-
-  const typeOptions = TYPE_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.type.${k || "empty"}`, {
-      defaultValue: TYPES[k] ?? k,
-    }),
-  }));
-
-  const ageOptions = AGE_RATING_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.age_rating.${k || "empty"}`, {
-      defaultValue: AGE_RATINGS[k] ?? k,
-    }),
-  }));
-
-  const resolutionOptions = RESOLUTION_KEYS.map((k) => ({
-    value: k,
-    label: i18n.t(`filters.resolution.${(k || "empty").replace(/ /g, "_")}`, {
-      defaultValue: RESOLUTIONS[k] ?? k,
     }),
   }));
 
@@ -231,21 +184,33 @@ export default function InstalledToolbar({
     });
   }
 
+  const hasAnyFilters = activeFiltersCount > 0 || activeChips.length > 0;
+
   return (
-    <div className="flex flex-col gap-2 px-4 py-3 pb-1.5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Search Input pinned to the left */}
-        <div className="relative w-105">
+    <div className="relative z-30 flex flex-col items-center gap-2 px-4 py-3 pb-1.5">
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {/* Search Input */}
+        <div className="relative w-96">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-9 hover:border-border-strong focus:border-border-strong focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+            className="input px-9 transition-colors hover:border-border-strong focus:border-border-strong focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
             placeholder={t("labels.search_placeholder")}
           />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute top-1/2 right-2.5 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded text-subtle transition-colors hover:bg-surface-raised hover:text-foreground"
+              aria-label={t("common.clear")}
+            >
+              <X className="size-3.5" />
+            </button>
+          ) : null}
         </div>
 
-        {/* Action controls pinned to the right */}
+        {/* Action controls */}
         <div className="flex items-center gap-2">
           {/* Sort Direction Toggle */}
           <Tooltip
@@ -322,7 +287,7 @@ export default function InstalledToolbar({
           </Tooltip>
 
           {/* Installed Filters Drawer Toggle: Icon only with Tooltip & badge */}
-          <Tooltip content={t("filters.workshop_filters") || "Filters"}>
+          <Tooltip content={t("filters.workshop_filters") || "Filters"} side="bottom">
             <button
               type="button"
               onClick={() => setShowAdvanced((prev) => !prev)}
@@ -341,12 +306,32 @@ export default function InstalledToolbar({
               )}
             </button>
           </Tooltip>
+
+          {/* Reset filters: larger icon appearing only when active filters exist */}
+          <AnimatePresence>
+            {hasAnyFilters && (
+              <Tooltip content={t("filters.reset_all")} side="bottom">
+                <motion.button
+                  type="button"
+                  onClick={handleClearAll}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger focus:ring-0 focus:outline-none"
+                  aria-label={t("filters.reset_all")}
+                >
+                  <RotateCcw className="size-5" />
+                </motion.button>
+              </Tooltip>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Active Filter Pills / Chips */}
       {showActiveFilters && activeChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
           <span className="text-[11px] font-medium text-subtle">
             {t("filters.active_filters")}:
           </span>
@@ -375,184 +360,6 @@ export default function InstalledToolbar({
           </button>
         </div>
       )}
-
-      {/* Left Filter Drawer */}
-      <Drawer
-        open={showAdvanced}
-        onOpenChange={(open) => setShowAdvanced(() => open)}
-        side="left"
-        width="390px"
-        title={
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="size-4 text-primary" />
-            <span>{t("filters.workshop_filters") || "Filters"}</span>
-            {activeFiltersCount > 0 && (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-                {activeFiltersCount}
-              </span>
-            )}
-          </div>
-        }
-        headerAction={
-          <Tooltip content={t("filters.reset_all")}>
-            <button
-              type="button"
-              onClick={handleClearAll}
-              disabled={!hasActiveFilters}
-              className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-danger/15 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted"
-              aria-label={t("filters.reset_all")}
-            >
-              <RotateCcw className="size-4" />
-            </button>
-          </Tooltip>
-        }
-      >
-        <div className="flex flex-col gap-4 p-4">
-          {/* Category */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-subtle">
-              {t("tag_categories.Category")}
-            </label>
-            <Select
-              value={category}
-              onValueChange={setCategory}
-              options={categoryOptions}
-              className="w-full justify-between"
-            />
-          </div>
-
-          {/* Type */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-subtle">
-              {t("tag_categories.Type")}
-            </label>
-            <Select
-              value={typeFilter}
-              onValueChange={setTypeFilter}
-              options={typeOptions}
-              className="w-full justify-between"
-            />
-          </div>
-
-          {/* Resolution */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-subtle">
-              {t("tag_categories.Resolution")}
-            </label>
-            <Select
-              value={resolution}
-              onValueChange={setResolution}
-              options={resolutionOptions}
-              className="w-full justify-between"
-            />
-          </div>
-
-          {/* Age Rating */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-subtle">
-              {t("tag_categories.Age Rating")}
-            </label>
-            <Select
-              value={age}
-              onValueChange={setAge}
-              options={ageOptions}
-              className="w-full justify-between"
-            />
-          </div>
-
-          {visibleAuthors.length > 0 && (
-            <>
-              <div className="h-px bg-border/50" />
-              <InstalledTagBlock
-                title={t("labels.authors") || "Authors"}
-                tags={visibleAuthors}
-                included={authorFilters}
-                excluded={excludedAuthorFilters}
-                onToggle={toggleAuthor}
-              />
-            </>
-          )}
-
-          {visibleMiscTags.length > 0 && (
-            <>
-              <div className="h-px bg-border/50" />
-              <InstalledTagBlock
-                title={t("labels.miscellaneous") || "Miscellaneous"}
-                tags={visibleMiscTags}
-                included={tagFilters}
-                excluded={excludedTagFilters}
-                onToggle={toggleTag}
-                i18n={i18n}
-                i18nPrefix="filters.misc_tags"
-              />
-            </>
-          )}
-
-          {visibleGenreTags.length > 0 && (
-            <>
-              <div className="h-px bg-border/50" />
-              <InstalledTagBlock
-                title={t("labels.genre") || "Genre"}
-                tags={visibleGenreTags}
-                included={tagFilters}
-                excluded={excludedTagFilters}
-                onToggle={toggleTag}
-                i18n={i18n}
-                i18nPrefix="filters.genre_tags"
-              />
-            </>
-          )}
-        </div>
-      </Drawer>
-    </div>
-  );
-}
-
-function InstalledTagBlock({
-  title,
-  tags,
-  included,
-  excluded,
-  onToggle,
-  i18n,
-  i18nPrefix,
-}: {
-  title: string;
-  tags: readonly string[];
-  included: string[];
-  excluded: string[];
-  onToggle: (tag: string) => void;
-  i18n?: any;
-  i18nPrefix?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-xs font-medium text-subtle">{title}</span>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {tags.map((tag) => {
-          const isIncluded = included.includes(tag);
-          const isExcluded = excluded.includes(tag);
-          const displayTag =
-            i18n && i18nPrefix ? translateTag(tag, i18nPrefix, i18n) : tag;
-          return (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => onToggle(tag)}
-              className={cn(
-                "chip cursor-pointer text-xs transition-colors select-none",
-                !isIncluded && !isExcluded && "hover:bg-surface",
-                isIncluded &&
-                  "border-primary/60 bg-primary/15 font-medium text-foreground",
-                isExcluded &&
-                  "border-danger/60 bg-danger/10 text-danger line-through",
-              )}
-            >
-              {displayTag}
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }

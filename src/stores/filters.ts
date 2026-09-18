@@ -51,6 +51,7 @@ export const DEFAULT_FILTERS: WorkshopFilters = {
 interface FiltersState {
   filters: WorkshopFilters;
   showAdvanced: boolean;
+  showInstalledAdvanced: boolean;
   collapsed: boolean;
   // Separate page state for each view to preserve navigation history
   viewPages: {
@@ -65,13 +66,17 @@ interface FiltersState {
   setPage: (page: number) => void;
   setViewPage: (view: string, page: number, key?: string) => void;
   getViewPage: (view: string, key?: string) => number;
+  setShowAdvanced: (v: boolean) => void;
   toggleAdvanced: () => void;
+  setShowInstalledAdvanced: (v: boolean | ((prev: boolean) => boolean)) => void;
+  toggleInstalledAdvanced: () => void;
   toggleCollapsed: () => void;
 }
 
 export const useFiltersStore = create<FiltersState>((set, get) => ({
   filters: DEFAULT_FILTERS,
   showAdvanced: false,
+  showInstalledAdvanced: false,
   collapsed: false,
   viewPages: {
     workshop: 1,
@@ -123,6 +128,14 @@ export const useFiltersStore = create<FiltersState>((set, get) => ({
     }
     return 1;
   },
+  setShowAdvanced: (showAdvanced) => set({ showAdvanced }),
   toggleAdvanced: () => set((state) => ({ showAdvanced: !state.showAdvanced })),
+  setShowInstalledAdvanced: (v) =>
+    set((state) => ({
+      showInstalledAdvanced:
+        typeof v === "function" ? v(state.showInstalledAdvanced) : v,
+    })),
+  toggleInstalledAdvanced: () =>
+    set((state) => ({ showInstalledAdvanced: !state.showInstalledAdvanced })),
   toggleCollapsed: () => set((state) => ({ collapsed: !state.collapsed })),
 }));

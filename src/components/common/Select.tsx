@@ -67,7 +67,7 @@ export default function Select({
         <RadixSelect.Content
           position="popper"
           sideOffset={6}
-          className="z-50 max-h-80 w-(--radix-select-trigger-width) min-w-(--radix-select-trigger-width overflow-hidden rounded-md border border-border bg-surface shadow-card-hover"
+          className="min-w-(--radix-select-trigger-width z-50 max-h-80 w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border bg-surface shadow-card-hover"
           onPointerDownOutside={(e) => {
             if (closeOnSelectionOnly) e.preventDefault();
           }}
