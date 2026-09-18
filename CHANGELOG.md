@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.13.0](https://github.com/psyattack/WEave/compare/v4.12.0.0...v4.13.0) - 2026-09-18
+
+### Changed
+- The filter panel, additional filters, and search settings panel have been completely redesigned
+- Smooth animations enabled in the settings have been added to all views, not just the Installed view.
+
+### Fixed
+- Fixed an issue where the pagination bar would overlap the cards when scrolling to the bottom
+- Other changes and improvements
+
+<details><summary>Detailed Changelog</summary>
+
+### Added
+- **installed:** Add filter sidebar to installed view (by @psyattack in 958604c)
+
+</details>
+
 ## [4.12.0](https://github.com/psyattack/WEave/compare/v4.11.1...v4.12.0) - 2026-09-16
 
 ### Added
