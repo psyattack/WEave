@@ -1,3 +1,12 @@
+> [!CAUTION]
+> ## ⚠️ Development Paused — Superseded by WEngine-Plus
+> Development of the standalone **WEave** application is on hold. We strongly recommend switching to **[WEngine-Plus](https://github.com/psyattack/WEngine-Plus)**.
+> 
+> **Why switch?**  
+> Rather than running a separate standalone client, **WEngine-Plus** integrates directly into Wallpaper Engine itself: native Workshop browser, 1-click downloads, scene unpacking, and Steam accounts without running external windows.
+> 
+> 🔗 **Repository:** **[https://github.com/psyattack/WEngine-Plus](https://github.com/psyattack/WEngine-Plus)**
+
 <div align="center">
   <img src="src/assets/icon.svg" alt="WEave Logo" width="120" height="120">
   
